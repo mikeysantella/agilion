@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>envincior</groupId>
+  <groupId>agilion</groupId>
   <artifactId>dataengine-pom</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>${project.groupId}:${project.artifactId}</name>
-  <description>Envincior Data Engine</description>
+  <description>Data Engine</description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <blueprints.ver>2.6.0</blueprints.ver>
@@ -180,7 +180,7 @@
           <artifactId>maven-scm-plugin</artifactId>
           <version>1.9.4</version>
           <configuration>
-            <tag>envincior-${project.version}</tag>
+            <tag>agilion-${project.version}</tag>
           </configuration>
         </plugin>
       </plugins>

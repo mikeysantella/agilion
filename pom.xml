@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>envincior</groupId>
-  <artifactId>envincior-pom</artifactId>
+  <groupId>agilion</groupId>
+  <artifactId>agilion-pom</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>${project.groupId}:${project.artifactId}</name>
-  <description>Envincior</description>
-  <url>https://github.com/deelam/envincior</url>
+  <description>Agilion</description>
+  <url>https://github.com/deelam/agilion</url>
   <licenses>
     <license>
       <name>GNU General Lesser Public License (LGPL) version 3.0</name>
@@ -18,15 +18,15 @@
   <developers>
     <developer>
       <name>DEELAM</name>
-      <email>envincior@deelam.net</email>
+      <email>agilion@deelam.net</email>
       <organization/>
       <organizationUrl/>
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:git@github.com:deelam/envincior.git</connection>
-    <developerConnection>scm:git:git@github.com:deelam/envincior.git</developerConnection>
-    <url>git@github.com:deelam/envincior.git</url>
+    <connection>scm:git:git@github.com:deelam/agilion.git</connection>
+    <developerConnection>scm:git:git@github.com:deelam/agilion.git</developerConnection>
+    <url>git@github.com:deelam/agilion.git</url>
   </scm>
   <distributionManagement>
     <snapshotRepository>
