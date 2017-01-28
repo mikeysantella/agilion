@@ -39,6 +39,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <modules>
+    <module>swagger/dataengine/jaxrs</module>
     <module>dataengine</module>
   </modules>
   <build>
