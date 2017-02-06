@@ -13,3 +13,4 @@ gradle-3.0
 .project
 .settings
 workspace/
+.idea/
