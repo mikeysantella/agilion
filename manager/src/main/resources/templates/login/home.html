@@ -1,0 +1,67 @@
+<html>
+<head>
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/font-awesome.min.css}">
+    <script th:src="@{/webjars/jquery/jquery.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
+    <link media="all" rel="stylesheet" th:href="@{/css/buttons.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/panels.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
+
+</head>
+
+<body>
+    <div th:replace="/common/navbar::navbarContainer ('home')"></div>
+    <div class="container-fluid page-content">
+        <div class="page-header">
+            Overview
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <i class="fa fa-info-circle" aria-hidden="true"></i>
+                        Notifications
+                    </div>
+                    <div class="panel-body">
+                        <ul>
+                            <li>Session <a href="#">Legal Case network</a> finshed all remaining jobs on Nov 13, 2017</li>
+                            <li>Session <a href="#">Recruiter Contact Network</a> finshed all remaining jobs on Nov 13, 2017</li>
+                            <li>Job <a href="#">3-Core Social Media Network</a> (#abcd12344) finished on Nov 17, 2017</li>
+                        </ul>
+                        <a href="#">View All Notifications</a>
+                    </div>
+                </div>
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <i class="fa fa-question-circle" aria-hidden="true"></i>
+                         Warnings
+                    </div>
+                    <div class="panel-body">Panel Content</div>
+                </div>
+                <div class="panel panel-danger">
+                    <div class="panel-heading">
+                        <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+                         Error Alerts
+                    </div>
+                    <div class="panel-body">
+                        <ul>
+                            <li>
+                                <a href="#">2 out of 4</a> Jobs failed in the <a href="#">Bad person Network</a>
+                            </li>
+                            <li>
+                                <a href="#">7 out of 7</a> Jobs failed in the <a href="#">Another person Network</a>
+                            </li>
+                            <li>
+                                No data was generated in the <a href="#">Sparse Network</a> Session
+                            </li>
+                        </ul>
+                        <a href="#">View All Notifications</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.1.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+
+jar {
+	baseName = 'manager-ui'
+	version = '0.0.1-SNAPSHOT'
+}
+
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile 'org.thymeleaf:thymeleaf:3.0.0.RELEASE'
+	compile 'org.thymeleaf:thymeleaf-spring4:3.0.0.RELEASE'
+	compile("org.springframework.boot:spring-boot-starter-thymeleaf")
+			{
+				exclude group: 'nz.net.ultraq.thymeleaf'
+			}
+	compile('org.springframework.boot:spring-boot-starter-validation')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	runtime('org.springframework.boot:spring-boot-devtools')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+
+
+	compile group: 'org.webjars', name: 'bootstrap', version: '3.3.5'
+	compile group: 'org.webjars', name: 'webjars-locator', version: '0.32'
+	compile group: 'org.webjars', name: 'jquery', version: '2.1.4'
+	compile group: 'org.webjars', name: 'font-awesome', version: '4.7.0'
+	compile group: 'org.webjars', name: 'datatables', version: '1.10.13'
+
+	compile group: 'commons-io', name: 'commons-io', version: '2.5'
+}

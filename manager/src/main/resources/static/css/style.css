@@ -1,0 +1,62 @@
+html,
+body
+{
+    height: 100%;
+}
+
+.page-content
+{
+    height: 100%;
+}
+
+.navbar-fixed-top + .page-content
+{
+    /* required when using a fixed-top navbar */
+    padding-top: 65px;
+}
+
+
+.vertically-centered-container
+{
+    position: relative;
+    width: 100%;
+    top: 20%;
+}
+
+.page-header
+{
+    font-size: 40px;
+    margin-top: 0px;
+    padding: 0px;
+    margin-bottom: 20px;
+}
+
+.thin-form-group
+{
+    margin-bottom: 0px;
+}
+
+.hidden
+{
+    display: none;
+}
+
+.sticky-top-alert {
+    position: fixed;
+    width: 350px;
+    top: 75px;
+    margin-left: auto;
+    margin-right: auto;
+    left:0;
+    right:0;
+    box-shadow: 4px 4px 6px #888888;
+    z-index: 105;
+    text-align: center;
+    padding-top:7px;
+    padding-bottom:7px;
+}
+
+.formSectionTitle
+{
+    border-bottom: 1px solid silver;
+}
