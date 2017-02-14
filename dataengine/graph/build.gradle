@@ -1,0 +1,15 @@
+
+dependencies {
+  compile 'io.fastjson:boon:0.33'
+  compile dep.commons_io
+  compile dep.blueprints
+  
+  compileOnly dep.blueprints_neo
+  testCompile dep.blueprints_neo
+  compileOnly dep.frames
+  testCompile dep.frames
+  
+  testCompile dep.guava
+}
+
+

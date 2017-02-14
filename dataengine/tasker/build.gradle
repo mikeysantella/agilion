@@ -1,0 +1,22 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.tasker.Main"
+
+dependencies {
+  compile project(':apis')
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile dep.vertx
+  compile dep.vertx_rpc
+  compile dep.vertx_ignite
+  compile dep.rxjava
+  compile group: 'joda-time', name: 'joda-time', version: '2.9.7'
+    
+  testCompile dep.vertx_unittest
+  
+  // temp: for testing
+  compile project(':vertx')
+  
+}
