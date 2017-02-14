@@ -2,7 +2,9 @@
 
 ### Gradle ###
 .gradle
-/build/
+
+# tab completion cache
+.gradle-tab/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -17,4 +19,7 @@ gradle-app.setting
 # gradle/wrapper/gradle-wrapper.properties
 
 # End of https://www.gitignore.io/api/gradle
+
+bin
+build
 

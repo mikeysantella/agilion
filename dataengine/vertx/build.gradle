@@ -1,0 +1,23 @@
+
+dependencies {
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile dep.vertx
+  
+  compile 'com.esotericsoftware:kryo-shaded:4.0.0'
+  compileOnly dep.vertx_rpc
+  testCompile dep.vertx_rpc
+  
+  compileOnly group: 'io.vertx', name: 'vertx-hazelcast', version:ver.vertx
+  testCompile group: 'io.vertx', name: 'vertx-hazelcast', version:ver.vertx
+  compileOnly dep.vertx_ignite
+  testCompile dep.vertx_ignite
+  
+  compileOnly project(':graph')
+  testCompile project(':graph')
+  compileOnly dep.frames
+  testCompile dep.frames
+  
+  testCompile dep.vertx_unittest
+}
