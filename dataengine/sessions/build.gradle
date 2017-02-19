@@ -5,23 +5,15 @@ mainClassName = "dataengine.sessions.Main"
 
 dependencies {
   compile project(':apis')
+  compile project(':graph')
+  compile dep.frames
   compile dep.xinject
   compile dep.guice
   compile dep.guava
-  compile dep.vertx
-  compile dep.vertx_rpc
-  compile dep.rxjava
-  compile dep.vertx_ignite
-  compile group: 'joda-time', name: 'joda-time', version: '2.9.7'
-    
-  compile project(':graph')
-  compile dep.frames
+  compile project(':vertx')
+  runtime dep.vertx_ignite
   
   testCompile dep.vertx_unittest
-  
-  // temp: for testing
-  compile project(':vertx')
-  
 }
 
 jar {
