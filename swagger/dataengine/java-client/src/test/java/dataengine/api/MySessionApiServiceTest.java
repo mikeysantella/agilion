@@ -23,7 +23,7 @@ public class MySessionApiServiceTest {
   }
 
   public static ApiClient getApiClient() {
-    String BASEPATH = "http://192.168.11.74:8080/server/deelam/DataEngine/0.0.1";
+    String BASEPATH = "http://localhost:8080/server/deelam/DataEngine/0.0.1";
     return new ApiClient().setBasePath(BASEPATH);
   }
 
