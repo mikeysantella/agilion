@@ -10,9 +10,7 @@ dependencies {
   compile project(':vertx')
   compile dep.dataengine_api
   compile dep.guice
-  compile dep.vertx_rpc
-  compile dep.rxjava
-  compile dep.vertx_ignite
+  runtime dep.vertx_ignite
   
   testCompile 'agilion:dataengine-client:0.0.1-SNAPSHOT'
   testCompile project(':sessions')
