@@ -38,5 +38,8 @@ artifacts.archives packageTests
 task runClientTest(type:JavaExec) {
    main = 'dataengine.api.MySessionApiServiceTest'
    classpath = sourceSets.test.runtimeClasspath
+   if(project.hasProperty('clientArgs')){
+       args(clientArgs.split(','))
+   }
 }
 

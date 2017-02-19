@@ -17,18 +17,30 @@ import dataengine.ApiException;
 public class MySessionApiServiceTest {
   
   public static void main(String[] args) throws ApiException {
-    MySessionApiServiceTest me = new MySessionApiServiceTest();
+    String baseUri = "http://localhost:8080/server/";
+    if(args.length>0)
+      baseUri=args[0];
+    if(!baseUri.startsWith("http")){
+      baseUri = "http://"+baseUri+":8080/server/";
+    }
+    if(!baseUri.contains("DataEngine"))
+      baseUri += "deelam/DataEngine/0.0.1";
+    System.out.println("Using baseUri="+baseUri);
+    MySessionApiServiceTest me = new MySessionApiServiceTest(baseUri);
     me.testSessionsApi();
     me.testRequestsApi();
   }
 
-  public static ApiClient getApiClient() {
-    String BASEPATH = "http://localhost:8080/server/deelam/DataEngine/0.0.1";
-    return new ApiClient().setBasePath(BASEPATH);
+  final SessionsApi sessApi;
+  final RequestsApi reqApi;
+  final DatasetsApi datasetApi;
+  
+  public MySessionApiServiceTest(String basePathUri) {
+    ApiClient apiClient = new ApiClient().setBasePath(basePathUri);
+    sessApi = new SessionsApi(apiClient);
+    reqApi = new RequestsApi(apiClient);
+    datasetApi = new DatasetsApi(apiClient);
   }
-
-  SessionsApi sessApi = new SessionsApi(getApiClient());
-  RequestsApi reqApi = new RequestsApi(getApiClient());
 
   @Test
   public void testSessionsApi() throws ApiException {
@@ -79,10 +91,9 @@ public class MySessionApiServiceTest {
 
   @Test
   public void testDatasetsApi() throws ApiException {
-    DatasetsApi apiInstance = new DatasetsApi(getApiClient());
     String id = "id_example"; // String | dataset ID
     try {
-      Dataset result = apiInstance.getDataset(id);
+      Dataset result = datasetApi.getDataset(id);
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling SessionsApi#getDataset");
