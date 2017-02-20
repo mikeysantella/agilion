@@ -1,5 +1,7 @@
 package dataengine.apis;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -11,6 +13,8 @@ public interface OperationsRegistry_I {
     QUERY_OPS
   }
 
-  CompletableFuture<List<Operation>> listOperations();
+  Class<?>[] msgBodyClasses={ Operation.class, ArrayList.class, List.class };
+  
+  CompletableFuture<Collection<Operation>> listOperations();
 
 }

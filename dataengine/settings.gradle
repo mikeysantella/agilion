@@ -9,5 +9,7 @@ include 'vertx'
 include 'sessions'
 include 'tasker'
 
+include 'workers'
+
 include 'server'
 

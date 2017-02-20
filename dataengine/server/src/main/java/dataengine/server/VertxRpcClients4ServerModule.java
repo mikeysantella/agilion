@@ -2,6 +2,8 @@ package dataengine.server;
 
 import java.util.concurrent.CompletableFuture;
 
+import javax.inject.Singleton;
+
 import com.google.inject.Provides;
 
 import dataengine.apis.OperationsRegistry_I;
@@ -22,27 +24,18 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
     debug=true;
   }
 
-  SessionsDB_I sessDbClient=null;
-  @Provides
+  @Provides @Singleton
   SessionsDB_I getSessionsDBClient() {
-    if(sessDbClient==null)
-      sessDbClient=getClientFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
-    return sessDbClient;
+    return getClientFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
   }
 
-  Tasker_I taskerClient=null;
-  @Provides
+  @Provides @Singleton
   Tasker_I getTaskerClient() {
-    if(taskerClient==null)
-      taskerClient=getClientFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr); // blocks
-    return taskerClient;
+    return getClientFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr); // blocks
   }
 
-  OperationsRegistry_I opsRegClient=null;
-  @Provides
+  @Provides @Singleton
   OperationsRegistry_I getOperationsRegistryClient() {
-    if(opsRegClient==null)
-      opsRegClient=getClientFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr); // blocks
-    return opsRegClient;
+    return getClientFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr); // blocks
   }
 }

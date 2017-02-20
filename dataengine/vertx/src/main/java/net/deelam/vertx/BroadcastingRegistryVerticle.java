@@ -24,10 +24,6 @@ public class BroadcastingRegistryVerticle extends RegistryVerticle {
   
   ///
 
-  public <T> CountDownLatch notify(Enum<?> method, T msg) {
-    return notify(method.name(), msg);
-  }
-
   /**
    * Call a void-returning method on the subscribers with given arguments.
    * Can wait on response by calling CountDownLatch.await() on the returned object.
@@ -51,10 +47,6 @@ public class BroadcastingRegistryVerticle extends RegistryVerticle {
       });
     }
     return latch;
-  }
-
-  public <T, R> CompletableFuture<Set<R>> query(Enum<?> method, T msg) {
-    return query(method.name(), msg);
   }
 
   /**
