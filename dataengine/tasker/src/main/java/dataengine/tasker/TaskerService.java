@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TaskerService implements Tasker_I {
 
   final SessionsDB_I sessionsDB;
+  final OperationsRegistryVerticle opsRegVert;
   {
     log.info("-- TaskerService instance created");
   }

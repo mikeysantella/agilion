@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
@@ -54,7 +53,7 @@ public class BroadcastingRegistryVerticle extends RegistryVerticle {
     return latch;
   }
 
-  public <T, R> Future<Set<R>> query(Enum<?> method, T msg) {
+  public <T, R> CompletableFuture<Set<R>> query(Enum<?> method, T msg) {
     return query(method.name(), msg);
   }
 
@@ -62,10 +61,10 @@ public class BroadcastingRegistryVerticle extends RegistryVerticle {
    * Call an object-returning method on the subscribers with given arguments.
    * Get the result object (of the method) by calling Future.get() on the returned Future
    * @param method to be called on service
-   * @param argsObj primitive or JsonArray or JsonObject or Bean (remember to registerMessageBeans()) to be passed to method
-   * @return a Future containing a primitive or JsonArray or JsonObject
+   * @param argsObj primitive or JsonArray or JsonObject or Bean to be passed to method
+   * @return a Future containing a primitive or JsonArray or JsonObject or Bean
    */
-  public <T, R> Future<Set<R>> query(String method, T argsObj) {
+  public <T, R> CompletableFuture<Set<R>> query(String method, T argsObj) {
     CompletableFuture<Set<R>> future = new CompletableFuture<>();
     CountDownLatch latch = new CountDownLatch(subscriberAddresses.size());
     Set<R> returnedObjs = new HashSet<>();
