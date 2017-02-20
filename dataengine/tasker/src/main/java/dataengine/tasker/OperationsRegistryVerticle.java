@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import dataengine.api.Operation;
+import dataengine.apis.OperationsRegistry_I;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.BroadcastingRegistryVerticle;
@@ -26,16 +27,20 @@ public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
   @Override
   public void start() throws Exception {
     super.start();
-  }
-  
-  public void queryOperations() {
-    CompletableFuture<Set<List<Operation>>> opsReplySet = query(QUERY_OPS, null);
-    opsReplySet.thenAccept(set -> set.forEach(list -> operations.addAll(list)));
+    registerMsgBeans(OperationsRegistry_I.msgBodyClasses);
   }
 
-  public void refresh() {
+  public CompletableFuture<Collection<Operation>> queryOperations() {
+    CompletableFuture<Set<List<Operation>>> opsReplySet = query(QUERY_OPS.name(), null);
+    return opsReplySet.thenApply(set -> {
+      set.forEach(list -> operations.addAll(list));
+      return operations;
+    });
+  }
+
+  public CompletableFuture<Collection<Operation>> refresh() {
     operations.clear();
-    queryOperations();
+    return queryOperations();
   }
 
   public void refreshSubscribers(long timeToWaitForSubscribers) {

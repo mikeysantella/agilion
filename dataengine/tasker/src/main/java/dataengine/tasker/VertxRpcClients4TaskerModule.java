@@ -2,6 +2,8 @@ package dataengine.tasker;
 
 import java.util.concurrent.CompletableFuture;
 
+import javax.inject.Singleton;
+
 import com.google.inject.Provides;
 
 import dataengine.apis.SessionsDB_I;
@@ -16,12 +18,9 @@ class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
     super(vertxF);
     debug = true;
   }
-  
-  SessionsDB_I sessDbClient=null;
-  @Provides
+
+  @Provides @Singleton
   SessionsDB_I getSessionsDBClient() {
-    if(sessDbClient==null)
-      sessDbClient=getClientFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
-    return sessDbClient;
+    return getClientFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
   }
 }

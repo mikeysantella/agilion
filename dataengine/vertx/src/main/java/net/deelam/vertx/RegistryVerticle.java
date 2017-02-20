@@ -36,9 +36,11 @@ public class RegistryVerticle extends AbstractVerticle {
    * Do not call this in the constructor, where vertx is still null.
    * @param msgBeans
    */
-  public void registerMsgBeans(Set<Class<?>> msgBeans) {
-    msgBeans.forEach(beanClass -> KryoMessageCodec.register(vertx.eventBus(), beanClass));
+  public void registerMsgBeans(Class<?>... msgBeans) {
+    for(Class<?> msgBodyClass:msgBeans)
+      KryoMessageCodec.register(vertx.eventBus(), msgBodyClass);
   }
+
 
   @Override
   public void start() throws Exception {
