@@ -16,11 +16,3 @@ dependencies {
   testCompile dep.vertx_unittest
 }
 
-jar {
-  manifest {
-      attributes 'Main-Class': mainClassName
-      // must be run after dependencies declared
-      attributes "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
-  }
-}
-
