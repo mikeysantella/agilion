@@ -1,9 +1,7 @@
 description = 'data engine'
 
 apply plugin: 'project-report'
-htmlDependencyReport {
-    projects = project.subprojects
-}
+htmlDependencyReport { projects = project.subprojects }
 
 configure(subprojects) {
   apply plugin: 'java'
@@ -30,97 +28,115 @@ configure(subprojects) {
 
     dep = [
       dataengine_api: 'agilion:dataengine-api:0.0.1-SNAPSHOT',
-      
+
       commons_io: 'commons-io:commons-io:2.5',
       xinject: 'javax.inject:javax.inject:1',
       guice: 'com.google.inject:guice:3.0',
       guava: 'com.google.guava:guava:18.0',
-      
+
       blueprints: 'com.tinkerpop.blueprints:blueprints-core:'+ver.tinkerpop,
       blueprints_neo: 'com.tinkerpop.blueprints:blueprints-neo4j-graph:'+ver.tinkerpop,
       frames: 'com.tinkerpop:frames:'+ver.tinkerpop,
-      
+
       vertx: 'io.vertx:vertx-core:'+ver.vertx,
       vertx_unittest: 'io.vertx:vertx-unit:'+ver.vertx,
       vertx_ignite: 'io.vertx:vertx-ignite:3.3.3',
- 
+
     ]
   }
 
   dependencies {
-  
+
     // The production code uses the SLF4J logging API at compile time
     compile 'org.slf4j:slf4j-api:1.7.23'
     runtime 'org.slf4j:slf4j-log4j12:1.7.23'
     compileOnly "org.projectlombok:lombok:1.16.14"
     testCompile "org.projectlombok:lombok:1.16.14"
-    
+
     // Declare the dependency for your favourite test framework you want to use in your tests.
     // TestNG is also supported by the Gradle Test task. Just change the
     // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
     // 'test.useTestNG()' to your build script.
     testCompile group: 'junit', name: 'junit', version:'4.12'
   }
-  
+
   eclipse {
     classpath.file {
-        whenMerged { classpath ->
-            classpath.entries.removeAll { it.path.endsWith('pom') }
-        }
+      whenMerged { classpath ->
+        classpath.entries.removeAll { it.path.endsWith('pom') }
+      }
     }
-    
-//    wtp.component.file {
-//        whenMerged { wtpComponent ->
-//            def toIgnore = wtpComponent.wbModuleEntries.findAll { entry ->
-//                (entry instanceof org.gradle.plugins.ide.eclipse.model.WbDependentModule) && entry.handle.endsWith('pom')
-//            }
-//            wtpComponent.wbModuleEntries.removeAll(toIgnore)
-//        }
-//    }
+
+    //    wtp.component.file {
+    //        whenMerged { wtpComponent ->
+    //            def toIgnore = wtpComponent.wbModuleEntries.findAll { entry ->
+    //                (entry instanceof org.gradle.plugins.ide.eclipse.model.WbDependentModule) && entry.handle.endsWith('pom')
+    //            }
+    //            wtpComponent.wbModuleEntries.removeAll(toIgnore)
+    //        }
+    //    }
+  }
 }
+
+configure([
+  project(':sessions'),
+  project(':tasker')
+]) {
+  afterEvaluate {
+    jar {
+      manifest {
+        attributes 'Main-Class': mainClassName
+        // must be run after dependencies declared
+        attributes "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
+      }
+    }
+  }
 }
 
 /// following needed so using Composite builds in ../settings.gradle works
 // https://discuss.gradle.org/t/gradle-clean-all-projects/10618/4
 task assemble {
-    subprojects.each {
-        it.afterEvaluate {
-            def foundTask = it.tasks.findByName('assemble')
-            if (foundTask) {
-                dependsOn(foundTask)
-            }
-        }
+  subprojects.each {
+    it.afterEvaluate {
+      def foundTask = it.tasks.findByName('assemble')
+      if (foundTask) {
+        dependsOn(foundTask)
+      }
     }
+  }
 }
 task check {
-    subprojects.each {
-        it.afterEvaluate {
-            def foundTask = it.tasks.findByName('check')
-            if (foundTask) {
-                dependsOn(foundTask)
-            }
-        }
+  subprojects.each {
+    it.afterEvaluate {
+      def foundTask = it.tasks.findByName('check')
+      if (foundTask) {
+        dependsOn(foundTask)
+      }
     }
+  }
 }
 task clean {
-    subprojects.each {
-        it.afterEvaluate {
-            def foundTask = it.tasks.findByName('clean')
-            if (foundTask) {
-                dependsOn(foundTask)
-            }
-        }
+  subprojects.each {
+    it.afterEvaluate {
+      def foundTask = it.tasks.findByName('clean')
+      if (foundTask) {
+        dependsOn(foundTask)
+      }
     }
+  }
 }
 
-task runDE (dependsOn: [ ':configureRunAllInJvm', ':server:jettyRun' ])
+task runDE (dependsOn: [
+  ':configureRunAllInJvm',
+  ':server:jettyRun'
+])
 task configureRunAllInJvm {
   doFirst{
-	  evaluationDependsOn ':server' // needed to configure gretty
-	  project(':server'){
-		 println "Configuring to run all DataEngine modules in same JVM"
-		 gretty { onStart{    jvmArg '-DRUN_ALL_IN_SAME_JVM=true'  } }
-	  }
+    evaluationDependsOn ':server' // needed to configure gretty
+    project(':server'){
+      println "Configuring to run all DataEngine modules in same JVM"
+      gretty { onStart{    jvmArg '-DRUN_ALL_IN_SAME_JVM=true'  } }
+    }
   }
 }
 
