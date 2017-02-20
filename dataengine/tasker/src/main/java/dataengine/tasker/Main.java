@@ -9,10 +9,12 @@ import com.google.inject.Injector;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
+import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
+import net.deelam.vertx.RegistryVerticle;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
 @Slf4j
@@ -30,7 +32,9 @@ public class Main {
     Tasker_I taskerSvc = injector.getInstance(Tasker_I.class);
     new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
         .start("TaskerServiceBusAddr", taskerSvc);
-    
+
+    OperationsRegistryVerticle opsRegVert= injector.getInstance(OperationsRegistryVerticle.class);
+    vertx.deployVerticle(opsRegVert);
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
@@ -43,6 +47,9 @@ public class Main {
           protected void configure() {
             bind(OperationsRegistry_I.class).to(OperationsRegistryService.class).asEagerSingleton();
             bind(Tasker_I.class).to(TaskerService.class).asEagerSingleton();
+            
+            OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
+            bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
           }
         });
   }

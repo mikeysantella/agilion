@@ -47,6 +47,7 @@ public class RegistryVerticle extends AbstractVerticle {
     Handler<Message<String>> subscriberRespHandler = (Message<String> msg) -> {
       subscriberAddresses.add(msg.body());
       log.info("Added new subscriber: subscriberAddrs={}", subscriberAddresses);
+      subscriberAdded(msg.body());
     };
     
     createSubscriberBroadcastConsumer(subscriberRespHandler);
@@ -55,6 +56,9 @@ public class RegistryVerticle extends AbstractVerticle {
     broadcastConnectRequest();
   }
   
+  protected void subscriberAdded(String subscriberAddr) {
+  }
+
   public void invalidateAndRebroadcast() {
     subscriberAddresses.clear();
     broadcastConnectRequest();
@@ -65,7 +69,7 @@ public class RegistryVerticle extends AbstractVerticle {
   }
 
   void createSubscriberBroadcastConsumer(Handler<Message<String>> subscriberRespHandler) {
-    String publishInbox = RegistryVerticle.genRegistryPublishInbox(serviceType);
+    String publishInbox = genRegistryPublishInbox(serviceType);
     log.info("Setting up msgHandler for Registry type={} at " + publishInbox, serviceType);
     vertx.eventBus().consumer(publishInbox, (Message<String> msg) -> {
       log.debug("Got subscriber broadcast: subscriberAddr={}", msg.body());
