@@ -35,6 +35,7 @@ public final class SessionDB_JobHelper {
   }
 
   static final String JOB_PARAMS_PROPPREFIX = "params.";
+  static final String JOB_STATS_PROPPREFIX = "stats.";
   static int jobCounter = 0;
 
   @SuppressWarnings("unchecked")
@@ -84,7 +85,7 @@ public final class SessionDB_JobHelper {
         .state(jf.getState())
         .progress(new Progress()
             .percent(jf.getProgress())
-            // TODO: stats
+            .stats(SessionDB_FrameHelper.loadPropertiesAsMap(jf.asVertex(), JOB_STATS_PROPPREFIX))
             )
         .params(SessionDB_FrameHelper.loadPropertiesAsMap(jf.asVertex(), JOB_PARAMS_PROPPREFIX))
         .inputDatasetIds(SessionDB_DatasetHelper.toDatasetMap(jf.getInputDatasets()))
@@ -97,21 +98,29 @@ public final class SessionDB_JobHelper {
         .collect(toList());
   }
 
+  ///
+
+  public void updateJobState(String jobId, State state) {
+    tryCAndCloseTxn(graph, graph -> getJobFrame(jobId).setState(state));
+  }
+
+  public void updateJobProgress(String jobId, Progress progress) {
+    tryCAndCloseTxn(graph, graph -> {
+      JobFrame jf = getJobFrame(jobId);
+      jf.setProgress(progress.getPercent());
+      if (progress.getStats() != null)
+        SessionDB_FrameHelper.saveMapAsProperties(progress.getStats(),
+            jf.asVertex(), JOB_STATS_PROPPREFIX);
+    });
+  }
+
   ////
 
-  void updateProgress(String qualTaskId, int percent) {
-    tryCAndCloseTxn(graph, graph -> getJobFrame(qualTaskId).setProgress(percent));
-  }
-
-  synchronized void updateTaskState(String sessId, String qualTaskId, State state) {
-    tryCAndCloseTxn(graph, graph -> getJobFrame(qualTaskId).setState(state));
-  }
-
-  synchronized boolean isTaskDone(String qualTaskIdOfInputGraph) {
+  boolean isJobDone(String qualTaskIdOfInputGraph) {
     return tryFAndCloseTxn(graph, graph -> getJobFrame(qualTaskIdOfInputGraph).getState() == State.COMPLETED);
   }
 
-  synchronized List<String> getOutputGraphUrisOfTask(String qualTaskIdOfInputGraph) {
+  List<String> getOutputGraphUrisOfTask(String qualTaskIdOfInputGraph) {
     return tryFAndCloseTxn(graph, graph -> {
       return stream(getJobFrame(qualTaskIdOfInputGraph).getOutputDatasets().spliterator(), false)
           .map(ds -> ds.getUri()).collect(toList());

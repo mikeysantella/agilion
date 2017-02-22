@@ -13,7 +13,6 @@ import net.deelam.vertx.HandlingSubscriberVerticle;
 
 public class OperationsSubscriberVerticle extends HandlingSubscriberVerticle {
 
-
   public OperationsSubscriberVerticle(String serviceType, String serviceAddr) {
     super(serviceType, serviceAddr);
   }
