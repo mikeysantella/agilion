@@ -1,7 +1,5 @@
 package dataengine.server;
 
-import static dataengine.server.RestParameterHelper.makeBadRequestResponse;
-
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -9,8 +7,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 
 import dataengine.api.ApiResponseMessage;
 import lombok.extern.slf4j.Slf4j;

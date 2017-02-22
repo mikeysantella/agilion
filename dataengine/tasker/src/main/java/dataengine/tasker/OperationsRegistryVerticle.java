@@ -14,6 +14,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.BroadcastingRegistryVerticle;
 
+/**
+ * Used by OperationsSubscriberVerticle to register themselves
+ * and allow themselves to be queried by this verticle. 
+ */
 @Slf4j
 public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
 
@@ -38,9 +42,12 @@ public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
     });
   }
 
-  public CompletableFuture<Collection<Operation>> refresh() {
+  public CompletableFuture<Void> refresh() {
     operations.clear();
-    return queryOperations();
+    return CompletableFuture.allOf(
+        queryOperations()
+    // TODO: 4: query other things from subscribers
+    );
   }
 
   public void refreshSubscribers(long timeToWaitForSubscribers) {

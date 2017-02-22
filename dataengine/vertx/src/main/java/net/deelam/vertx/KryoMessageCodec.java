@@ -14,29 +14,25 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class KryoMessageCodec<C> implements MessageCodec<C,C> {
-  
-  public synchronized static <C> KryoMessageCodec<C> register(EventBus eb, Class<C> beanClass){
+public class KryoMessageCodec<C> implements MessageCodec<C, C> {
+
+  public synchronized static <C> void register(EventBus eb, Class<C> clazz) {
     try {
-      // throws error if already registered
-      KryoMessageCodec<C> codec = new KryoMessageCodec<C>(beanClass);
-      eb.registerDefaultCodec(beanClass, codec);
-      return codec;
+      eb.registerDefaultCodec(clazz, new KryoMessageCodec<C>(clazz));// throws error if already registered
     } catch (IllegalStateException e) {
-      //log.error(e.getMessage()); // log it and keep going
-      return null;
+      // no worries as long as it is registered, keep going
     }
   }
-  
-  private final Kryo kryo= new Kryo();
-  private final Class<C> beanClass;
-  
+
+  private final Kryo kryo = new Kryo();
+  private final Class<C> clazz;
+
   @Override
-  public synchronized void encodeToWire(Buffer buffer, C s) {
-    log.debug("Encoding {}", s);
+  public synchronized void encodeToWire(Buffer buffer, C msgBody) {
+    log.trace("Encoding {}", msgBody);
     Output out = new Output(new ByteArrayOutputStream());
-    kryo.writeObject(out, s);
-    
+    kryo.writeObject(out, msgBody);
+
     buffer.appendInt(out.getBuffer().length);
     buffer.appendBytes(out.getBuffer());
   }
@@ -46,14 +42,13 @@ public class KryoMessageCodec<C> implements MessageCodec<C,C> {
     // My custom message starting from this *pos* of buffer
     int _pos = pos;
     int length = buffer.getInt(_pos);
-    log.debug("Decoding buffer of length={}", length);
 
     // Jump 4 because getInt() == 4 bytes
-    byte[] serialized = buffer.getBytes(_pos+=4, _pos+=length);
-    C o = kryo.readObject(new Input(serialized), beanClass);
+    byte[] serialized = buffer.getBytes(_pos += 4, _pos += length);
+    C o = kryo.readObject(new Input(serialized), clazz);
     log.trace("Decoded {}", o);
     return o;
-    }
+  }
 
   @Override
   public synchronized C transform(C body) {
@@ -62,12 +57,12 @@ public class KryoMessageCodec<C> implements MessageCodec<C,C> {
 
   @Override
   public String name() {
-    return this.getClass().getSimpleName()+":"+beanClass.getSimpleName();
+    return this.getClass().getSimpleName() + ":" + clazz.getSimpleName();
   }
 
   @Override
   public byte systemCodecID() {
     return -1;
   }
-  
+
 }

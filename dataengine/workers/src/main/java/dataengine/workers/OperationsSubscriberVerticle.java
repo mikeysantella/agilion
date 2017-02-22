@@ -27,7 +27,7 @@ public class OperationsSubscriberVerticle extends HandlingSubscriberVerticle {
 
   private String myId="-"+System.currentTimeMillis();
   private List<Operation> getOperations() {
-    // TODO: get operations from actual workers, if still alive
+    // TODO: 1: get operations from actual workers, if still alive
     ArrayList<Operation> list = new ArrayList<>();
     List<OperationParam> params=new ArrayList<>();
     list.add(new Operation().id("ADD_SOURCE_DATASET"+myId).description("add source dataset")
@@ -36,7 +36,8 @@ public class OperationsSubscriberVerticle extends HandlingSubscriberVerticle {
         .valuetype(ValuetypeEnum.STRING).defaultValue(null).isMultivalued(false));
     params.add(new OperationParam().key("dataformat").required(true).description("type and format of data")
         .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false)
-        .addPossibleValuesItem("TELEPHONE.CSV").addPossibleValuesItem("PEOPLE.CSV")); // TODO: 1:retrieve from Workers
+        .addPossibleValuesItem("TELEPHONE.CSV").addPossibleValuesItem("PEOPLE.CSV")); 
+    // TODO: 1: retrieve from Workers
     return list;
   }
 

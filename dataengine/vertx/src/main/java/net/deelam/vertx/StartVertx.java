@@ -30,11 +30,11 @@ public class StartVertx {
       options = new VertxOptions();
     Stopwatch sw = Stopwatch.createStarted();
     config.infer();
-    log.info("{}", config);
+    log.info("createClustered: {}", config);
     ClusterManager clusterManager;
     switch (config.clusterMgr) {
       case IGNITE_ALL_SERVERS:
-        clusterManager = createIgniteClusterManager2(config);
+        clusterManager = createIgniteClusterManager(config);
         break;
       default:
         throw new IllegalArgumentException("Unknown: " + config.clusterMgr);
@@ -64,12 +64,12 @@ public class StartVertx {
     //}, "vertx-shutdown-hook"));
   }
 
-  private static ClusterManager createIgniteClusterManager2(ClusteredVertxConfig ipInfo) {
+  private static ClusterManager createIgniteClusterManager(ClusteredVertxConfig config) {
     // Check to make sure settings are valid
-    if ((ipInfo.tcpCommPort >= ipInfo.serverPort &&
-        ipInfo.tcpCommPort <= ipInfo.getEndServerPort())) {
+    if ((config.tcpCommPort >= config.serverPort &&
+        config.tcpCommPort <= config.getEndServerPort())) {
       log.error("Invalid tcp port {}.  Falls within range {}..{}",
-          ipInfo.tcpCommPort, ipInfo.serverPort, ipInfo.getEndServerPort());
+          config.tcpCommPort, config.serverPort, config.getEndServerPort());
       throw new IllegalArgumentException();
     }
 
@@ -80,17 +80,17 @@ public class StartVertx {
     TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi();
 
     // Initial local port to listen to.
-    discoverySpi.setLocalPort(ipInfo.serverPort);
+    discoverySpi.setLocalPort(config.serverPort);
 
     // Changing local port range. This is an optional action.
-    discoverySpi.setLocalPortRange(ipInfo.portRangeSize);
+    discoverySpi.setLocalPortRange(config.portRangeSize);
 
     TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
 
     // Addresses and port range of the nodes from the first cluster.
     // 127.0.0.1 can be replaced with actual IP addresses or host names.
     // The port range is optional.
-    ipFinder.setAddresses(ipInfo.clusterIpList());
+    ipFinder.setAddresses(config.clusterIpList());
 
     // Overriding IP finder.
     discoverySpi.setIpFinder(ipFinder);
@@ -99,7 +99,7 @@ public class StartVertx {
     // the nodes from the first cluster.
     TcpCommunicationSpi commSpi = new TcpCommunicationSpi();
 
-    commSpi.setLocalPort(ipInfo.tcpCommPort);
+    commSpi.setLocalPort(config.tcpCommPort);
 
     // Overriding discovery SPI.
     cfg.setDiscoverySpi(discoverySpi);

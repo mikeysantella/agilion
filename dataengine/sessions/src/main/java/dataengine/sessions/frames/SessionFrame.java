@@ -1,7 +1,5 @@
 package dataengine.sessions.frames;
 
-import java.util.Date;
-
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;

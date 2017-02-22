@@ -40,7 +40,7 @@ configure(subprojects) {
 
       vertx: 'io.vertx:vertx-core:'+ver.vertx,
       vertx_unittest: 'io.vertx:vertx-unit:'+ver.vertx,
-      vertx_ignite: 'io.vertx:vertx-ignite:3.3.3',
+      vertx_ignite: 'io.vertx:vertx-ignite:'+ver.vertx,
 
     ]
   }
@@ -80,7 +80,8 @@ configure(subprojects) {
 
 configure([
   project(':sessions'),
-  project(':tasker')
+  project(':tasker'),
+  project(':workers')
 ]) {
   afterEvaluate {
     jar {

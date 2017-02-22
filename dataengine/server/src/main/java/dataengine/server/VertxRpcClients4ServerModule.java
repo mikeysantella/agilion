@@ -1,6 +1,7 @@
 package dataengine.server;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
@@ -22,20 +23,21 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
   public VertxRpcClients4ServerModule(CompletableFuture<Vertx> vertxF) {
     super(vertxF);
     debug=true;
+    log.info("VertxRpcClients4ServerModule configured");
   }
 
   @Provides @Singleton
-  SessionsDB_I getSessionsDBClient() {
-    return getClientFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
+  Supplier<SessionsDB_I> getSessionsDBClient() {
+    return getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
   }
 
   @Provides @Singleton
-  Tasker_I getTaskerClient() {
-    return getClientFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr); // blocks
+  Supplier<Tasker_I> getTaskerClient() {
+    return getClientSupplierFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr); // blocks
   }
 
   @Provides @Singleton
-  OperationsRegistry_I getOperationsRegistryClient() {
-    return getClientFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr); // blocks
+  Supplier<OperationsRegistry_I> getOperationsRegistryClient() {
+    return getClientSupplierFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr); // blocks
   }
 }

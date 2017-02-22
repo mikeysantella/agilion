@@ -14,11 +14,11 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
 @Slf4j
-public class Main {
+public class SessionsMain {
   
   public static void main(String[] args) {
     System.out.println("Starting ...");
-    log.info("Starting {}", Main.class);
+    log.info("Starting {}", SessionsMain.class);
     Injector injector = createInjector(new CompletableFuture<>());
     SessionsDB_I sessVert = injector.getInstance(SessionsDB_I.class);
     Vertx vertx = injector.getInstance(Vertx.class);

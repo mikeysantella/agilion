@@ -41,8 +41,9 @@ public final class SessionDB_RequestHelper {
         rf = graph.addVertex(reqId, RequestFrame.class);
         sf.addRequest(rf);
         if (request.getLabel() == null)
-          request.setLabel("request " + (++requestCounter));
-        rf.setLabel(request.getLabel());
+          rf.setLabel("request " + (++requestCounter));
+        else
+          rf.setLabel(request.getLabel());
         if (request.getCreatedTime() != null)
           rf.setCreatedDate((request.getCreatedTime()));
 //          rf.setCreatedDate(VertexFrameHelper.toOffsetDateTime(request.getCreatedTime()));

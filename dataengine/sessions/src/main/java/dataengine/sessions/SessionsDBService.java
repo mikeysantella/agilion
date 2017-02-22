@@ -16,6 +16,7 @@ import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.api.State;
 import dataengine.apis.SessionsDB_I;
+import dataengine.sessions.SessionDB_DatasetHelper.IO;
 import dataengine.sessions.frames.SessionFrame;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class SessionsDBService implements SessionsDB_I {
   {
     log.info("-- SessionsDBService instance created");
   }
-  
+
   @Override
   public CompletableFuture<Session> createSession(Session session) {
     log.debug("createSession: {}", session.getId());
@@ -38,7 +39,7 @@ public class SessionsDBService implements SessionsDB_I {
     sessDB.addSessionNode(session, baseDir);
     return getSession(session.getId());
   }
-  
+
   @Override
   public CompletableFuture<Request> addRequest(Request req) {
     log.debug("addRequest: {}", req.getId());
@@ -56,10 +57,19 @@ public class SessionsDBService implements SessionsDB_I {
   }
 
   @Override
-  public CompletableFuture<Dataset> addDataset(Dataset ds) {
+  public CompletableFuture<Dataset> addOutputDataset(Dataset ds, String jobId) {
+    return addDatasetToJob(ds, jobId, IO.OUTPUT);
+  }
+
+  @Override
+  public CompletableFuture<Dataset> addInputDataset(Dataset ds, String jobId) {
+    return addDatasetToJob(ds, jobId, IO.INPUT);
+  }
+
+  private CompletableFuture<Dataset> addDatasetToJob(Dataset ds, String jobId, IO io) {
     log.debug("addDataset: {}", ds.getId());
     ds.id(useOrGenerateId(ds.getId()));
-    sessDB.addDatasetNode(ds);
+    sessDB.addDatasetNode(ds, jobId, io);
     return getDataset(ds.getId());
   }
 
@@ -72,7 +82,7 @@ public class SessionsDBService implements SessionsDB_I {
     }
     return sId;
   }
-  
+
   @Getter
   private String baseDir = ".";
 
@@ -121,25 +131,25 @@ public class SessionsDBService implements SessionsDB_I {
   @Override
   public CompletableFuture<Boolean> hasSession(String id) {
     log.trace("hasSession: {}", id);
-    try{
+    try {
       sessDB.getSessionFrame(id);
       return CompletableFuture.completedFuture(true);
-    }catch(IllegalArgumentException e){
+    } catch (IllegalArgumentException e) {
       return CompletableFuture.completedFuture(false);
     }
   }
-  
+
   @Override
   public CompletableFuture<Boolean> hasRequest(String id) {
     log.trace("hasRequest: {}", id);
-    try{
+    try {
       sessDB.getRequestFrame(id);
       return CompletableFuture.completedFuture(true);
-    }catch(IllegalArgumentException e){
+    } catch (IllegalArgumentException e) {
       return CompletableFuture.completedFuture(false);
     }
   }
-  
+
   @Override
   public CompletableFuture<Session> getSession(String id) {
     log.trace("getSession: {}", id);
@@ -151,7 +161,7 @@ public class SessionsDBService implements SessionsDB_I {
     log.trace("getRequest: {}", id);
     return CompletableFuture.completedFuture(SessionDB_RequestHelper.toRequest(sessDB.getRequestFrame(id)));
   }
-  
+
   @Override
   public CompletableFuture<Job> getJob(String id) {
     log.trace("getJob: {}", id);

@@ -1,7 +1,7 @@
 
 apply plugin: 'application'
 
-mainClassName = "dataengine.sessions.Main"
+mainClassName = "dataengine.sessions.SessionsMain"
 
 dependencies {
   compile project(':apis')

@@ -1,6 +1,5 @@
 package dataengine.server;
 
-import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
 import com.google.inject.AbstractModule;
@@ -47,8 +46,9 @@ public final class DeServerGuiceInjector {
 
   private void startAllInSameJvm() {
     String[] args=null;
-    dataengine.sessions.Main.main(args);
-    dataengine.tasker.Main.main(args);
+    dataengine.sessions.SessionsMain.main(args);
+    dataengine.tasker.TaskerMain.main(args);
+    dataengine.workers.WorkerMain.main(args);
   }
 
   static class RestServiceModule extends AbstractModule {

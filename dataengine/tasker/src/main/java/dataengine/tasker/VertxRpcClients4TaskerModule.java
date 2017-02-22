@@ -1,6 +1,7 @@
 package dataengine.tasker;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
@@ -20,7 +21,7 @@ class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
   }
 
   @Provides @Singleton
-  SessionsDB_I getSessionsDBClient() {
-    return getClientFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
+  Supplier<SessionsDB_I> getSessionsDBClient() {
+    return getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
   }
 }

@@ -15,6 +15,8 @@ public interface OperationsRegistry_I {
 
   Class<?>[] msgBodyClasses={ Operation.class, ArrayList.class, List.class };
   
+  CompletableFuture<Void> refresh();
+
   CompletableFuture<Collection<Operation>> listOperations();
 
 }

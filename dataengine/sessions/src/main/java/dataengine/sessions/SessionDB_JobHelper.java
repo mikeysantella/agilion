@@ -28,7 +28,6 @@ public final class SessionDB_JobHelper {
   private final FramedTransactionalGraph<TransactionalGraph> graph;
   private final SessionDB_DatasetHelper dsHelper;
   private final SessionDB_RequestHelper reqHelper;
-  private final SessionDB_SessionHelper sessHelper;
   private final SessionDB_FrameHelper frameHelper;
 
   public JobFrame getJobFrame(String id) {
@@ -51,8 +50,9 @@ public final class SessionDB_JobHelper {
         rf.addJob(jf);
 
         if (job.getLabel() == null)
-          job.setLabel("job " + (++jobCounter));
-        jf.setLabel(job.getLabel());
+          jf.setLabel("job " + (++jobCounter));
+        else
+          jf.setLabel(job.getLabel());
 
         if (job.getType() != null)
           jf.setType(job.getType());

@@ -50,6 +50,7 @@ public class VertxRpcUtil {
 
   @SuppressWarnings("unchecked")
   public <T> T createClient(Class<T> iface) {
+    log.debug("Creating RPC client for {} at {} ", iface.getSimpleName(), address);
     final KryoSerDe serde = new KryoSerDe();
     return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
         (proxy, method, args) -> {
@@ -113,7 +114,7 @@ public class VertxRpcUtil {
   }
 
   public <T> MessageConsumer<Buffer> registerServer(T service) {
-    log.debug("Register server: {}", service.getClass().getName());
+    log.debug("Registering RPC server at {}: {}", address, service.getClass().getName());
     HashMap<String, Method> methods = new HashMap<>();
     for (Method method : service.getClass().getDeclaredMethods()) {
       method.setAccessible(true);
@@ -253,7 +254,7 @@ public class VertxRpcUtil {
     public synchronized Buffer writeObject(Object obj) {
       try {
         final Output output = new Output(new ByteArrayOutputStream());
-        log.debug("writeObject: " + obj);
+        //log.debug("writeObject: " + obj);
         kryo.writeClassAndObject(output, obj);
         return Buffer.buffer(output.toBytes());
       } catch (Throwable t) {

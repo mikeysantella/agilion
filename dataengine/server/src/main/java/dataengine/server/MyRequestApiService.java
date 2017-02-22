@@ -8,6 +8,7 @@ import static dataengine.server.RestParameterHelper.tryCreateObject;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -18,16 +19,40 @@ import dataengine.api.Request;
 import dataengine.api.RequestApiService;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyRequestApiService extends RequestApiService {
 
   private static final String OBJECT_TYPE = "Request";
 
-  final Tasker_I tasker;
-  final SessionsDB_I sessionsDB;
+  final Supplier<Tasker_I> taskerF;
+  
+  @Getter(lazy = true)
+  private final Tasker_I tasker = lazyCreateTaskerClient();
 
+  Tasker_I lazyCreateTaskerClient() {
+    log.info("-- initializing instance "+this);
+    return taskerF.get();
+  }
+
+  //
+  
+  final Supplier<SessionsDB_I> sessionsDBF;
+  
+  @Getter(lazy = true)
+  private final SessionsDB_I sessionsDb = lazyCreateSessionsDbClient();
+
+  SessionsDB_I lazyCreateSessionsDbClient() {
+    log.info("-- initializing instance "+this);
+    return sessionsDBF.get();
+  }
+  
+  /// 
+  
   @Override
   public Response submitRequest(Request req, SecurityContext securityContext)
       throws NotFoundException {
@@ -39,8 +64,8 @@ public class MyRequestApiService extends RequestApiService {
       return makeBadRequestResponse("Submitted Request must have a sessionId! " + req);
 
     return tryCreateObject(OBJECT_TYPE, req, "request/", (r)->r.getId(),
-        sessionsDB::hasRequest,
-        () -> tasker.submitRequest(req));
+        getSessionsDb()::hasRequest,
+        () -> taskerF.get().submitRequest(req));
   }
 
   @Override
@@ -61,7 +86,7 @@ public class MyRequestApiService extends RequestApiService {
     if ("null".equalsIgnoreCase(id)) // for testing
       return CompletableFuture.completedFuture(new Request());
 
-    return sessionsDB.getRequest(id);
+    return getSessionsDb().getRequest(id);
   }
 
 }

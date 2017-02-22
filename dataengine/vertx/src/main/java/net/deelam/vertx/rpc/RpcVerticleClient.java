@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -45,7 +46,7 @@ public class RpcVerticleClient {
     return this;
   }
 
-  public <T> T invalidateAndFindNewServer(Class<T> clazz) {
+  public <T> Supplier<T> invalidateAndFindNewServer(Class<T> clazz) {
     serverAddrF = new CompletableFuture<>();
     createMsgConsumer(serverAddrF);
     broadcastServerSearch(serverAddrF);
@@ -117,41 +118,41 @@ public class RpcVerticleClient {
    * @param clazz
    * @return proxy for server
    */
-  public <T> T createRpcClient(Class<T> clazz) {
-    return createRpcClient(clazz, false);
+  public <T> Supplier<T> createRpcClient(Class<T> clazz) {
+    return createRpcClientSupplier(clazz, false);
   }
 
   /**
-   * Creates RPC client, blocking until serverAddr received from server
+   * Creates RPC client supplier.  
+   * Calling Supplier.get() will block until serverAddr received from server
    * @param clazz
    * @param withDebugHook whether to add a hook that logs RPC calls
    * @return proxy for server
    */
-  public <T> T createRpcClient(Class<T> clazz, boolean withDebugHook) {
+  public <T> Supplier<T> createRpcClientSupplier(Class<T> clazz, boolean withDebugHook) {
     if (serverAddrF == null)
       throw new IllegalStateException("Run start() first.");
-
-    String serverAddr = null;
-    while (serverAddr == null)
-      try {
-        serverAddr = serverAddrF.get();
-      } catch (InterruptedException | ExecutionException e) {
-        log.warn(" Retrying to get serverAddr", e);
-      }
-    return createRpcClient(serverAddr, clazz, withDebugHook);
+    return ()->createRpcClient(serverAddrF, clazz, withDebugHook);
   }
 
   /**
    * Creates RPC client at serverAddr
-   * @param serverAddr
+   * @param serverAddrF2
    * @param clazz
    * @return proxy for server
    */
-  <T> T createRpcClient(String serverAddr, Class<T> iface, boolean withDebugHook) {
+  <T> T createRpcClient(CompletableFuture<String> serverAddrF, Class<T> clazz, boolean withDebugHook) {
+    String serverAddr = null;
+    while (serverAddr == null)
+      try {
+        serverAddr = serverAddrF.get(); // wait for serverAddr
+      } catch (InterruptedException | ExecutionException e) {
+        log.warn(" Retrying to get serverAddr", e);
+      }
     VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);
     if (withDebugHook)
       rpc.setHook(new VertxRpcUtil.DebugRpcHook());
-    return rpc.createClient(iface);
+    return rpc.createClient(clazz);
   }
 
 }

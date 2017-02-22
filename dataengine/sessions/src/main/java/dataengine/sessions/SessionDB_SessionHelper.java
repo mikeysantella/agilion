@@ -51,10 +51,12 @@ public final class SessionDB_SessionHelper {
         sf = graph.addVertex(id, SessionFrame.class);
         graph.addEdge(id, graph.getVertex(SessionDB.ROOT_NODE), sf.asVertex(), SESSION_LABEL);
         sf.setBaseDirectory(baseDir);
-        if (session.getLabel() != null)
-          sf.setLabel(session.getLabel());
-        else
+        
+        if (session.getLabel() == null)
           sf.setLabel("session " + (++sessionCounter));
+        else
+          sf.setLabel(session.getLabel());
+
         if (session.getCreatedTime() != null)
           sf.setCreatedDate((session.getCreatedTime()));
         //        sf.setCreatedDate(VertexFrameHelper.toOffsetDateTime(session.getCreatedTime()));

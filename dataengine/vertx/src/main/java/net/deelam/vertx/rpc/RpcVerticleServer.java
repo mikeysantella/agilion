@@ -21,6 +21,7 @@ public class RpcVerticleServer {
     VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);
     if (withDebugHook)
       rpc.setHook(new VertxRpcUtil.DebugRpcHook());
+    log.debug("Registering RPC service at {}: {}", serverAddr, service);
     rpc.registerServer(service);
 
     vertx.eventBus().consumer(serversBroadcastAddr, (Message<String> clientAddr) -> {

@@ -12,8 +12,8 @@ import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import dataengine.api.Dataset;
-import dataengine.api.Job;
 import dataengine.sessions.frames.DatasetFrame;
+import dataengine.sessions.frames.JobFrame;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,18 +21,53 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public final class SessionDB_DatasetHelper {
   private final FramedTransactionalGraph<TransactionalGraph> graph;
-  private final SessionDB_SessionHelper sessHelper;
   private final SessionDB_FrameHelper frameHelper;
 
   public DatasetFrame getDatasetFrame(String id) {
     return frameHelper.getVertexFrame(id, DatasetFrame.class);
   }
 
-  public void addDatasetNode(Dataset job) {
-    log.debug("addJobNode: {}", job.getId());
+  static final String DATASET_STATS_PROPPREFIX = "stats.";
+  
+  enum IO {INPUT, OUTPUT}
+  static int datasetCounter = 0;
+  
+  public void addDatasetNode(Dataset ds, String jobId, IO io) {
+    log.debug("addJobNode: {}", ds.getId());
     tryAndCloseTxn(graph, graph -> {
-      String reqId = job.getJobId();
-      // TODO: complete
+      JobFrame jf = graph.getVertex(jobId, JobFrame.class);
+      String dsId = ds.getId();
+      DatasetFrame df = graph.getVertex(dsId, DatasetFrame.class);
+      if (df == null) {
+        df = graph.addVertex(dsId, DatasetFrame.class);
+        switch(io){
+          case INPUT:
+            jf.addInputDataset(df);
+            break;
+          case OUTPUT:
+            jf.addOutputDataset(df);
+            break;
+          default:
+            throw new IllegalArgumentException("io="+io);
+        }
+        if (ds.getLabel() == null)
+          df.setLabel("dataset " + (++datasetCounter));
+        else
+          df.setLabel(ds.getLabel());
+        if (ds.getCreatedTime() != null)
+          df.setCreatedDate((ds.getCreatedTime()));
+        if (ds.getUri() != null)
+          df.setUri((ds.getUri()));
+        if (ds.getDataSchema() != null)
+          df.setDataSchema((ds.getDataSchema()));
+        if (ds.getDataFormat() != null)
+          df.setDataFormat((ds.getDataFormat()));
+        if (ds.getStats() != null)
+          SessionDB_FrameHelper.saveMapAsProperties(ds.getStats(),
+              df.asVertex(), DATASET_STATS_PROPPREFIX);
+      } else {
+        throw new IllegalArgumentException("Request.id already exists: " + dsId);
+      }
     });
   }
   
@@ -52,13 +87,12 @@ public final class SessionDB_DatasetHelper {
   public static Dataset toDataset(DatasetFrame df) {
     return new Dataset().id(df.getNodeId())
         .label(df.getLabel())
-        .jobId(df.getCreatorTask().getNodeId())
         .createdTime((df.getCreatedDate()))
         //.createdTime(VertexFrameHelper.toJodaDateTime(df.getCreatedDate()))
         .state(df.getState())
         .uri(df.getUri())
         .dataFormat(df.getDataFormat())
-        .dataSchema(df.getSchema())
+        .dataSchema(df.getDataSchema())
         .stats(SessionDB_FrameHelper.loadPropertiesAsMap(df.asVertex(), STATS_PROPPREFIX));
   }
 }

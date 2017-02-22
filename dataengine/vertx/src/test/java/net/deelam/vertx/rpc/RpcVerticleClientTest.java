@@ -30,7 +30,7 @@ public class RpcVerticleClientTest {
     Thread.sleep(1000);
 
     RpcVerticleClient client = startClient();
-    SvcInterface hdfs = client.createRpcClient(SvcInterface.class);
+    SvcInterface hdfs = client.createRpcClient(SvcInterface.class).get();
     log.info("exists=" + hdfs.exists("src").get());
   }
   
@@ -46,7 +46,7 @@ public class RpcVerticleClientTest {
     }).start();
     
     RpcVerticleClient client = startClient();
-    SvcInterface hdfs = client.createRpcClient(SvcInterface.class); // blocks
+    SvcInterface hdfs = client.createRpcClient(SvcInterface.class).get(); // blocks
     Boolean boolean1 = hdfs.exists("src").get();
     assertTrue(boolean1);
     log.info("exists=" + boolean1); //blocks
@@ -64,7 +64,7 @@ public class RpcVerticleClientTest {
     }).start();
     
     RpcVerticleClient client = startClient();
-    SvcInterface hdfs = client.createRpcClient(SvcInterface.class); // blocks
+    SvcInterface hdfs = client.createRpcClient(SvcInterface.class).get(); // blocks
     Boolean boolean1 = hdfs.exists("src").get();
     assertTrue(boolean1);
     log.info("exists=" + boolean1); //blocks

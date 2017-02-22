@@ -147,6 +147,7 @@ public class JsonSetPropertyMerger implements PropertyMerger {
     allowedMultivaluedProps.add(propName);
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public void mergeValues(Object fromValue, Element toE, String key) {
     // toValue and fromValue are not null and not equal
     /* Possible cases:
@@ -330,6 +331,7 @@ public class JsonSetPropertyMerger implements PropertyMerger {
     return newMap;
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   public void convertFromJson(Map<String, Object> existingProps, GrafRecord tempGr) {
     for(Entry<String, Object> entry:existingProps.entrySet()){
       Object value = entry.getValue();
