@@ -176,12 +176,14 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public void updateJobState(String jobId, State state) {
-    // TODO Auto-generated method stub
+    log.trace("updateJobState: {} to {}", jobId, state);
+    sessDB.updateJobState(jobId, state);
   }
 
   @Override
   public void updateJobProgress(String jobId, Progress progress) {
-    // TODO Auto-generated method stub
+    log.trace("updateJobProgress: {} to {}", jobId, progress);
+    sessDB.updateJobProgress(jobId, progress);
   }
 
 

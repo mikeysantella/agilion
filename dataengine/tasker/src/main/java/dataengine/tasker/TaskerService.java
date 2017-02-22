@@ -42,12 +42,14 @@ public class TaskerService implements Tasker_I {
 
   @Override
   public void updateJobState(String jobId, State state) {
-    // TODO Auto-generated method stub
+    // placeholder to do any checking
+    getSessionsDB().updateJobState(jobId, state);
   }
 
   @Override
   public void updateJobProgress(String jobId, Progress progress) {
-    // TODO Auto-generated method stub
+    // placeholder to do any checking
+    getSessionsDB().updateJobProgress(jobId, progress);
   }
 
 }

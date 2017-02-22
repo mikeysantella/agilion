@@ -10,9 +10,17 @@ public interface Tasker_I {
   
   CompletableFuture<Request> submitRequest(Request req);
 
-  // called by job performer
+  /**
+   *  called by job performer
+   * @param jobId
+   * @param state
+   */
   void updateJobState(String jobId, State state);
   
-  // called by job performer
+  /** 
+   * called by job performer
+   * @param jobId
+   * @param progress
+   */
   void updateJobProgress(String jobId, Progress progress);
 }
