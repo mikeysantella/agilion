@@ -6,9 +6,11 @@ import com.google.inject.AbstractModule;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 
 import dataengine.apis.SessionsDB_I;
+import lombok.extern.slf4j.Slf4j;
 import net.deelam.graph.GrafUri;
 import net.deelam.graph.IdGrafFactoryTinker;
 
+@Slf4j
 public class TinkerGraphSessionsDbModule extends AbstractModule {
   @Override
   protected void configure() {            
@@ -23,5 +25,6 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
     } finally {
       //sessGraphUri.shutdown(); // TODO: move to a shutdown hook
     }
+    log.info("TinkerGraphSessionsDbModule configured");
   }
 }

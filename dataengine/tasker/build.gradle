@@ -1,7 +1,7 @@
 
 apply plugin: 'application'
 
-mainClassName = "dataengine.tasker.Main"
+mainClassName = "dataengine.tasker.TaskerMain"
 
 dependencies {
   compile project(':apis')

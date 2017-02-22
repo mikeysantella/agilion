@@ -27,21 +27,21 @@ public class SessionDB {
 
   @Delegate
   private final SessionDB_FrameHelper frameHelper;
-  
+
   @Delegate
   private final SessionDB_SessionHelper sessHelper;
-  
+
   @Delegate
   private final SessionDB_RequestHelper reqHelper;
 
   @Delegate
   private final SessionDB_JobHelper jobHelper;
-  
+
   @Delegate
   private final SessionDB_DatasetHelper dsHelper;
-  
-//  @Delegate
-//  private final DeprecatedHelper depHelper;
+
+  //  @Delegate
+  //  private final DeprecatedHelper depHelper;
 
   static final String ROOT_NODE = "ROOT";
 
@@ -53,12 +53,12 @@ public class SessionDB {
 
     fgProvider = new FramedGrafSupplier(SessionFramesRegistry.getFrameClasses());
     graph = fgProvider.get(tgraph);
-    frameHelper=new SessionDB_FrameHelper(graph);
-    sessHelper=new SessionDB_SessionHelper(graph, frameHelper);
-    reqHelper=new SessionDB_RequestHelper(graph, sessHelper, frameHelper);
-    dsHelper=new SessionDB_DatasetHelper(graph, sessHelper, frameHelper);
-    jobHelper=new SessionDB_JobHelper(graph, dsHelper, reqHelper, sessHelper, frameHelper);
-//    depHelper=new DeprecatedHelper(graph, sessHelper, frameHelper);
+    frameHelper = new SessionDB_FrameHelper(graph);
+    sessHelper = new SessionDB_SessionHelper(graph, frameHelper);
+    reqHelper = new SessionDB_RequestHelper(graph, sessHelper, frameHelper);
+    dsHelper = new SessionDB_DatasetHelper(graph, frameHelper);
+    jobHelper = new SessionDB_JobHelper(graph, dsHelper, reqHelper, frameHelper);
+    //    depHelper=new DeprecatedHelper(graph, sessHelper, frameHelper);
     log.info("-- Ready: {}", this);
   }
 
@@ -71,19 +71,16 @@ public class SessionDB {
 
 
   public String getBaseDirectory(String sessId) {
-    return tryFAndCloseTxn(graph, graph -> 
-      sessHelper.getSessionFrame(sessId).getBaseDirectory());
+    return tryFAndCloseTxn(graph, graph -> sessHelper.getSessionFrame(sessId).getBaseDirectory());
   }
 
   ///
 
   synchronized public boolean hasNode(String qualTaskId) {
-
     return tryAndCloseTxn(graph, graph -> graph.getVertex(qualTaskId) != null);
   }
 
   private <T> void validateNode(String id, Class<T> expected) {
-
     Vertex v = graph.getVertex(id);
     if (v == null)
       throw new NoSuchElementException();
@@ -91,6 +88,5 @@ public class SessionDB {
     if (!expected.isAssignableFrom(clazz))
       throw new IllegalArgumentException();
   }
-
 
 }

@@ -37,12 +37,6 @@ public interface SessionsDB_I {
 
   CompletableFuture<Request> getRequest(String id);
   
-  /// Dataset
-
-  CompletableFuture<Dataset> addDataset(Dataset ds);
-
-  CompletableFuture<Dataset> getDataset(String id);
-
   /// Job
 
   CompletableFuture<Job> addJob(Job job);
@@ -52,5 +46,13 @@ public interface SessionsDB_I {
   void updateJobState(String jobId, State state);
 
   void updateJobProgress(String jobId, Progress progress);
+
+  CompletableFuture<Dataset> addOutputDataset(Dataset ds, String jobId);
+
+  CompletableFuture<Dataset> addInputDataset(Dataset ds, String jobId);
+
+  /// Dataset
+
+  CompletableFuture<Dataset> getDataset(String id);
 
 }

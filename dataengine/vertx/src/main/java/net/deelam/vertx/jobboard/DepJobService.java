@@ -344,7 +344,7 @@ public class DepJobService implements DepJobService_I {
 
     //log.debug("----------------------  submitJob: {} {}", job.getClass(), job);
     if (submittedJobs.containsKey(jobV.getNodeId())) {
-      jobProd.removeJob(jobV.getNodeId(), null);
+      // NEEDED?: jobProd.removeJob(jobV.getNodeId(), null);
     }
     submittedJobs.put(jobV.getNodeId(), job);
     jobProd.addJob(job);

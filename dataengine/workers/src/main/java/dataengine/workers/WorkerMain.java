@@ -15,10 +15,10 @@ import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j
-public class Main {
+public class WorkerMain {
   
   public static void main(String[] args) {
-    log.info("Starting {}", Main.class);
+    log.info("Starting {}", WorkerMain.class);
     Injector injector = createInjector(new CompletableFuture<>());
 //    Vertx vertx = injector.getInstance(Vertx.class);
     

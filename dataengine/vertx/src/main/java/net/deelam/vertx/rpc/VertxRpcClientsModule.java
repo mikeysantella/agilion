@@ -4,6 +4,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 import com.google.inject.AbstractModule;
 
@@ -31,12 +32,15 @@ public class VertxRpcClientsModule extends AbstractModule {
   }
 
   protected boolean debug = false;
-  // this needs to run in a separate thread so incoming message is not blocked
-  protected <T> T getClientFor(Class<T> clazz, String serviceType) {
+
+
+  // For Guice, cannot block waiting for server side to come up, so returns a Supplier instead.
+  // Also, the thread calling Supplier.get() needs to run in a separate thread such that incoming message is not blocked.
+  protected <T> Supplier<T> getClientSupplierFor(Class<T> clazz, String serviceType) {
     log.info("Creating RPC client for {}", clazz.getSimpleName());
-    T rpcClient = new RpcVerticleClient(vertx, serviceType).start()
-        .createRpcClient(clazz, debug); // blocks
+    Supplier<T> rpcClientS = new RpcVerticleClient(vertx, serviceType).start()
+        .createRpcClientSupplier(clazz, debug); // blocks
     log.info("  Created RPC client for {}", clazz.getSimpleName());
-    return rpcClient;
+    return rpcClientS;
   }
 }

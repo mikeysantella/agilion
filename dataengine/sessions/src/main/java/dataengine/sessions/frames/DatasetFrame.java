@@ -1,7 +1,5 @@
 package dataengine.sessions.frames;
 
-import java.util.Date;
-
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
@@ -20,33 +18,29 @@ public interface DatasetFrame extends BaseFrame {
   @Property("uri")
   String getUri();
 
-  public static final String TIMESTAMP = "timestamp";
-
-  @Property(TIMESTAMP)
-  void setTimestamp(String timestamp);
-
-  @Property(TIMESTAMP)
-  String getTimestamp();
+  @Property("schema")
+  void setDataSchema(String schema);
 
   @Property("schema")
-  void setSchema(String schema);
+  String getDataSchema();
 
-  @Property("schema")
-  String getSchema();
+  @Property("dataFormat") // dataset storage format, e.g., csv-semicolon
+  String getDataFormat();
+
+  @Property("dataFormat")
+  void setDataFormat(String format);
 
   @Adjacency(label = JobFrame.OUTPUT_DATA, direction = Direction.IN)
-  JobFrame getCreatorTask();
+  Iterable<JobFrame> getCreatorTasks();
+
+  @Adjacency(label = JobFrame.INPUT_DATA, direction = Direction.IN)
+  Iterable<JobFrame> getDownstreamTasks();
 
   abstract class DataFrameImpl extends BaseFrame.Impl implements DatasetFrame {
     @Initializer
     public void init() {
-      //super.init();
-      setTimestamp(new Date().toString());
+      super.init();
     }
   }
-
-  String getDataFormat();
-
-  String getDataSchema();
 
 }
