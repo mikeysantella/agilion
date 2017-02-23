@@ -7,14 +7,15 @@ import static net.deelam.graph.GrafTxn.rollback;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 import com.google.common.collect.Iterables;
 import com.tinkerpop.blueprints.Element;
@@ -35,30 +36,30 @@ import net.deelam.vertx.jobboard.DepJobFrame.STATE;
 public class DepJobService implements DepJobService_I {
 
   private final FramedTransactionalGraph<TransactionalGraph> graph;
-
-  private final JobProducer jobProd;
-
-  public DepJobService(IdGraph<?> dependencyGraph, JobProducer vertxJobProducer) {
-    Class<?>[] typedClasses = {DepJobFrame.class};
-    FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
-    graph = provider.get(dependencyGraph);
-
-    jobProd = vertxJobProducer;
-    jobProd.addJobCompletionHandler((Message<JobDTO> msg) -> {
+  
+  private final Supplier<JobProducer> jobProdS;
+  
+  @Getter(lazy=true)
+  private final JobProducer jobProducer=getJobProducerWithMsgHandlers();
+ 
+  private JobProducer getJobProducerWithMsgHandlers(){
+    log.info("Registering JobProducer's job completion handlers");
+    final JobProducer jobProducer=jobProdS.get();
+    jobProducer.addJobCompletionHandler((Message<JobDTO> msg) -> {
       log.info("==========> Job complete: {}", msg.body());
       String jobId = msg.body().getId();
       if (false)
-        jobProd.removeJob(jobId, null);
+        jobProducer.removeJob(jobId, null);
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       log.debug("all jobs: {}", this);
       jobDone(jobV);
       log.info("Done jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
     });
-    jobProd.addJobFailureHandler((Message<JobDTO> msg) -> {
+    jobProducer.addJobFailureHandler((Message<JobDTO> msg) -> {
       log.info("==========> Job failed: {}", msg.body());
       String jobId = msg.body().getId();
       if (false)
-        jobProd.removeJob(jobId, null);
+        jobProducer.removeJob(jobId, null);
       log.info("  --------> cancelJobsDependentOn failedJob: {}", jobId);
       cancelJobsDependentOn(jobId, null);
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
@@ -66,6 +67,14 @@ public class DepJobService implements DepJobService_I {
       jobFailed(jobV);
       log.info("Failed jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
     });
+    return jobProducer;
+  }
+    
+  public DepJobService(IdGraph<?> dependencyGraph, Supplier<JobProducer> jobProdS) {
+    Class<?>[] typedClasses = {DepJobFrame.class};
+    FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
+    graph = provider.get(dependencyGraph);
+    this.jobProdS=jobProdS;
   }
 
   public synchronized void close() {
@@ -76,12 +85,11 @@ public class DepJobService implements DepJobService_I {
   }
 
   @Getter
-  private Map<String, JobDTO> waitingJobs = Collections.synchronizedMap(new HashMap<>());
+  private Map<String, JobDTO> waitingJobs = new ConcurrentHashMap<>();
   @Getter
-  private Map<String, JobDTO> submittedJobs = Collections.synchronizedMap(new HashMap<>());
+  private Map<String, JobDTO> submittedJobs = new ConcurrentHashMap<>();
   @Getter
-  private Map<String, JobDTO> unsubmittedJobs = Collections.synchronizedMap(new HashMap<>());
-
+  private Map<String, JobDTO> unsubmittedJobs = new ConcurrentHashMap<>();
 
   public String toString() {
     return
@@ -91,7 +99,7 @@ public class DepJobService implements DepJobService_I {
     // return GraphUtils.toString(graph, 1000, "jobType", "state");
   }
 
-  protected String toStringRemainingJobs(String... propsToPrint) {
+  public String toStringRemainingJobs(String... propsToPrint) {
     StringBuilder sb = new StringBuilder("Incomplete jobs:\n");
     GrafTxn.tryAndCloseTxn(graph, () -> {
       int nodeCount = 0;
@@ -150,6 +158,7 @@ public class DepJobService implements DepJobService_I {
       if (jobV == null) {
         jobV = graph.addVertex(jobId, DepJobFrame.class);
         //        jobV.setJobType(job.getJobType());
+        jobV.setUpdatable(job.isUpdatable());
         jobV.setOrder(++counter);
         graph.commit();
       } else {
@@ -305,7 +314,7 @@ public class DepJobService implements DepJobService_I {
             break;
           case SUBMITTED:
             log.info("Attempting to cancel submitted job={}", jobId);
-            jobProd.removeJob(jobId, null); // may fail
+            getJobProducer().removeJob(jobId, null); // may fail
             submittedJobs.remove(jobId);
             setJobCancelled(jobV);
             break;
@@ -347,7 +356,7 @@ public class DepJobService implements DepJobService_I {
       // NEEDED?: jobProd.removeJob(jobV.getNodeId(), null);
     }
     submittedJobs.put(jobV.getNodeId(), job);
-    jobProd.addJob(job);
+    getJobProducer().addJob(job);
   }
 
   public STATE getJobStatus(String jobId) {
@@ -369,7 +378,7 @@ public class DepJobService implements DepJobService_I {
       Map<String, Object> map = new HashMap<>();
       if (jobV.getState() == STATE.PROCESSING) {
         threadPool.execute(() -> {
-          jobProd.getProgress(jobId, reply -> {
+          getJobProducer().getProgress(jobId, reply -> {
             synchronized (map) {
               JobDTO bodyJO = reply.result().body();
               //job = Json.decodeValue(bodyJO.toString(), DependentJob.class);
@@ -460,9 +469,11 @@ public class DepJobService implements DepJobService_I {
             switch (outV.getState()) {
               case SUBMITTED:
               case DONE:
-                log.info("Job dependent on {} has state={}. Marking {} as NEEDS_UPDATE.", doneJob.getNodeId(),
-                    outV.getState(), outV.getNodeId());
-                outV.setState(STATE.NEEDS_UPDATE);
+                if(outV.getUpdatable()){
+                  log.info("Job dependent on {} has state={}. Marking {} as NEEDS_UPDATE.", doneJob.getNodeId(),
+                      outV.getState(), outV.getNodeId());
+                  outV.setState(STATE.NEEDS_UPDATE);
+                }
                 break;
               case NEEDS_UPDATE:
                 break;
@@ -471,9 +482,11 @@ public class DepJobService implements DepJobService_I {
                   readyJobs.add(outV);
                 break;
               case PROCESSING:
-                log.info("Job dependent on {} is currently processing. Marking {} as NEEDS_UPDATE.",
-                    doneJob.getNodeId(), outV.getNodeId());
-                outV.setState(STATE.NEEDS_UPDATE);
+                if(outV.getUpdatable()){
+                  log.info("Job dependent on {} is currently processing. Marking {} as NEEDS_UPDATE.",
+                      doneJob.getNodeId(), outV.getNodeId());
+                  outV.setState(STATE.NEEDS_UPDATE);
+                }
                 break;
               case CANCELLED:
               case FAILED:

@@ -48,6 +48,7 @@ public final class DeServerGuiceInjector {
     String[] args=null;
     dataengine.sessions.SessionsMain.main(args);
     dataengine.tasker.TaskerMain.main(args);
+    dataengine.jobmgr.JobManagerMain.main(args);
     dataengine.workers.WorkerMain.main(args);
   }
 

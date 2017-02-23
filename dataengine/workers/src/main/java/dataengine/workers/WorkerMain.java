@@ -16,43 +16,37 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j
 public class WorkerMain {
-  
+
   public static void main(String[] args) {
     log.info("Starting {}", WorkerMain.class);
     Injector injector = createInjector(new CompletableFuture<>());
-//    Vertx vertx = injector.getInstance(Vertx.class);
-    
-//    Tasker_I taskerSvc = injector.getInstance(Tasker_I.class);
-//    new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
-//        .start("TaskerServiceBusAddr", taskerSvc);
-
-    OperationsSubscriberVerticle opsRegVert= injector.getInstance(OperationsSubscriberVerticle.class);
+    OperationsSubscriberVerticle opsRegVert = injector.getInstance(OperationsSubscriberVerticle.class);
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
     ClusteredVertxConfig vertxConfig = new ClusteredVertxConfig();
     return Guice.createInjector(
         new ClusteredVertxInjectionModule(vertxF, vertxConfig),
-        //new VertxRpcClients4TaskerModule(vertxF),
+        //TODO: new VertxRpcClients4WorkerModule(vertxF),
         new AbstractModule() {
           Vertx vertx;
+
           @Override
           protected void configure() {
             try {
-              vertx=vertxF.get();
+              vertx = vertxF.get();
             } catch (InterruptedException | ExecutionException e) {
               e.printStackTrace();
             }
-            
-//            bind(OperationsRegistry_I.class).to(OperationsRegistryService.class).asEagerSingleton();
-//            bind(Tasker_I.class).to(TaskerService.class).asEagerSingleton();
           }
-          
-          int subscriberCounter=0;
+
+          int subscriberCounter = 0;
+
           @Provides
-          OperationsSubscriberVerticle createOperationsSubscriberVerticle(){
-            OperationsSubscriberVerticle opsRegVert=  new OperationsSubscriberVerticle(VerticleConsts.opsRegBroadcastAddr, 
-                "operations"+(++subscriberCounter)+System.currentTimeMillis());
+          OperationsSubscriberVerticle deployOperationsSubscriberVerticle() {
+            OperationsSubscriberVerticle opsRegVert =
+                new OperationsSubscriberVerticle(VerticleConsts.opsRegBroadcastAddr,
+                    "operations" + (++subscriberCounter) + System.currentTimeMillis());
             vertx.deployVerticle(opsRegVert);
             return opsRegVert;
           }

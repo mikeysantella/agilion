@@ -37,7 +37,7 @@ public class WorkDoerExample {
     ///---------  JobMarket
     final String svcType = "myJobMarket-"+WorkDoerExample.class.getSimpleName(); // connects JobConsumer and JobProducer to JobMarket
     {
-      JobBoard jMarket = new JobBoard(svcType);
+      JobBoard jMarket = new JobBoard(svcType, svcType+System.currentTimeMillis());
       vertx.deployVerticle(jMarket, deployHandler);
     }
 
@@ -62,7 +62,7 @@ public class WorkDoerExample {
       IdGrafFactoryTinker.register();
       GrafUri guri = new GrafUri("tinker:///");
       IdGraph<?> dependencyGraph = guri.openIdGraph();
-      DepJobService depJobMgr = new DepJobService(dependencyGraph, jProducer);
+      DepJobService depJobMgr = new DepJobService(dependencyGraph, ()->jProducer);
 
       JobSubmitter submitter = new JobSubmitter(depJobMgr);
 

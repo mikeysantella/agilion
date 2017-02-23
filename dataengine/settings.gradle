@@ -8,6 +8,7 @@ include 'vertx'
 
 include 'sessions'
 include 'tasker'
+include 'jobmgr'
 
 include 'workers'
 

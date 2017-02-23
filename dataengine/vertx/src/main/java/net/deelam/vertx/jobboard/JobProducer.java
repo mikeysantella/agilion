@@ -43,17 +43,29 @@ public class JobProducer extends AbstractVerticle {
     });
   }
 
+  private void waitForEventBus(){
+    while (vertx == null || vertx.eventBus() == null)
+      try {
+        log.info("Waiting for Vertx.eventBus to be initialized for " + this);
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        log.warn("Interrupted while waiting", e);
+      }
+  }
+
   public boolean isReady() {
     return jobBoardPrefix != null;
   }
 
   public <T> void addJobCompletionHandler(Handler<Message<JobDTO>> jobCompletionHandler) {
+    waitForEventBus();
     jobCompletionAddress = deploymentID() + JOBCOMPLETE_ADDRESS_SUFFIX;
     log.info("add jobCompletionHandler to address={}", jobCompletionAddress);
     vertx.eventBus().consumer(jobCompletionAddress, jobCompletionHandler);
   }
 
   public <T> void addJobFailureHandler(Handler<Message<JobDTO>> jobFailureHandler) {
+    waitForEventBus();
     jobFailureAddress = deploymentID() + JOBFAILED_ADDRESS_SUFFIX;
     log.info("add jobFailureHandler to address={}", jobFailureAddress);
     vertx.eventBus().consumer(jobFailureAddress, jobFailureHandler);

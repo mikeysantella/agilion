@@ -13,7 +13,8 @@ import lombok.experimental.Accessors;
 public class JobDTO {
   String id;
   String type;
-
+  boolean updatable=true;
+  
   public JobDTO(String id, String type) {
     this.id = id;
     this.type = type;

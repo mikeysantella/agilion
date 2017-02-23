@@ -45,7 +45,7 @@ public class JobBoardTest {
       }
     };
 
-    JobBoard jm = new JobBoard(svcType);
+    JobBoard jm = new JobBoard(svcType, svcType+System.currentTimeMillis());
     prod = new JobProducer(svcType);
 
     JobConsumer consA;
