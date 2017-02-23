@@ -52,7 +52,7 @@ public final class VerticleUtils {
 
       //Don't need to publish service if AbstractVerticleClient is used: publishService(vertx, type, serviceContactInfo);
     } else {
-      log.warn("DEPRECATED: Use AbstractVerticleServer to announceServiceType instead; "
+      log.warn("DEPRECATED: Use AbstractServerVerticle to announceServiceType instead; "
           + "and use AbstractVerticleClient to find server");
       publishService(vertx, type, serviceContactInfo);
     }

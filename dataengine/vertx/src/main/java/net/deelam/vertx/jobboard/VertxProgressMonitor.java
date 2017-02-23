@@ -84,18 +84,22 @@ public class VertxProgressMonitor implements ProgressMonitor {
 
   @Override
   public void stop() {
-    if (isStopped)
+    if (isStopped){
       log.warn("stop() already called!");
+      return;
+    }
     isStopped = true;
+    
+    if (timer != null)
+      timer.cancel();
+    timer = null;
+    
     if (progressMaker != null) {
       ProgressState p = progressMaker.getProgress();
       if (p.getPercent() > 0 && p.getPercent() < 100)
         log.warn("Stopping progress updates for {} before completion: {}", jobId, p);
 
-      if (timer != null)
-        timer.cancel();
       progressMaker = null;
-      timer = null;
     }
   }
 

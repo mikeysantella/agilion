@@ -19,6 +19,7 @@ dependencies {
   // TEMPORARY: for easily starting everything in one JVM
   compile project(':sessions')
   compile project(':tasker')
+  compile project(':jobmgr')
   compile project(':workers')
 }
 

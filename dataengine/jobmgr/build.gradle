@@ -1,0 +1,17 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.jobmgr.JobManagerMain"
+
+dependencies {
+  compile project(':apis')
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile project(':graph')
+  compile project(':vertx')
+  runtime dep.vertx_ignite
+    
+  testCompile dep.vertx_unittest
+  
+}

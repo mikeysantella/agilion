@@ -34,6 +34,12 @@ public interface DepJobFrame extends VertexFrame {
   @Property(value=STATE_PROPKEY)
   void setState(STATE state);
   
+  @Property(value="updatable")
+  boolean getUpdatable();
+  
+  @Property(value="updatable")
+  void setUpdatable(boolean updatable);
+
   @Property(value="order")
   int getOrder();
 

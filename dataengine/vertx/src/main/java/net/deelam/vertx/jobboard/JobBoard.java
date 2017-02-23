@@ -59,32 +59,11 @@ import net.deelam.vertx.jobboard.JobBoard.JobItem.JobState;
  */
 @Slf4j
 @ToString
+@RequiredArgsConstructor
 public class JobBoard extends AbstractVerticle {
   private final String serviceType;
 
-  @Getter
-  private String addressBase;
-
-  public JobBoard(String serviceType) {
-    this.serviceType = serviceType;
-  }
-
-  public static final String EVENT_BUS_PREFIX = "eventBusPrefix";
-
-  private void initAddressPrefix() {
-    final String configAddrPrefix = config().getString(EVENT_BUS_PREFIX);
-    if (addressBase == null) {
-      addressBase = configAddrPrefix;
-      if (addressBase == null) {
-        addressBase = deploymentID();
-        log.info("Using deploymentID() as addressBase={}", addressBase);
-      }
-    } else if (configAddrPrefix != null) {
-      log.warn("Ignoring {} configuration since already set (in constructor): {}", EVENT_BUS_PREFIX, addressBase);
-    }
-
-    checkNotNull(addressBase, "Must set '" + EVENT_BUS_PREFIX + "' config since not provided in constructor!");
-  }
+  private final String addressBase;
 
   public enum BUS_ADDR {
     ADD_JOB, REMOVE_JOB, GET_PROGRESS, // for producers 
@@ -114,8 +93,6 @@ public class JobBoard extends AbstractVerticle {
   
   @Override
   public void start() throws Exception {
-    initAddressPrefix();
-
     EventBus eb = vertx.eventBus();
     KryoMessageCodec.register(eb, JobDTO.class);
     KryoMessageCodec.register(eb, JobListDTO.class);
@@ -302,7 +279,7 @@ public class JobBoard extends AbstractVerticle {
     }
 
     // announce after setting eb.consumer
-    VerticleUtils.announceServiceType(vertx, serviceType, addressBase);
+    VerticleUtils.announceServiceType(vertx, serviceType, addressBase, true);
 
     log.info("Ready: addressBase={} this={}", addressBase, this);
   }
