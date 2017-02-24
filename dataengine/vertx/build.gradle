@@ -15,5 +15,5 @@ dependencies {
   testCompile dep.frames
   
   testCompile dep.vertx_unittest
-  testCompile 'com.xored.vertx:vertx-typed-rpc:1.0'
+  //testCompile 'com.xored.vertx:vertx-typed-rpc:1.0'
 }

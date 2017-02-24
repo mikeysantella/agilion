@@ -6,14 +6,11 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.xored.vertx.typed.rpc.EventBusService;
-
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 
-@EventBusService("mytest-service")
 public interface SvcInterface {
   CompletableFuture<File> downloadFile(String src, String dst) throws IOException;
 

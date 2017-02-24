@@ -42,6 +42,7 @@ public final class DeServerGuiceInjector {
       log.info("======== Running all required DataEngine services in same JVM");
       startAllInSameJvm();
     }
+    log.info("Created DeServerGuiceInjector");
   }
 
   private void startAllInSameJvm() {
