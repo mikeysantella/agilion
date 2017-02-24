@@ -16,26 +16,21 @@ import javax.ws.rs.core.SecurityContext;
 import dataengine.api.NotFoundException;
 import dataengine.api.Session;
 import dataengine.api.SessionApiService;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MySessionApiService extends SessionApiService {
   private static final String OBJECT_TYPE = "Session";
-  
-  final Supplier<SessionsDB_I> sessionsDBF;
-  
-  @Getter(lazy = true)
-  private final SessionsDB_I sessionsDb = lazyCreateSessionsDbClient();
 
-  SessionsDB_I lazyCreateSessionsDbClient() {
-    log.info("-- initializing instance "+this);
-    return sessionsDBF.get();
-  }
+  final RpcClientProvider<SessionsDB_I> sessDb;
   
+  @Inject
+  MySessionApiService(Supplier<SessionsDB_I> sessionsDbF) {
+    sessDb = new RpcClientProvider<>(sessionsDbF);
+  }
+
   @Override
   public Response createSession(Session session, SecurityContext securityContext) throws NotFoundException {
     Response resp = makeResponseIfNotSecure(securityContext);
@@ -43,8 +38,8 @@ public class MySessionApiService extends SessionApiService {
       return resp;
 
     return tryCreateObject(OBJECT_TYPE, session, "session/", (s) -> s.getId(),
-        getSessionsDb()::hasSession,
-        () -> getSessionsDb().createSession(session));
+        sessDb.rpc()::hasSession,
+        () -> sessDb.rpc().createSession(session));
   }
 
   @Override
@@ -56,12 +51,13 @@ public class MySessionApiService extends SessionApiService {
     resp = makeResponseIfIdInvalid(OBJECT_TYPE, id);
     if (resp != null)
       return resp;
-    return makeResultResponse(OBJECT_TYPE, "session/", id, getSessionsDb().getSession(id));
+    return makeResultResponse(OBJECT_TYPE, "session/", id, sessDb.rpc().getSession(id));
   }
 
   @SuppressWarnings("unchecked")
   @Override
-  public Response setSessionMetadata(String id, @SuppressWarnings("rawtypes") Map props, SecurityContext securityContext) throws NotFoundException {
+  public Response setSessionMetadata(String id, @SuppressWarnings("rawtypes") Map props,
+      SecurityContext securityContext) throws NotFoundException {
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
@@ -75,6 +71,7 @@ public class MySessionApiService extends SessionApiService {
         return makeBadRequestResponse(
             "All keys in property map must be strings! Found: " + k.getClass() + " for key=" + k);
 
-    return makeResultResponse(OBJECT_TYPE, "session/", id, getSessionsDb().setMetadata(id, props));
+    return makeResultResponse(OBJECT_TYPE, "session/", id, sessDb.rpc().setMetadata(id, props));
   }
+
 }

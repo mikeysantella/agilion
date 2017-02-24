@@ -17,42 +17,25 @@ import javax.ws.rs.core.SecurityContext;
 import dataengine.api.NotFoundException;
 import dataengine.api.Request;
 import dataengine.api.RequestApiService;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyRequestApiService extends RequestApiService {
+
+  final RpcClientProvider<Tasker_I> tasker;
+  final RpcClientProvider<SessionsDB_I> sessDb;
+
+  @Inject
+  MyRequestApiService(Supplier<Tasker_I> taskerF, Supplier<SessionsDB_I> sessionsDbF) {
+    tasker=new RpcClientProvider<>(taskerF);
+    sessDb=new RpcClientProvider<>(sessionsDbF);
+  }
 
   private static final String OBJECT_TYPE = "Request";
 
-  final Supplier<Tasker_I> taskerF;
-  
-  @Getter(lazy = true)
-  private final Tasker_I tasker = lazyCreateTaskerClient();
-
-  Tasker_I lazyCreateTaskerClient() {
-    log.info("-- initializing instance "+this);
-    return taskerF.get();
-  }
-
-  //
-  
-  final Supplier<SessionsDB_I> sessionsDBF;
-  
-  @Getter(lazy = true)
-  private final SessionsDB_I sessionsDb = lazyCreateSessionsDbClient();
-
-  SessionsDB_I lazyCreateSessionsDbClient() {
-    log.info("-- initializing instance "+this);
-    return sessionsDBF.get();
-  }
-  
   /// 
-  
+
   @Override
   public Response submitRequest(Request req, SecurityContext securityContext)
       throws NotFoundException {
@@ -60,12 +43,12 @@ public class MyRequestApiService extends RequestApiService {
     if (resp != null)
       return resp;
 
-    if (req!=null && req.getSessionId() == null)
+    if (req != null && req.getSessionId() == null)
       return makeBadRequestResponse("Submitted Request must have a sessionId! " + req);
 
-    return tryCreateObject(OBJECT_TYPE, req, "request/", (r)->r.getId(),
-        getSessionsDb()::hasRequest,
-        () -> taskerF.get().submitRequest(req));
+    return tryCreateObject(OBJECT_TYPE, req, "request/", (r) -> r.getId(),
+        sessDb.rpc()::hasRequest,
+        () -> tasker.rpc().submitRequest(req));
   }
 
   @Override
@@ -86,7 +69,7 @@ public class MyRequestApiService extends RequestApiService {
     if ("null".equalsIgnoreCase(id)) // for testing
       return CompletableFuture.completedFuture(new Request());
 
-    return getSessionsDb().getRequest(id);
+    return sessDb.rpc().getRequest(id);
   }
 
 }

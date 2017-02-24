@@ -1,16 +1,20 @@
 package dataengine.tasker;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Singleton;
 
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import dataengine.api.Operation;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
+import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxConfig;
@@ -32,7 +36,10 @@ public class TaskerMain {
     new RpcVerticleServer(vertx, VerticleConsts.opsRegBroadcastAddr)
         .start("OperationsRegServiceBusAddr", opsRegSvc);
 
-    Tasker_I taskerSvc = injector.getInstance(Tasker_I.class);
+    JobListener jobListenerVert = injector.getInstance(JobListener.class);
+    vertx.deployVerticle(jobListenerVert);
+
+    TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
         .start("TaskerServiceBusAddr", taskerSvc);
   }
@@ -46,15 +53,23 @@ public class TaskerMain {
           @Override
           protected void configure() {
             // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
+
+            // OperationsRegistry_I used by clients
+            // OperationsRegistryRpcService uses OperationsRegistryVerticle
             bind(OperationsRegistry_I.class).to(OperationsRegistryRpcService.class);
             bind(OperationsRegistryRpcService.class).in(Singleton.class);
-            
-            bind(Tasker_I.class).to(TaskerService.class);
-            bind(TaskerService.class).in(Singleton.class);
 
+            // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
             OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
             bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
+
+            // 
+            bind(JobListener.class).in(Singleton.class);
+
+            bind(Tasker_I.class).to(TaskerService.class);
+            bind(TaskerService.class).in(Singleton.class);
           }
         });
   }
+
 }

@@ -11,31 +11,24 @@ import javax.ws.rs.core.SecurityContext;
 
 import dataengine.api.JobApiService;
 import dataengine.api.NotFoundException;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyJobApiService extends JobApiService {
-  
-  final Supplier<SessionsDB_I> sessionsDBF;
-  
-  @Getter(lazy = true)
-  private final SessionsDB_I sessionsDB = lazyCreateSessionsDbClient();
 
-  SessionsDB_I lazyCreateSessionsDbClient() {
-    log.info("-- initializing instance "+this);
-    return sessionsDBF.get();
+  final RpcClientProvider<SessionsDB_I> sessDb;
+
+  @Inject
+  MyJobApiService(Supplier<SessionsDB_I> sessionsDbF) {
+    sessDb=new RpcClientProvider<>(sessionsDbF);
   }
-  
+
   @Override
   public Response getJob(String id, SecurityContext securityContext) throws NotFoundException {
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
 
-    return makeResultResponse("Job", "job/", id, getSessionsDB().getJob(id));
+    return makeResultResponse("Job", "job/", id, sessDb.rpc().getJob(id));
   }
 }

@@ -12,24 +12,17 @@ import javax.ws.rs.core.SecurityContext;
 
 import dataengine.api.DatasetApiService;
 import dataengine.api.NotFoundException;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyDatasetApiService extends DatasetApiService {
   private static final String OBJECT_TYPE = "Dataset";
-  
-  final Supplier<SessionsDB_I> sessionsDBF;
-  
-  @Getter(lazy = true)
-  private final SessionsDB_I sessionsDB = lazyCreateSessionsDbClient();
 
-  SessionsDB_I lazyCreateSessionsDbClient() {
-    log.info("-- initializing instance "+this);
-    return sessionsDBF.get();
+  final RpcClientProvider<SessionsDB_I> sessDb;
+
+  @Inject
+  MyDatasetApiService(Supplier<SessionsDB_I> sessionsDbF) {
+    sessDb=new RpcClientProvider<>(sessionsDbF);
   }
 
   @Override
@@ -42,6 +35,7 @@ public class MyDatasetApiService extends DatasetApiService {
     resp = makeResponseIfIdInvalid(OBJECT_TYPE, id);
     if (resp != null)
       return resp;
-    return makeResultResponse(OBJECT_TYPE, "dataset/", id, getSessionsDB().getDataset(id));
+    return makeResultResponse(OBJECT_TYPE, "dataset/", id, sessDb.rpc().getDataset(id));
   }
+
 }

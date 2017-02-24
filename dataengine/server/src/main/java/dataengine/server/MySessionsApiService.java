@@ -1,6 +1,7 @@
 package dataengine.server;
 
-import static dataengine.server.RestParameterHelper.*;
+import static dataengine.server.RestParameterHelper.makeResponseIfNotSecure;
+import static dataengine.server.RestParameterHelper.makeResultResponse;
 
 import java.util.function.Supplier;
 
@@ -10,23 +11,16 @@ import javax.ws.rs.core.SecurityContext;
 
 import dataengine.api.NotFoundException;
 import dataengine.api.SessionsApiService;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MySessionsApiService extends SessionsApiService {
 
-  final Supplier<SessionsDB_I> sessionsDBF;
-  
-  @Getter(lazy = true)
-  private final SessionsDB_I sessionsDb = lazyCreateSessionsDbClient();
+  final RpcClientProvider<SessionsDB_I> sessDb;
 
-  SessionsDB_I lazyCreateSessionsDbClient() {
-    log.info("-- initializing instance "+this);
-    return sessionsDBF.get();
+  @Inject
+  MySessionsApiService(Supplier<SessionsDB_I> sessionsDbF) {
+    sessDb=new RpcClientProvider<>(sessionsDbF);
   }
   
   @Override
@@ -34,7 +28,7 @@ public class MySessionsApiService extends SessionsApiService {
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
-    return makeResultResponse("sessionList", getSessionsDb().listSessions());
+    return makeResultResponse("sessionList", sessDb.rpc().listSessions());
   }
 
   @Override
@@ -42,7 +36,7 @@ public class MySessionsApiService extends SessionsApiService {
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
-    return makeResultResponse("sessionIdList", getSessionsDb().listSessionIds());
+    return makeResultResponse("sessionIdList", sessDb.rpc().listSessionIds());
   }
 
   @Override
@@ -50,7 +44,7 @@ public class MySessionsApiService extends SessionsApiService {
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
-    return makeResultResponse("sessionNameList", getSessionsDb().listSessionNames());
+    return makeResultResponse("sessionNameList", sessDb.rpc().listSessionNames());
   }
 
 }

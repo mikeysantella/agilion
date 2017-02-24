@@ -33,6 +33,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.io.Serializable;
 
 /**
@@ -45,6 +46,9 @@ public class Operation  implements Serializable {
 
   @JsonProperty("description")
   private String description = null;
+
+  @JsonProperty("info")
+  private Map info = null;
 
   @JsonProperty("params")
   private List<OperationParam> params = new ArrayList<OperationParam>();
@@ -85,6 +89,24 @@ public class Operation  implements Serializable {
     this.description = description;
   }
 
+  public Operation info(Map info) {
+    this.info = info;
+    return this;
+  }
+
+   /**
+   * Get info
+   * @return info
+  **/
+  @ApiModelProperty(value = "")
+  public Map getInfo() {
+    return info;
+  }
+
+  public void setInfo(Map info) {
+    this.info = info;
+  }
+
   public Operation params(List<OperationParam> params) {
     this.params = params;
     return this;
@@ -120,12 +142,13 @@ public class Operation  implements Serializable {
     Operation operation = (Operation) o;
     return Objects.equals(this.id, operation.id) &&
         Objects.equals(this.description, operation.description) &&
+        Objects.equals(this.info, operation.info) &&
         Objects.equals(this.params, operation.params);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, description, params);
+    return Objects.hash(id, description, info, params);
   }
 
 
@@ -136,6 +159,7 @@ public class Operation  implements Serializable {
     
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    info: ").append(toIndentedString(info)).append("\n");
     sb.append("    params: ").append(toIndentedString(params)).append("\n");
     sb.append("}");
     return sb.toString();

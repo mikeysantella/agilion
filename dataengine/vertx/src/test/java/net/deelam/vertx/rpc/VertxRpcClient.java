@@ -9,8 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import com.xored.vertx.typed.rpc.EventBusServiceFactory;
-
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxConfig;
@@ -37,7 +35,8 @@ public class VertxRpcClient {
 
     vertx = vertxF.get();
 
-    SvcInterface rpcClient = EventBusServiceFactory.createClient(vertx.eventBus(), SvcInterface.class);
+    SvcInterface rpcClient = new VertxRpcUtil(vertx.eventBus(), VertxRpcServer.SVC_INBOX)
+        .createClient(SvcInterface.class);
 
     try {
       go(rpcClient);
