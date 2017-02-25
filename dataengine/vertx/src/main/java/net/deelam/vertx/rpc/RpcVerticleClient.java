@@ -1,17 +1,11 @@
 package net.deelam.vertx.rpc;
 
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.eventbus.MessageConsumer;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,84 +27,27 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class RpcVerticleClient {
+  
   final Vertx vertx;
-  final String serversBroadcastAddr;
-  final String myAddress = UUID.randomUUID().toString();
+  
+  @Getter
+  final ServiceWaiter waiter;
+  
+  public RpcVerticleClient(Vertx vertx, String serversBroadcastAddr){
+    this.vertx=vertx;
+    waiter=new ServiceWaiter(vertx, serversBroadcastAddr);
+  }
 
   CompletableFuture<String> serverAddrF;
 
   public RpcVerticleClient start() {
-    serverAddrF = new CompletableFuture<>();
-    createMsgConsumer(serverAddrF);
-    broadcastServerSearch(serverAddrF);
+    serverAddrF = waiter.listenAndBroadCast();
     return this;
   }
 
   public <T> Supplier<T> invalidateAndFindNewServer(Class<T> clazz) {
-    serverAddrF = new CompletableFuture<>();
-    createMsgConsumer(serverAddrF);
-    broadcastServerSearch(serverAddrF);
+    serverAddrF = waiter.listenAndBroadCast();
     return createRpcClient(clazz);
-  }
-
-  /**
-   * Creates msg consumer assuming reply is a serverAddr string.
-   */
-  void createMsgConsumer(CompletableFuture<String> serverAddrF) {
-    createServerMsgConsumer((String msgBody) -> {
-      if (serverAddrF.isDone())
-        log.warn("Already got serverAddr, ignoring this one: {}", msgBody);
-      else {
-        log.info("Got serverAddr={}", msgBody);
-        serverAddrF.complete(msgBody);
-      }
-    });
-  }
-
-  private CompletableFuture<String> myAddressF = new CompletableFuture<>();
-
-  private MessageConsumer<?> consumer;
-
-  /**
-   * Creates msg consumer with given registerServer
-   * @param registerServer
-   */
-  <T> void createServerMsgConsumer(Consumer<T> registerServer) {
-    if (consumer != null)
-      consumer.unregister();
-    consumer = vertx.eventBus().consumer(myAddress, (Message<T> msg) -> {
-      log.info("Got response from server: {}", msg.body());
-      registerServer.accept(msg.body());
-    });
-    myAddressF.complete(myAddress);
-  }
-
-  void broadcastServerSearch(CompletableFuture<String> serverAddrF) {
-    if (!myAddressF.isDone())
-      throw new IllegalStateException("Must createServerMsgConsumer() before broadcastServerSearch()");
-    try {
-      Handler<Long> broadcastUntilSuccess =
-          createBroadcastUntilSuccess(serversBroadcastAddr, myAddressF.get(), serverAddrF);
-      broadcastUntilSuccess.handle(0L);
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(" Should not happen", e);
-    }
-  }
-
-  @Setter
-  private long broadcastPeriodInSeconds = 3;
-
-  private Handler<Long> createBroadcastUntilSuccess(String serversBroadcastAddr, final String myAddr,
-      CompletableFuture<String> serverAddrF) {
-    return (time) -> {
-      if (!serverAddrF.isDone()) {
-        log.info("broadcastServerSearch from={} to addr={};  waiting for server response ...", myAddr, serversBroadcastAddr);
-        vertx.eventBus().publish(serversBroadcastAddr, myAddr);
-        // check again later
-        vertx.setTimer(broadcastPeriodInSeconds * 1000,
-            createBroadcastUntilSuccess(serversBroadcastAddr, myAddr, serverAddrF));
-      }
-    };
   }
 
   /**
@@ -142,13 +79,7 @@ public class RpcVerticleClient {
    * @return proxy for server
    */
   <T> T createRpcClient(CompletableFuture<String> serverAddrF, Class<T> clazz, boolean withDebugHook) {
-    String serverAddr = null;
-    while (serverAddr == null)
-      try {
-        serverAddr = serverAddrF.get(); // wait for serverAddr
-      } catch (InterruptedException | ExecutionException e) {
-        log.warn(" Retrying to get serverAddr", e);
-      }
+    String serverAddr = waiter.awaitServiceAddress();
     VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);
     if (withDebugHook)
       rpc.setHook(new VertxRpcUtil.DebugRpcHook());

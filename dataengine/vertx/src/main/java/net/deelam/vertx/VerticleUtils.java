@@ -50,7 +50,8 @@ public final class VerticleUtils {
       // detect existence of services listening on the same eventBus topic
       checkForExistingServer(vertx, type, time);
 
-      //Don't need to publish service if AbstractVerticleClient is used: publishService(vertx, type, serviceContactInfo);
+      //Don't need to publish service if AbstractVerticleClient is used: 
+      //publishService(vertx, type, serviceContactInfo);
     } else {
       log.warn("DEPRECATED: Use AbstractServerVerticle to announceServiceType instead; "
           + "and use AbstractVerticleClient to find server");

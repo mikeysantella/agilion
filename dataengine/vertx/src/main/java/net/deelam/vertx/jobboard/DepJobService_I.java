@@ -1,7 +1,9 @@
 package net.deelam.vertx.jobboard;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface DepJobService_I {
 
-  void addJob(JobDTO job, String... inJobIds);
+  CompletableFuture<Boolean> addJob(JobDTO job, String... inJobIds);
 
 }
