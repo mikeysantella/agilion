@@ -96,6 +96,11 @@ public class JobBoard extends AbstractVerticle {
     EventBus eb = vertx.eventBus();
     KryoMessageCodec.register(eb, JobDTO.class);
     KryoMessageCodec.register(eb, JobListDTO.class);
+    
+    vertx.eventBus().consumer(serviceType, (Message<String> clientAddr) -> {
+      log.info("Got client broadcast from {}", clientAddr.body());
+      vertx.eventBus().send(clientAddr.body(), addressBase);
+    });
 
     eb.consumer(addressBase/* + BUS_ADDR.REGISTER*/, message -> {
       String workerAddr = getWorkerAddress(message);

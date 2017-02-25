@@ -3,8 +3,12 @@ package net.deelam.vertx.jobboard;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 
 import io.vertx.core.AbstractVerticle;
@@ -45,13 +49,41 @@ public class JobConsumer extends AbstractVerticle {
 
     eb.consumer(myAddr, jobListHandler);
 
-    VerticleUtils.announceClientType(vertx, serviceType, msg -> {
+    myAnnounceInbox=VerticleUtils.announceClientType(vertx, serviceType, msg -> {
       jobBoardPrefix = msg.body();
+      getSvcAddrPrefix.complete(jobBoardPrefix);
       log.info("Sending client registration to {} from {}", jobBoardPrefix, myAddr);
       vertx.eventBus().send(jobBoardPrefix, null, deliveryOptions);
     });
   }
-
+  
+  private CompletableFuture<String> getSvcAddrPrefix = new CompletableFuture<>();
+  String myAnnounceInbox;
+  
+  private synchronized void waitForSvcAddress() {
+    if (!getSvcAddrPrefix.isDone()) {
+      try {
+        do {
+          try {
+            log.info("Waiting for address of server with serviceType={}", serviceType);
+            getSvcAddrPrefix.get(2, TimeUnit.SECONDS);
+          } catch (TimeoutException e) {
+            log.info("Timed out waiting for address of server with serviceType={}; reannouncing client", serviceType);
+            VerticleUtils.reannounceClientType(vertx, serviceType, myAnnounceInbox);
+          }
+        } while (!getSvcAddrPrefix.isDone());
+      } catch (ExecutionException | InterruptedException e) {
+        log.error("Could not get address for a server with serviceType=" + serviceType, e);
+      }
+      try {
+        jobBoardPrefix = getSvcAddrPrefix.get();
+        log.info("Done waiting for address of server with serviceType={}: address={}", serviceType, jobBoardPrefix);
+      } catch (InterruptedException | ExecutionException e) {
+        log.error("Could not get address for a server with serviceType=" + serviceType, e);
+      }
+    }
+  }
+  
   private JobDTO pickedJob = null;
 
   public void jobPartlyDone() {

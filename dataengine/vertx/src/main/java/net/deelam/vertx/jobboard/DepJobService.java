@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -146,11 +147,11 @@ public class DepJobService implements DepJobService_I {
 
   public int counter = 0;
 
-  public synchronized void addJob(JobDTO job, String... inJobIds) {
-    addJob(true, job, inJobIds);
+  public synchronized CompletableFuture<Boolean> addJob(JobDTO job, String... inJobIds) {
+    return addJob(true, job, inJobIds);
   }
 
-  public synchronized void addJob(boolean addToQueue, JobDTO job, String... inJobIds) {
+  public synchronized CompletableFuture<Boolean> addJob(boolean addToQueue, JobDTO job, String... inJobIds) {
     String jobId = job.getId();
     // add to graph
     GrafTxn.tryAndCloseTxn(graph, () -> {
@@ -171,6 +172,7 @@ public class DepJobService implements DepJobService_I {
       else
         unsubmittedJobs.put(jobId, job);
     });
+    return CompletableFuture.completedFuture(true);
   }
 
   private void addToQueue(JobDTO job, DepJobFrame jobV) {

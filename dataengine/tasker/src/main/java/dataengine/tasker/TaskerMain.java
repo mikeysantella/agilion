@@ -1,20 +1,16 @@
 package dataengine.tasker;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Singleton;
 
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import dataengine.api.Operation;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
-import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxConfig;
@@ -36,12 +32,11 @@ public class TaskerMain {
     new RpcVerticleServer(vertx, VerticleConsts.opsRegBroadcastAddr)
         .start("OperationsRegServiceBusAddr", opsRegSvc);
 
-    JobListener jobListenerVert = injector.getInstance(JobListener.class);
-    vertx.deployVerticle(jobListenerVert);
-
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
         .start("TaskerServiceBusAddr", taskerSvc);
+    new RpcVerticleServer(vertx, VerticleConsts.jobListenerBroadcastAddr)
+        .start("JobListenerBusAddr", taskerSvc);
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
@@ -64,8 +59,7 @@ public class TaskerMain {
             bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
 
             // 
-            bind(JobListener.class).in(Singleton.class);
-
+            
             bind(Tasker_I.class).to(TaskerService.class);
             bind(TaskerService.class).in(Singleton.class);
           }
