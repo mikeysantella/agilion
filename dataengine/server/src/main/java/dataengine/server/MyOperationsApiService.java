@@ -43,8 +43,7 @@ public class MyOperationsApiService extends OperationsApiService {
 
   private void refresh() {
     try {
-      opRegistry.rpc().refresh().get();
-      tasker.rpc().refreshJobsCreators().get();
+      opRegistry.rpc().refresh().thenAccept((f) -> tasker.rpc().refreshJobsCreators()).get();
     } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
     }
