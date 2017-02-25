@@ -92,19 +92,13 @@ public final class RestParameterHelper {
     }
     try {
       String id = getId.apply(inputObj);
-      if (id != null)
-        try {
-          Boolean objectExists = hasObject.apply(id).get();
-          if (objectExists) {
-            String errMsg = "Object already exists of type " + objectType + ": " + hasObject;
-            log.warn(errMsg);
-            return Response.status(Status.CONFLICT)
-                .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
-                .build();
-          }
-        } catch (Exception e) {
-          // good, object doesn't already exist
-        }
+      if (id != null && hasObject.apply(id).get()) {
+        String errMsg = "Object already exists of type " + objectType + ": " + hasObject;
+        log.warn(errMsg);
+        return Response.status(Status.CONFLICT)
+            .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
+            .build();
+      }
       Future<T> createF = createObject.get();
       T newObj = createF.get(); // blocks until object created
       if (newObj == null) {

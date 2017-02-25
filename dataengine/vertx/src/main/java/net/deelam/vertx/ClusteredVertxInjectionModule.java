@@ -1,7 +1,6 @@
 package net.deelam.vertx;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import com.google.inject.AbstractModule;
 
@@ -18,19 +17,18 @@ public class ClusteredVertxInjectionModule extends AbstractModule {
   @Override
   protected void configure() {
     // create clustered VertX
-    new Thread(() -> StartVertx.createClustered(vertxConfig, vertx -> {
-      //System.out.println("=========  Vert.x service registered");
-      vertxF.complete(vertx);
-      log.info("VertX created");
-    })).start();
-    try {
-      if(!vertxF.isDone())
-        log.info("Waiting for Vertx ...");
-      bind(Vertx.class).toInstance(vertxF.get());
-      log.info("Got Vertx");
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
+    if(!vertxF.isDone()){
+      new Thread(() -> StartVertx.createClustered(vertxConfig, vertx -> {
+        //System.out.println("=========  Vert.x service registered");
+        vertxF.complete(vertx);
+        log.info("VertX created");
+      })).start();
     }
+    
+    if(!vertxF.isDone())
+      log.info("Waiting for Vertx ... {}", vertxF);
+    bind(Vertx.class).toInstance(vertxF.join());
+    log.info("Got Vertx");
   }
 
 }

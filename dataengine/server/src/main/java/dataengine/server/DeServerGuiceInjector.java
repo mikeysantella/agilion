@@ -39,18 +39,20 @@ public final class DeServerGuiceInjector {
 
     String runAllInSameJvm = System.getProperty("RUN_ALL_IN_SAME_JVM");
     if(Boolean.valueOf(runAllInSameJvm)){
-      log.info("======== Running all required DataEngine services in same JVM");
-      startAllInSameJvm();
+      vertxF.join();
+      log.info("======== Running all required DataEngine services in same JVM {}", vertxF);
+      startAllInSameJvm(vertxF);
     }
     log.info("Created DeServerGuiceInjector");
   }
 
-  private void startAllInSameJvm() {
-    String[] args=null;
-    dataengine.sessions.SessionsMain.main(args);
-    dataengine.tasker.TaskerMain.main(args);
-    dataengine.jobmgr.JobManagerMain.main(args);
-    dataengine.workers.WorkerMain.main(args);
+  private void startAllInSameJvm(CompletableFuture<Vertx> vertxF) {
+    // Only create 1 Vertx instance per JVM! 
+    // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
+    dataengine.sessions.SessionsMain.main(vertxF);
+    dataengine.tasker.TaskerMain.main(vertxF);
+    dataengine.jobmgr.JobManagerMain.main(vertxF);
+    dataengine.workers.WorkerMain.main(vertxF);
   }
 
   static class RestServiceModule extends AbstractModule {

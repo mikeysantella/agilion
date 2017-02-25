@@ -1,7 +1,6 @@
 package dataengine.workers;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -18,9 +17,13 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
 public class WorkerMain {
 
   public static void main(String[] args) {
+    main(new CompletableFuture<>());
+  }
+  public static void main(CompletableFuture<Vertx> vertxF) {
     log.info("Starting {}", WorkerMain.class);
-    Injector injector = createInjector(new CompletableFuture<>());
+    Injector injector = createInjector(vertxF);
     OperationsSubscriberVerticle opsRegVert = injector.getInstance(OperationsSubscriberVerticle.class);
+    log.info("Created OperationsSubscriberVerticle: {}",opsRegVert);
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
@@ -33,11 +36,7 @@ public class WorkerMain {
 
           @Override
           protected void configure() {
-            try {
-              vertx = vertxF.get();
-            } catch (InterruptedException | ExecutionException e) {
-              e.printStackTrace();
-            }
+            vertx = vertxF.join();
           }
 
           int subscriberCounter = 0;

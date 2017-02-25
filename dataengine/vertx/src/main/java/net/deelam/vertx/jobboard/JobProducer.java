@@ -20,21 +20,20 @@ import net.deelam.vertx.rpc.ServiceWaiter;
 public class JobProducer extends AbstractVerticle {
   private final String serviceType;
 
-  private ServiceWaiter waiter;  
-
   @Override
   public void start() throws Exception {
     KryoMessageCodec.register(vertx.eventBus(), JobDTO.class);
     KryoMessageCodec.register(vertx.eventBus(), JobListDTO.class);
 
     waiter=new ServiceWaiter(vertx, serviceType);
-    waiter.listenAndBroadCast();
+    waiter.listenAndBroadcast();
     
     log.info("Ready: deploymentID={} JobProducer for: {}", deploymentID(), serviceType);
   }
 
   @Getter(lazy=true)
   private final String jobBoardPrefix = waitUntilReady();
+  private ServiceWaiter waiter;  
   private String waitUntilReady() {
     return waiter.awaitServiceAddress();
   }

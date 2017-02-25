@@ -60,6 +60,9 @@ public final class SessionDB_JobHelper {
         else
           jf.setLabel(job.getLabel());
 
+        // TODO: 1: Add createdTime so we can order the jobs
+        // TODO: add edge between jobs to show dependencies, matching DepJobService
+        
         if (job.getType() != null)
           jf.setType(job.getType());
         if (job.getParams() != null)

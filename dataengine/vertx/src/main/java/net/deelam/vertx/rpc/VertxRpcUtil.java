@@ -1,7 +1,5 @@
 package net.deelam.vertx.rpc;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -53,7 +51,7 @@ public class VertxRpcUtil {
   @SuppressWarnings("unchecked")
   public <T> T createClient(Class<T> iface) {
     log.debug("Creating RPC client for {} at {} ", iface.getSimpleName(), address);
-    final KryoSerDe serde = new KryoSerDe();
+    final KryoSerDe serde = new KryoSerDe(address+"-client");
     return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
         (proxy, method, args) -> {
           if ("toString".equals(method.getName())) {
@@ -126,8 +124,10 @@ public class VertxRpcUtil {
       method.setAccessible(true);
       methods.put(genMethodId(method), method);
     }
-    final KryoSerDe serde = new KryoSerDe();
-    return eventBus.<Buffer>consumer(address, r -> {
+    CompletableFuture<MessageConsumer<Buffer>> msgConsumerF=new CompletableFuture<>();
+    //new Thread(()->{
+    final KryoSerDe serde = new KryoSerDe(address+"-service");
+    MessageConsumer<Buffer> msgConsumer = eventBus.<Buffer>consumer(address, r -> {
       try {
         String methodId = r.headers().get(HEADER_METHOD_ID);
         if (!methods.containsKey(methodId)) {
@@ -137,15 +137,17 @@ public class VertxRpcUtil {
           Method method = methods.get(methodId);
           Object result = null;
           try {
+            if (hook != null)
+              hook.serverReceivesCall(methodId+" before args are deserialized", null);
             if (method.getParameterTypes().length == 0) {
               if (hook != null)
                 hook.serverReceivesCall(methodId, null);
               result = method.invoke(service);
             } else {
-              Object[] objects = serde.readObjects(r.body(), method.getParameterTypes().length);
+              Object[] args = serde.readObjects(r.body(), method.getParameterTypes().length);
               if (hook != null)
-                hook.serverReceivesCall(methodId, objects);
-              result = method.invoke(service, objects);
+                hook.serverReceivesCall(methodId, args);
+              result = method.invoke(service, args);
             }
 
             if (method.getReturnType().isAssignableFrom(CompletableFuture.class)) {
@@ -169,6 +171,11 @@ public class VertxRpcUtil {
               hook.serverRepliesThrowable("invoking " + methodId, e);
             DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
             r.reply(serde.writeObject(e), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
+          } catch (IllegalArgumentException|IllegalAccessException e){
+            if (hook != null)
+              hook.serverRepliesThrowable("invoking " + methodId, e);
+            DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
+            r.reply(serde.writeObject(e), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
           }
         }
       } catch (Throwable e) {
@@ -176,6 +183,9 @@ public class VertxRpcUtil {
         r.fail(-1, e.getMessage());
       }
     });
+    msgConsumerF.complete(msgConsumer);
+    //}, "VertxRpcUtil-service-thread:"+address+":"+service.getClass().getName()).start();
+    return msgConsumerF.join();
   }
 
   static String genMethodId(Method method) {
@@ -183,11 +193,22 @@ public class VertxRpcUtil {
     return method.getName(); // Doesn't work with varargs: method.getParameterCount();
   }
 
+  /**
+   * Reminder: Do NOT use varargs as parameters to RPC methods.
+   * Doing so causes Kyro to fail, due to wrong parameter count, due to wrong method selection.
+   */
   static final class KryoSerDe {
-    Kryo kryo = new Kryo();
+    Kryo kryo;
+    final String name;
+
+    public KryoSerDe(String name) {
+      this.name=name;
+      kryo=newKryo();
+    }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public KryoSerDe() {
+    private Kryo newKryo() {
+      Kryo kryo = new Kryo();
       kryo.register(Map.class, new MapSerializer() {
         protected Map create(Kryo kryo, Input input, java.lang.Class<Map> type) {
           return new HashMap();
@@ -211,19 +232,23 @@ public class VertxRpcUtil {
               return new StdInstantiatorStrategy().newInstantiatorOf(type);
             }
           }));
+      log.info("Created new Kryo for {}: {}", name, kryo);
+      return kryo;
     }
 
     public synchronized Registration readClass(Input input) {
       try {
+        log.debug("Using kryo={} to read for {}", kryo, name);
         return kryo.readClass(input);
       } catch (Throwable t) {
         log.error("Couldn't read input", t);
-        return null;
+        throw t; //return null;
       }
     }
 
     public synchronized Object[] readObjects(Buffer buffer, int count) {
       try {
+        log.debug("Using kryo={} to read for {}", kryo, name);
         final Input input = new Input(buffer.getBytes());
         Object[] result = new Object[count];
         for (int i = 0; i < count; i++)
@@ -231,22 +256,24 @@ public class VertxRpcUtil {
         return result;
       } catch (Throwable t) {
         log.error("Couldn't read buffer", t);
-        return null;
+        throw t;
       }
     }
 
     @SuppressWarnings("unchecked")
     public synchronized <T> T readObject(Buffer buffer) {
       try {
+        log.debug("Using kryo={} to read for {}", kryo, name);
         return (T) kryo.readClassAndObject(new Input(buffer.getBytes()));
       } catch (Throwable t) {
         log.error("Couldn't read buffer", t);
-        return null;
+        throw t; //return null;
       }
     }
 
     public synchronized Buffer writeObjects(Object[] objs) {
       try {
+        log.debug("Using kryo={} to write for {}", kryo, name);
         final Output output = new Output(new ByteArrayOutputStream());
         for (int i = 0; i < objs.length; i++)
           kryo.writeClassAndObject(output, objs[i]);
@@ -262,12 +289,13 @@ public class VertxRpcUtil {
 
     public synchronized Buffer writeObject(Object obj) {
       try {
+        log.debug("Using kryo={} to write for {}", kryo, name);
         final Output output = new Output(new ByteArrayOutputStream());
         //log.debug("writeObject: " + obj);
         kryo.writeClassAndObject(output, obj);
 
-        //Object debugCheck=kryo.readClassAndObject(new Input(output.toBytes()));
-        //log.debug("debugCheck: " + debugCheck);
+//        Object debugCheck=kryo.readClassAndObject(new Input(output.toBytes()));
+//        log.debug("debugCheck: " + debugCheck);
 
         return Buffer.buffer(output.toBytes());
       } catch (Throwable t) {
@@ -331,7 +359,7 @@ public class VertxRpcUtil {
     }
 
     public void serverRepliesThrowable(String methodId, Throwable e) {
-      log.debug("{} serverRepliesThrowable: "+iface+": "+methodId, e);
+      log.debug(iface+" serverRepliesThrowable: "+methodId+": "+ e);
       //log.debug("{} serverRepliesThrowable: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage()); // in case getMessage()==null
     }
 

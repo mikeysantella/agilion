@@ -147,7 +147,10 @@ public class DepJobService implements DepJobService_I {
 
   public int counter = 0;
 
-  public synchronized CompletableFuture<Boolean> addJob(JobDTO job, String... inJobIds) {
+  public synchronized CompletableFuture<Boolean> addJob(JobDTO job) {
+    return addJob(true, job);
+  }
+  public synchronized CompletableFuture<Boolean> addDepJob(JobDTO job, String[] inJobIds) {
     return addJob(true, job, inJobIds);
   }
 

@@ -107,7 +107,7 @@ public class WorkDoerExample {
           .setRequest(new Request().setId("reqId2"));
       if (jobProducer == null) {
         depJobMgr.addJob(job);
-        depJobMgr.addJob(job2, job.getId());
+        depJobMgr.addDepJob(job2, new String[]{job.getId()});
       } else {
         jobProducer.addJob(job);
         jobProducer.addJob(job2);

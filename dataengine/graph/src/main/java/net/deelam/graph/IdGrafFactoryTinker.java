@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
+import com.tinkerpop.blueprints.KeyIndexableGraph;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph;
 import com.tinkerpop.blueprints.impls.tg.TinkerGraph.FileType;
 import com.tinkerpop.blueprints.util.GraphHelper;
@@ -23,20 +24,20 @@ public class IdGrafFactoryTinker implements IdGrafFactory {
   @Getter
   String scheme="tinker";
 
-  @SuppressWarnings("unchecked")
   @Override
-  public IdGraph<TinkerGraph> open(GrafUri gUri) {
+  @SuppressWarnings("unchecked")
+  public <T extends KeyIndexableGraph> IdGraph<T> open(GrafUri gUri) {
     // check desired output format
     FileType fileType = getFileSaveType(gUri);
 
     // open graph
     if (fileType == null) {
       log.debug("Opening Tinker graph in memory");
-      return new IdGraph<>(new TinkerGraph());
+      return (IdGraph<T>) new IdGraph<>(new TinkerGraph());
     } else {
       String path = gUri.uriPath();
       log.debug("Opening Tinker graph at path={} of type={}", path, fileType);
-      return new IdGraph<>(new TinkerGraph(path, fileType));
+      return (IdGraph<T>) new IdGraph<>(new TinkerGraph(path, fileType));
     }
   }
 

@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RpcClientProvider<T> {
   final Supplier<T> supplier;
 
-  @Getter(lazy = true)
+  @Getter(lazy=true, onMethod = @__({@SuppressWarnings("unchecked")}))
   private final T rpc = lazyCreateRpcClient();
 
   private T lazyCreateRpcClient() {
