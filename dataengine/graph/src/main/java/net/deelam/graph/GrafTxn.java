@@ -165,6 +165,7 @@ public class GrafTxn {
    */
   public static boolean rollback(int tx) {
     log.warn("Rolling graph transaction back from: {}", tx);
+    log.warn("Rolling back", new Throwable("why?"));
     decrementNestingDepth(tx);
 
     if (!rollbackCalled.get().get()) {

@@ -17,8 +17,10 @@ public class RpcClientProvider<T> {
   private final T rpc = lazyCreateRpcClient();
 
   private T lazyCreateRpcClient() {
-    log.info("-- initializing instance using " + supplier);
-    return supplier.get();
+    log.info("Getting RPC client for {}", supplier);
+    T t = supplier.get();
+    log.info("  Created RPC client for {}", t);
+    return t;
   }
 
 }

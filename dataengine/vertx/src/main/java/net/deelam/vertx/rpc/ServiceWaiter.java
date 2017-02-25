@@ -2,6 +2,8 @@ package net.deelam.vertx.rpc;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.vertx.core.Vertx;
 import lombok.experimental.Accessors;
@@ -32,12 +34,12 @@ public class ServiceWaiter {
     while (true)
       try {
         if(!serverAddrF.isDone())
-          log.info("Waiting for server response ...");
-        String serverAddr = serverAddrF.get(); // wait for serverAddr
+          log.info("Waiting for server response from '{}' ...", base.serversBroadcastAddr);
+        String serverAddr = serverAddrF.get(10, TimeUnit.SECONDS); // wait for serverAddr
         //log.debug("Got server address: {}", serverAddr);
         return serverAddr;
-      } catch (InterruptedException | ExecutionException e) {
-        log.warn(" Retrying to get serverAddr", e);
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        log.warn(" Retrying to get serverAddr from "+base.serversBroadcastAddr, e);
       }
   }
 

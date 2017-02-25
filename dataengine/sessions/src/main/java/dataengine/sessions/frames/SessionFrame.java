@@ -4,6 +4,7 @@ import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.frames.Adjacency;
 import com.tinkerpop.frames.Property;
 import com.tinkerpop.frames.modules.javahandler.Initializer;
+import com.tinkerpop.frames.modules.javahandler.JavaHandler;
 import com.tinkerpop.frames.modules.typedgraph.TypeValue;
 
 @TypeValue(SessionFrame.TYPE_VALUE)
@@ -27,9 +28,9 @@ public interface SessionFrame extends BaseFrame {
 
   @Adjacency(label = "request", direction = Direction.OUT)
   Iterable<RequestFrame> getRequests();
+
   
-  
-  abstract class SessionFrameImpl extends BaseFrame.Impl implements SessionFrame {
+  abstract class Impl extends BaseFrame.Impl implements SessionFrame {
     @Initializer
     public void init() {
       super.init();

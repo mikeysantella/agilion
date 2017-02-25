@@ -1,5 +1,7 @@
 package dataengine.server;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -13,7 +15,9 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 
+import dataengine.api.Job;
 import dataengine.api.NotFoundException;
+import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.VerticleConsts;
@@ -69,11 +73,36 @@ public class VertxRpcSessionsTest {
   @Test
   public void test() throws NotFoundException, InterruptedException, ExecutionException {
     String sessId = "newSess";
-    Session session = new Session().label(sessId);
+    Session session = new Session().id(sessId);
 
     Session createdSession = sessionsDbRpcClient.createSession(session).get();
     log.info("create: " + createdSession);
     log.info("list: " + sessionsDbRpcClient.listSessionIds().get());
+    
+    {
+      Request req = new Request().sessionId(sessId).id("req1").label("req1Name");
+      Request req2 = sessionsDbRpcClient.addRequest(req).get();
+      req2.setState(null); // ignore
+      req2.setCreatedTime(null); // ignore
+      if (req2.getOperationParams().isEmpty())
+        req2.setOperationParams(null); // ignore
+      req2.getJobs().clear();; // ignore
+      assertEquals(req, req2);
+    }
+    {
+      Job job = new Job().requestId("req1").id("req1.jobA").label("jobAName");
+      Job job2 = sessionsDbRpcClient.addJob(job).get();
+      //log.info("job2={}", job2);
+      job2.setState(null); // ignore
+      job2.setProgress(null); // ignore
+      if (job2.getParams().isEmpty())
+        job2.setParams(null); // ignore
+      if (job2.getInputDatasetIds().isEmpty())
+        job2.setInputDatasetIds(null); // ignore
+      if (job2.getOutputDatasetIds().isEmpty())
+        job2.setOutputDatasetIds(null); // ignore
+      assertEquals(job, job2);
+    }
   }
 
 }

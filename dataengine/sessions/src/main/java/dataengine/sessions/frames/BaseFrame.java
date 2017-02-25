@@ -10,6 +10,7 @@ import com.tinkerpop.frames.modules.javahandler.JavaHandler;
 import com.tinkerpop.frames.modules.typedgraph.TypeField;
 
 import dataengine.api.State;
+import lombok.extern.slf4j.Slf4j;
 import net.deelam.graph.BpPropertySerializerUtils;
 
 @TypeField(BaseFrame.TYPE_KEY)
@@ -54,6 +55,7 @@ public interface BaseFrame extends VertexFrame {
   @JavaHandler
   void delete();
 
+  // must be called "Impl"
   abstract class Impl implements BaseFrame {
     private static final ZoneId UTC = ZoneId.of("Z");
 

@@ -1,12 +1,9 @@
 package net.deelam.vertx.jobboard;
 
-import java.util.concurrent.CompletableFuture;
-
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +24,13 @@ public class JobProducer extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    log.info("Ready: deploymentID={} JobProducer for: {}", deploymentID(), serviceType);
-
     KryoMessageCodec.register(vertx.eventBus(), JobDTO.class);
     KryoMessageCodec.register(vertx.eventBus(), JobListDTO.class);
 
     waiter=new ServiceWaiter(vertx, serviceType);
     waiter.listenAndBroadCast();
+    
+    log.info("Ready: deploymentID={} JobProducer for: {}", deploymentID(), serviceType);
   }
 
   @Getter(lazy=true)

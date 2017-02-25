@@ -61,9 +61,6 @@ public class Job  implements Serializable {
   @JsonProperty("params")
   private Map params = null;
 
-  @JsonProperty("stats")
-  private Map stats = null;
-
   @JsonProperty("inputDatasetIds")
   private Map inputDatasetIds = null;
 
@@ -196,24 +193,6 @@ public class Job  implements Serializable {
     this.params = params;
   }
 
-  public Job stats(Map stats) {
-    this.stats = stats;
-    return this;
-  }
-
-   /**
-   * Get stats
-   * @return stats
-  **/
-  @ApiModelProperty(value = "")
-  public Map getStats() {
-    return stats;
-  }
-
-  public void setStats(Map stats) {
-    this.stats = stats;
-  }
-
   public Job inputDatasetIds(Map inputDatasetIds) {
     this.inputDatasetIds = inputDatasetIds;
     return this;
@@ -267,14 +246,13 @@ public class Job  implements Serializable {
         Objects.equals(this.progress, job.progress) &&
         Objects.equals(this.label, job.label) &&
         Objects.equals(this.params, job.params) &&
-        Objects.equals(this.stats, job.stats) &&
         Objects.equals(this.inputDatasetIds, job.inputDatasetIds) &&
         Objects.equals(this.outputDatasetIds, job.outputDatasetIds);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestId, type, state, progress, label, params, stats, inputDatasetIds, outputDatasetIds);
+    return Objects.hash(id, requestId, type, state, progress, label, params, inputDatasetIds, outputDatasetIds);
   }
 
 
@@ -290,7 +268,6 @@ public class Job  implements Serializable {
     sb.append("    progress: ").append(toIndentedString(progress)).append("\n");
     sb.append("    label: ").append(toIndentedString(label)).append("\n");
     sb.append("    params: ").append(toIndentedString(params)).append("\n");
-    sb.append("    stats: ").append(toIndentedString(stats)).append("\n");
     sb.append("    inputDatasetIds: ").append(toIndentedString(inputDatasetIds)).append("\n");
     sb.append("    outputDatasetIds: ").append(toIndentedString(outputDatasetIds)).append("\n");
     sb.append("}");

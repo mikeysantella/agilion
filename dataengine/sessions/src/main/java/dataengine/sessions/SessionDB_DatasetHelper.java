@@ -23,6 +23,10 @@ public final class SessionDB_DatasetHelper {
   private final FramedTransactionalGraph<TransactionalGraph> graph;
   private final SessionDB_FrameHelper frameHelper;
 
+  public boolean hasDataset(String id) {
+    return frameHelper.hasFrame(id, DatasetFrame.TYPE_VALUE);
+  }
+  
   public DatasetFrame getDatasetFrame(String id) {
     return frameHelper.getVertexFrame(id, DatasetFrame.class);
   }
@@ -80,6 +84,8 @@ public final class SessionDB_DatasetHelper {
   }
   
   public static Map<String,String> toDatasetMap(Iterable<DatasetFrame> datasets) {
+    if(datasets==null)
+      return null;
     return stream(datasets.spliterator(), false)
         .collect(toMap(DatasetFrame::getLabel,DatasetFrame::getNodeId));
   }

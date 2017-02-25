@@ -36,7 +36,7 @@ public interface DatasetFrame extends BaseFrame {
   @Adjacency(label = JobFrame.INPUT_DATA, direction = Direction.IN)
   Iterable<JobFrame> getDownstreamTasks();
 
-  abstract class DataFrameImpl extends BaseFrame.Impl implements DatasetFrame {
+  abstract class Impl extends BaseFrame.Impl implements DatasetFrame {
     @Initializer
     public void init() {
       super.init();

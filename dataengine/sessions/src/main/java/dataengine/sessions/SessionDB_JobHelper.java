@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.tinkerpop.blueprints.TransactionalGraph;
+import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import dataengine.api.Job;
@@ -30,6 +31,10 @@ public final class SessionDB_JobHelper {
   private final SessionDB_RequestHelper reqHelper;
   private final SessionDB_FrameHelper frameHelper;
 
+  public boolean hasJob(String id) {
+    return frameHelper.hasFrame(id, JobFrame.TYPE_VALUE);
+  }
+  
   public JobFrame getJobFrame(String id) {
     return frameHelper.getVertexFrame(id, JobFrame.class);
   }
@@ -61,15 +66,17 @@ public final class SessionDB_JobHelper {
           SessionDB_FrameHelper.saveMapAsProperties(job.getParams(),
               jf.asVertex(), JOB_PARAMS_PROPPREFIX);
 
-        ((Map<String, String>) job.getInputDatasetIds()).forEach((String name, String nodeId) -> {
-          DatasetFrame df = dsHelper.getDatasetFrame(nodeId);
-          jf.addInputDataset(df);
-        });
+        if(job.getInputDatasetIds()!=null)
+          ((Map<String, String>) job.getInputDatasetIds()).forEach((String name, String nodeId) -> {
+            DatasetFrame df = dsHelper.getDatasetFrame(nodeId);
+            jf.addInputDataset(df);
+          });
 
-        ((Map<String, String>) job.getOutputDatasetIds()).forEach((String name, String nodeId) -> {
-          DatasetFrame df = dsHelper.getDatasetFrame(nodeId);
-          jf.addOutputDataset(df);
-        });
+        if(job.getOutputDatasetIds()!=null)
+          ((Map<String, String>) job.getOutputDatasetIds()).forEach((String name, String nodeId) -> {
+            DatasetFrame df = dsHelper.getDatasetFrame(nodeId);
+            jf.addOutputDataset(df);
+          });
       } else {
         throw new IllegalArgumentException("Job.id already exists: " + jobId);
       }
@@ -78,18 +85,22 @@ public final class SessionDB_JobHelper {
 
 
   public static Job toJob(JobFrame jf) {
+    log.debug("toJob: {}", jf);
     return new Job().id(jf.getNodeId())
         .label(jf.getLabel())
         .requestId(jf.getRequest().getNodeId())
         .type(jf.getType())
         .state(jf.getState())
-        .progress(new Progress()
-            .percent(jf.getProgress())
-            .stats(SessionDB_FrameHelper.loadPropertiesAsMap(jf.asVertex(), JOB_STATS_PROPPREFIX))
-            )
+        .progress(toProgress(jf.getProgress(), jf.asVertex(), JOB_STATS_PROPPREFIX))
         .params(SessionDB_FrameHelper.loadPropertiesAsMap(jf.asVertex(), JOB_PARAMS_PROPPREFIX))
         .inputDatasetIds(SessionDB_DatasetHelper.toDatasetMap(jf.getInputDatasets()))
         .outputDatasetIds(SessionDB_DatasetHelper.toDatasetMap(jf.getOutputDatasets()));
+  }
+
+  private static Progress toProgress(int progress, Vertex asVertex, String propPrefix) {
+    return new Progress()
+        .percent(progress)
+        .stats(SessionDB_FrameHelper.loadPropertiesAsMap(asVertex, propPrefix));
   }
 
   public static List<Job> toJobs(Iterable<JobFrame> jobs) {

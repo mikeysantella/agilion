@@ -1,6 +1,6 @@
 package dataengine.tasker;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +53,8 @@ public class TaskerService implements Tasker_I, JobListener_I {
 
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
-    log.debug("submitRequest: {}", req);
-    if (!opsRegVert.getOperations().contains(req.getOperationId()))
+    log.info("submitRequest: {}", req);
+    if (!opsRegVert.getOperations().containsKey(req.getOperationId()))
       throw new IllegalArgumentException("Unknown operationId=" + req.getOperationId());
 
     CompletableFuture<Request> f = sessDb.rpc().addRequest(req).thenApply((Request addedReq) -> {
@@ -64,6 +64,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
   }
 
   private Request submitJobs(Request addedReq) {
+    log.debug("submitJobs for: {}", addedReq);
     // add job(s) to request and submit job(s)
     JobsCreator jc = jobsCreatorMap.get(addedReq.getOperationId());
     if (jc == null)
@@ -79,18 +80,19 @@ public class TaskerService implements Tasker_I, JobListener_I {
 
   @Override
   public CompletableFuture<Void> refreshJobsCreators() {
+    log.info("refreshJobsCreators()");
     return CompletableFuture.runAsync(() -> {
       addJobsCreators();
     });
   }
 
   private void addJobsCreators() {
-    Collection<Operation> currOperations = opsRegVert.getOperations();
+    Map<String, Operation> currOperations = opsRegVert.getOperations();
     List<JobsCreator> jobCreators = Lists.newArrayList(
         new AddSourceDataset(currOperations));
     jobCreators.forEach(jc -> {
       Operation operation = jc.getOperation();
-      currOperations.add(operation);
+      currOperations.put(operation.getId(), operation);
       addjobsCreator(operation.getId(), jc);
     });
   }
@@ -100,24 +102,24 @@ public class TaskerService implements Tasker_I, JobListener_I {
 
   @Override
   public void updateJobState(String jobId, State state) {
+    log.info("updateJobState: {} {}", jobId, state);
     // placeholder to do any checking
     sessDb.rpc().updateJobState(jobId, state);
   }
 
   @Override
   public void updateJobProgress(String jobId, Progress progress) {
+    log.info("updateJobState: {} {}", jobId, progress);
     // placeholder to do any checking
     sessDb.rpc().updateJobProgress(jobId, progress);
   }
 
   @Override
   public CompletableFuture<Boolean> addJob(Job job, String... inputJobIds) {
+    log.info("addJob with inputs={} : {}", Arrays.toString(inputJobIds), job);
     // add job to sessionsDB
     CompletableFuture<Job> addJobToSessDB = sessDb.rpc().addJob(job);
-
-    try {
-      Job sessDbJob = addJobToSessDB.get();
-
+    return addJobToSessDB.thenCompose((sessDbJob) -> {
       // submit job
       JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType())
           .setRequest(sessDbJob)
@@ -126,10 +128,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
 
       log.info("Added and dispatched job={}", sessDbJob);
       return submitJob;
-    } catch (InterruptedException | ExecutionException e) {
-      e.printStackTrace();
-      throw new RuntimeException(e);
-    }
+    });
   }
 
 }

@@ -14,6 +14,7 @@ import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
+import dataengine.sessions.frames.BaseFrame;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,11 +24,27 @@ public final class SessionDB_FrameHelper {
 
   private final FramedTransactionalGraph<TransactionalGraph> graph;
 
-  public <T> T getVertexFrame(String qualId, Class<T> clazz) {
+  public boolean hasFrame(String id, String typeValue) {    
     return tryOn(graph, graph -> {
-      T vf = graph.getVertex(qualId, clazz);
+      Vertex vf = graph.getVertex(id);
+      if(vf == null)
+        return false;
+      return typeValue.equals(vf.getProperty(BaseFrame.TYPE_KEY));
+    });
+  }
+
+  public boolean hasVertexFrame(String id) {
+    return tryOn(graph, graph -> {
+      Vertex vf = graph.getVertex(id);
+      return (vf != null);
+    });
+  }
+  
+  public <T> T getVertexFrame(String id, Class<T> clazz) {
+    return tryOn(graph, graph -> {
+      T vf = graph.getVertex(id, clazz);
       if (vf == null)
-        throw new IllegalArgumentException("Node does not exists with id=" + qualId);
+        throw new IllegalArgumentException("Node does not exists with id=" + id);
       return vf;
     });
   }

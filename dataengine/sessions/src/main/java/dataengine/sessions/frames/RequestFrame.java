@@ -25,7 +25,8 @@ public interface RequestFrame extends BaseFrame {
   @Adjacency(label = "job", direction = Direction.OUT)
   Iterable<JobFrame> getJobs();
 
-  abstract class RequestFrameImpl extends BaseFrame.Impl implements RequestFrame {
+  // must be called "Impl"
+  abstract class Impl extends BaseFrame.Impl implements RequestFrame {
     @Initializer
     public void init() {
       super.init();
