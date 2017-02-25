@@ -23,7 +23,7 @@ public class ServiceWaiterBase {
   /**
    * Creates msg consumer assuming reply is a serverAddr string.
    */
-  public String createMsgConsumer(CompletableFuture<String> serverAddrF) {
+  public String createMsgConsumer(CompletableFuture<String> serverAddrF, Consumer<Message<String>> gotServiceAddrHook) {
     return createServerMsgConsumer((String msgBody) -> {
       if (serverAddrF.isDone())
         log.warn("Already got serverAddr, ignoring this one: {}", msgBody);
@@ -31,7 +31,7 @@ public class ServiceWaiterBase {
         log.info("Got serverAddr={}", msgBody);
         serverAddrF.complete(msgBody);
       }
-    });
+    }, gotServiceAddrHook);
   }
 
   private MessageConsumer<?> consumer;
@@ -41,12 +41,14 @@ public class ServiceWaiterBase {
    * Creates msg consumer with given registerServer
    * @param registerServer
    */
-  public <T> String createServerMsgConsumer(Consumer<T> registerServer) {
+  public <T> String createServerMsgConsumer(Consumer<T> registerServer, Consumer<Message<T>> gotServiceAddrHook) {
     if (consumer != null)
       consumer.unregister();
     consumer = vertx.eventBus().consumer(myAddress, (Message<T> msg) -> {
       log.info("Got response from server: {}", msg.body());
       registerServer.accept(msg.body());
+      if(gotServiceAddrHook!=null) 
+        gotServiceAddrHook.accept(msg);
     });
     return myAddress;
   }

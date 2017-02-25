@@ -15,8 +15,11 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
 public class JobManagerMain {
 
   public static void main(String[] args) {
+    main(new CompletableFuture<>());
+  }
+  public static void main(CompletableFuture<Vertx> vertxF) {
     log.info("Starting {}", JobManagerMain.class);
-    Injector injector = createInjector(new CompletableFuture<>());
+    Injector injector = createInjector(vertxF);
     JobBoardModule.deployJobBoardVerticles(injector);
     JobBoardModule.deployDepJobService(injector, VerticleConsts.depJobMgrBroadcastAddr);
   }

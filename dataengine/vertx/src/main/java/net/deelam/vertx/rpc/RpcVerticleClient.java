@@ -41,12 +41,12 @@ public class RpcVerticleClient {
   CompletableFuture<String> serverAddrF;
 
   public RpcVerticleClient start() {
-    serverAddrF = waiter.listenAndBroadCast();
+    serverAddrF = waiter.listenAndBroadcast();
     return this;
   }
 
   public <T> Supplier<T> invalidateAndFindNewServer(Class<T> clazz) {
-    serverAddrF = waiter.listenAndBroadCast();
+    serverAddrF = waiter.listenAndBroadcast();
     return createRpcClient(clazz);
   }
 

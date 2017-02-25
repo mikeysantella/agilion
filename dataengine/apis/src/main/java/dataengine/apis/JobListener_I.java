@@ -28,5 +28,5 @@ public interface JobListener_I {
    * @param inputJobIds
    * @return
    */
-  CompletableFuture<Boolean> addJob(Job job, String... inputJobIds);
+  CompletableFuture<Boolean> addJob(Job job, String[] inputJobIds);
 }

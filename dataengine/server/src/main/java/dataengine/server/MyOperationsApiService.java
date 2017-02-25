@@ -3,7 +3,6 @@ package dataengine.server;
 import static dataengine.server.RestParameterHelper.makeResponseIfNotSecure;
 import static dataengine.server.RestParameterHelper.makeResultResponse;
 
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -23,8 +22,8 @@ public class MyOperationsApiService extends OperationsApiService {
 
   @Inject
   MyOperationsApiService(Supplier<Tasker_I> taskerF, Supplier<OperationsRegistry_I> opsRegF) {
-    tasker=new RpcClientProvider<>(taskerF);
-    opRegistry=new RpcClientProvider<>(opsRegF);
+    tasker = new RpcClientProvider<>(taskerF);
+    opRegistry = new RpcClientProvider<>(opsRegF);
   }
 
   @Override
@@ -42,10 +41,6 @@ public class MyOperationsApiService extends OperationsApiService {
   }
 
   private void refresh() {
-    try {
-      opRegistry.rpc().refresh().thenAccept((f) -> tasker.rpc().refreshJobsCreators()).get();
-    } catch (InterruptedException | ExecutionException e) {
-      e.printStackTrace();
-    }
+    opRegistry.rpc().refresh().thenAccept((f) -> tasker.rpc().refreshJobsCreators()).join();
   }
 }

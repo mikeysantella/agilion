@@ -23,7 +23,7 @@ import net.deelam.vertx.rpc.VertxRpcUtil.KryoSerDe;
 
 public class KryoSerDeTest {
 
-  KryoSerDe kryo = new KryoSerDe();
+  KryoSerDe kryo = new KryoSerDe("test");
 
   @Before
   public void setUp() throws Exception {

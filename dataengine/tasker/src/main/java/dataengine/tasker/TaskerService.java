@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -71,9 +70,18 @@ public class TaskerService implements Tasker_I, JobListener_I {
       throw new UnsupportedOperationException("No JobsCreator found for " + addedReq.getOperationId());
 
     List<JobEntry> jobs = jc.createFrom(addedReq);
+
+    CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);
     for (JobEntry jobE : jobs) {
+      log.info("Adding new job "+jobE.job().getId());
       // add job to sessionsDB and submit to jobDispatcher
-      addJob(jobE.job, jobE.inputJobIds);
+      // FIXME: test thenCompose to ensure sequential
+      addJobsChainF.thenCompose((isAdded) -> {
+        if (isAdded)
+          return addJob(jobE.job, jobE.inputJobIds);
+        else
+          throw new IllegalStateException("Previous job was not added!  Not continuing to add job: "+jobE.job.getId());
+      });
     }
     return addedReq;
   }
@@ -115,17 +123,17 @@ public class TaskerService implements Tasker_I, JobListener_I {
   }
 
   @Override
-  public CompletableFuture<Boolean> addJob(Job job, String... inputJobIds) {
-    log.info("addJob with inputs={} : {}", Arrays.toString(inputJobIds), job);
+  public CompletableFuture<Boolean> addJob(Job job, String[] inputJobIds) {
+    log.info("addJob {} with inputs={}", job.getId(), Arrays.toString(inputJobIds));
     // add job to sessionsDB
     CompletableFuture<Job> addJobToSessDB = sessDb.rpc().addJob(job);
     return addJobToSessDB.thenCompose((sessDbJob) -> {
       // submit job
+      log.info("Submitting job={} to jobDispatcher", job.getId());
       JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType())
           .setRequest(sessDbJob)
           .setRequesterAddr(VerticleConsts.jobListenerBroadcastAddr);
-      CompletableFuture<Boolean> submitJob = jobDispatcher.rpc().addJob(jobDto, inputJobIds);
-
+      CompletableFuture<Boolean> submitJob = jobDispatcher.rpc().addDepJob(jobDto, inputJobIds);
       log.info("Added and dispatched job={}", sessDbJob);
       return submitJob;
     });
