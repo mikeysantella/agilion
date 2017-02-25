@@ -37,7 +37,7 @@ public class JobBoardModule extends AbstractModule {
     JobProducer jobProducer = injector.getInstance(JobProducer.class);
     JobBoard jm = injector.getInstance(JobBoard.class);
     if(DEBUG){
-      jm.periodicLogs(5_000, 20);
+      jm.periodicLogs(10_000, 20);
     }
     
     vertx.deployVerticle(jm);
@@ -64,14 +64,14 @@ public class JobBoardModule extends AbstractModule {
       .start(depJobMgrId+System.currentTimeMillis(), depJobMgr);
     
     if(DEBUG){
-      vertx.setPeriodic(5000, t -> {
+      vertx.setPeriodic(10_000, t -> {
         if (depJobMgr.getWaitingJobs().size() > 0)
           log.info("waitingJobs={}", depJobMgr.getWaitingJobs().keySet());
         if (depJobMgr.getUnsubmittedJobs().size() > 0)
           log.info("unsubmittedJobs={}", depJobMgr.getUnsubmittedJobs().keySet());
       });
       
-      int statusPeriod = 3_000;
+      int statusPeriod = 10_000;
       int sameLogThreshold = 10;
       if (statusPeriod > 0) {
         AtomicInteger sameLogMsgCount = new AtomicInteger(0);

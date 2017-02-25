@@ -3,8 +3,9 @@ package dataengine.tasker;
 import static dataengine.apis.OperationsRegistry_I.OPERATIONS_REG_API.QUERY_OPS;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -22,7 +23,7 @@ import net.deelam.vertx.BroadcastingRegistryVerticle;
 public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
 
   @Getter
-  private Collection<Operation> operations = new HashSet<>();
+  private Map<String, Operation> operations = new HashMap<>();
 
   public OperationsRegistryVerticle(String serviceType) {
     super(serviceType);
@@ -34,10 +35,14 @@ public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
     registerMsgBeans(OperationsRegistry_I.msgBodyClasses);
   }
 
-  public CompletableFuture<Collection<Operation>> queryOperations() {
+  public CompletableFuture<Map<String, Operation>> queryOperations() {
     CompletableFuture<Set<List<Operation>>> opsReplySet = query(QUERY_OPS.name(), null);
     return opsReplySet.thenApply(set -> {
-      set.forEach(list -> operations.addAll(list));
+      set.forEach(list -> list.forEach(op -> {
+        Operation existing = operations.put(op.getId(), op);
+        if(existing!=null)
+          log.warn("Replaced existing operation with same id={}: prev={} curr={}", op.getId(), existing, op);
+      }));
       return operations;
     });
   }

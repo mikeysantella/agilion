@@ -1,13 +1,17 @@
 package dataengine.workers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import static dataengine.apis.OperationsRegistry_I.OPERATIONS_REG_API.QUERY_OPS;
 
 
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
+import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationsRegistry_I;
 import net.deelam.vertx.HandlingSubscriberVerticle;
 
@@ -29,11 +33,14 @@ public class OperationsSubscriberVerticle extends HandlingSubscriberVerticle {
     // TODO: 1: get operations from actual workers, if still alive
     ArrayList<Operation> list = new ArrayList<>();
     List<OperationParam> params=new ArrayList<>();
+    Map<String,String> info=new HashMap<>();
+    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
     list.add(new Operation().id("ADD_SOURCE_DATASET"+myId).description("add source dataset")
+        .info(info)
         .params(params));
     params.add(new OperationParam().key("inputUri").required(true).description("location of source dataset")
         .valuetype(ValuetypeEnum.STRING).defaultValue(null).isMultivalued(false));
-    params.add(new OperationParam().key("dataformat").required(true).description("type and format of data")
+    params.add(new OperationParam().key(OperationConsts.INGEST_DATAFORMAT).required(true).description("type and format of data")
         .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false)
         .addPossibleValuesItem("TELEPHONE.CSV").addPossibleValuesItem("PEOPLE.CSV")); 
     // TODO: 1: retrieve from Workers

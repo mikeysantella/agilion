@@ -1,5 +1,7 @@
 package net.deelam.vertx.rpc;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -54,6 +56,9 @@ public class VertxRpcUtil {
     final KryoSerDe serde = new KryoSerDe();
     return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
         (proxy, method, args) -> {
+          if ("toString".equals(method.getName())) {
+            return (T) "RPC client proxy for " + iface.getSimpleName();
+          }
           try {
             String methodId = genMethodId(method);
             if (hook != null)
@@ -104,7 +109,8 @@ public class VertxRpcUtil {
               });
               return resultF;
             } else {
-              throw new UnsupportedOperationException("Unsupported return type: " + returnType);
+              throw new UnsupportedOperationException(
+                  "Unsupported method '" + method + "' with return type=" + returnType);
             }
           } catch (Throwable e) {
             log.error("Client-side error", e);
@@ -157,10 +163,12 @@ public class VertxRpcUtil {
               });
             }
           } catch (InvocationTargetException ex) {
+            Throwable e = (ex.getCause() == null) ? ex : ex.getCause();
+            //checkNotNull(e, ex.getCause());
             if (hook != null)
-              hook.serverRepliesThrowable("invoking " + methodId, ex.getCause());
-            DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, ex.getCause().toString());
-            r.reply(serde.writeObject(ex.getCause()), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
+              hook.serverRepliesThrowable("invoking " + methodId, e);
+            DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
+            r.reply(serde.writeObject(e), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
           }
         }
       } catch (Throwable e) {
@@ -171,8 +179,8 @@ public class VertxRpcUtil {
   }
 
   static String genMethodId(Method method) {
- // TODO: 7: make methodId more unique with method.getParameterTypes()?
-    return method.getName()+method.getParameterCount(); 
+    // TODO: 1: make methodId more unique with method.getParameterTypes()?
+    return method.getName(); // Doesn't work with varargs: method.getParameterCount();
   }
 
   static final class KryoSerDe {
@@ -191,14 +199,15 @@ public class VertxRpcUtil {
           new BaseInstantiatorStrategy() {
             @Override
             public ObjectInstantiator newInstantiatorOf(Class type) {
-              if (type.isInterface() && List.class.isAssignableFrom(type)) {
-                return new ObjectInstantiator<List>() {
-                  @Override
-                  public List newInstance() {
-                    return new ArrayList();
-                  }
-                };
-              }
+              if (type.isInterface())
+                if (List.class.isAssignableFrom(type)) {
+                  return new ObjectInstantiator<List>() {
+                    @Override
+                    public List newInstance() {
+                      return new ArrayList();
+                    }
+                  };
+                }
               return new StdInstantiatorStrategy().newInstantiatorOf(type);
             }
           }));
@@ -256,11 +265,15 @@ public class VertxRpcUtil {
         final Output output = new Output(new ByteArrayOutputStream());
         //log.debug("writeObject: " + obj);
         kryo.writeClassAndObject(output, obj);
+
+        //Object debugCheck=kryo.readClassAndObject(new Input(output.toBytes()));
+        //log.debug("debugCheck: " + debugCheck);
+
         return Buffer.buffer(output.toBytes());
       } catch (Throwable t) {
-        try{
+        try {
           //log.error("t",t);
-          return writeObject(Json.encode(obj));          
+          return writeObject(Json.encode(obj));
         } catch (Throwable t2) {
           // TODO: 3: determine appropriate kryo serializer
           //log.error("t2",t2);
@@ -293,37 +306,41 @@ public class VertxRpcUtil {
   }
 
   @Slf4j
+  @RequiredArgsConstructor
   public static class DebugRpcHook implements RpcHook {
+    final String iface;
+
     public void clientSendsCall(String methodId, Object[] args) {
-      log.debug("clientSendsCall: {}: {}", methodId, Arrays.toString(args));
+      log.debug("{} clientSendsCall: {}: {}", iface, methodId, Arrays.toString(args));
     }
 
     public void serverReceivesCall(String methodId, Object[] args) {
-      log.debug("serverReceivesCall: {}: {}", methodId, Arrays.toString(args));
+      log.debug("{} serverReceivesCall: {}: {}", iface, methodId, Arrays.toString(args));
     }
 
     public void serverReplies(String methodId, Object result) {
-      log.debug("serverReplies: {}: {}", methodId, result);
+      log.debug("{} serverReplies: {}: {}", iface, methodId, result);
     }
 
     public void clientReceivesResult(String methodId, Object result) {
-      log.debug("clientReceivesResult: {}: {}", methodId, result);
+      log.debug("{} clientReceivesResult: {}: {}", iface, methodId, result);
     }
 
     public void clientReceivedVoid(String methodId) {
-      log.debug("clientReceivedVoid: {}", methodId);
+      log.debug("{} clientReceivedVoid: {}", iface, methodId);
     }
 
     public void serverRepliesThrowable(String methodId, Throwable e) {
-      log.debug("serverRepliesThrowable: {}: {}", methodId, (e == null) ? e : e.getMessage());
+      log.debug("{} serverRepliesThrowable: "+iface+": "+methodId, e);
+      //log.debug("{} serverRepliesThrowable: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage()); // in case getMessage()==null
     }
 
     public void clientReceivedThrowable(String methodId, Throwable e) {
-      log.debug("clientReceivedThrowable: {}: {}", methodId, (e == null) ? e : e.getMessage());
+      log.debug("{} clientReceivedThrowable: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage());
     }
 
     public void clientCallFailed(String methodId, Throwable e) {
-      log.debug("clientCallFailed: {}: {}", methodId, (e == null) ? e : e.getMessage());
+      log.debug("{} clientCallFailed: {}: {}", iface, methodId, (e == null) ? e : e.getMessage());
     }
   }
 }

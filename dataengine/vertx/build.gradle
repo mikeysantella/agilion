@@ -11,6 +11,8 @@ dependencies {
   
   compileOnly project(':graph')
   testCompile project(':graph')
+  testCompile project(':apis')
+  testCompile dep.dataengine_api
   compileOnly dep.frames
   testCompile dep.frames
   

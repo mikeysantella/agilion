@@ -5,7 +5,6 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | 
-**jobId** | **String** |  | 
 **state** | [**State**](State.md) |  | 
 **dataFormat** | **String** | dataset storage format | 
 **dataSchema** | **String** | dataset schema name | 

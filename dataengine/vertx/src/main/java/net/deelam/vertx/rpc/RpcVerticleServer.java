@@ -20,7 +20,7 @@ public class RpcVerticleServer {
   public <T> RpcVerticleServer start(String serverAddr, T service, boolean withDebugHook) {
     VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);
     if (withDebugHook)
-      rpc.setHook(new VertxRpcUtil.DebugRpcHook());
+      rpc.setHook(new VertxRpcUtil.DebugRpcHook(service.getClass().getSimpleName()));
     log.debug("Registering RPC service at {}: {}", serverAddr, service);
     rpc.registerServer(service);
 

@@ -75,7 +75,8 @@ public class MySessionApiServiceTest {
       // ok if it already exists;
     }
     {
-      Request req = new Request().sessionId("newSess").label("req1Name");
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operationId("addSourceDataset");
       Request req2 = reqApi.submitRequest(req);
       req2.setId(null); // ignore
       req2.setCreatedTime(null); // ignore

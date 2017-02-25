@@ -19,9 +19,6 @@ public class Dataset implements Serializable {
   @JsonProperty("id")
   private String id = null;
 
-  @JsonProperty("jobId")
-  private String jobId = null;
-
   @JsonProperty("state")
   private State state = null;
 
@@ -63,25 +60,6 @@ public class Dataset implements Serializable {
 
   public void setId(String id) {
     this.id = id;
-  }
-
-  public Dataset jobId(String jobId) {
-    this.jobId = jobId;
-    return this;
-  }
-
-   /**
-   * Get jobId
-   * @return jobId
-  **/
-  @NotNull
-  @ApiModelProperty(example = "3333f1ee-6c54-4b01-90e6-d701748f3333", required = true, value = "")
-  public String getJobId() {
-    return jobId;
-  }
-
-  public void setJobId(String jobId) {
-    this.jobId = jobId;
   }
 
   public Dataset state(State state) {
@@ -242,7 +220,6 @@ public class Dataset implements Serializable {
     }
     Dataset dataset = (Dataset) o;
     return Objects.equals(this.id, dataset.id) &&
-        Objects.equals(this.jobId, dataset.jobId) &&
         Objects.equals(this.state, dataset.state) &&
         Objects.equals(this.dataFormat, dataset.dataFormat) &&
         Objects.equals(this.dataSchema, dataset.dataSchema) &&
@@ -255,7 +232,7 @@ public class Dataset implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, jobId, state, dataFormat, dataSchema, label, uri, createdTime, deletedTime, stats);
+    return Objects.hash(id, state, dataFormat, dataSchema, label, uri, createdTime, deletedTime, stats);
   }
 
 
@@ -265,7 +242,6 @@ public class Dataset implements Serializable {
     sb.append("class Dataset {\n");
     
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
-    sb.append("    jobId: ").append(toIndentedString(jobId)).append("\n");
     sb.append("    state: ").append(toIndentedString(state)).append("\n");
     sb.append("    dataFormat: ").append(toIndentedString(dataFormat)).append("\n");
     sb.append("    dataSchema: ").append(toIndentedString(dataSchema)).append("\n");

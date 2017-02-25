@@ -23,6 +23,10 @@ public final class SessionDB_RequestHelper {
   private final SessionDB_SessionHelper sessHelper;
   private final SessionDB_FrameHelper frameHelper;
 
+  public boolean hasRequest(String id) {
+    return frameHelper.hasFrame(id, RequestFrame.TYPE_VALUE);
+  }
+  
   public RequestFrame getRequestFrame(String id) {
     return frameHelper.getVertexFrame(id, RequestFrame.class);
   }
