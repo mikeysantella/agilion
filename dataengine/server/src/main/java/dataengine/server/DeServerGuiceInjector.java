@@ -31,10 +31,11 @@ public final class DeServerGuiceInjector {
 
   private DeServerGuiceInjector() {
     String runAllInSameJvm = System.getProperty("RUN_ALL_IN_SAME_JVM");
+    boolean runInSingleJVM = true; //Boolean.getBoolean(runAllInSameJvm);
     
     CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
     AbstractModule vertxInjectionModule;
-    if(Boolean.valueOf(runAllInSameJvm)){
+    if(runInSingleJVM){
       vertxInjectionModule= new AbstractModule() {
         @Override
         protected void configure() {
@@ -50,7 +51,7 @@ public final class DeServerGuiceInjector {
         new VertxRpcClients4ServerModule(vertxF),
         new RestServiceModule());
 
-    if(Boolean.valueOf(runAllInSameJvm)){
+    if(runInSingleJVM){
       vertxF.join();
       log.info("======== Running all required DataEngine services in same JVM {}", vertxF);
       startAllInSameJvm(vertxF);

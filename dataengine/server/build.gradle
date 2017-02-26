@@ -11,15 +11,15 @@ dependencies {
   compile dep.dataengine_api
   compile dep.guice
   runtime dep.vertx_ignite
-  
-  testCompile 'agilion:dataengine-client:0.0.1-SNAPSHOT'
+
   testCompile project(':sessions')
   testCompile project(':tasker')
-  
+
   // TEMPORARY: for easily starting everything in one JVM
   compile project(':sessions')
   compile project(':tasker')
   compile project(':jobmgr')
   compile project(':workers')
+
 }
 

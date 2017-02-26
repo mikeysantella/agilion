@@ -164,8 +164,11 @@ public class GrafTxn {
    *     rollback is delayed until the top-level transaction is committed or rolledback.
    */
   public static boolean rollback(int tx) {
+    return rollback(tx, null);
+  }
+  public static boolean rollback(int tx, Throwable t) {
     log.warn("Rolling graph transaction back from: {}", tx);
-    log.warn("Rolling back", new Throwable("why?"));
+    log.warn("Rolling back", t);
     decrementNestingDepth(tx);
 
     if (!rollbackCalled.get().get()) {
@@ -231,7 +234,7 @@ public class GrafTxn {
       consumer.accept(graph);
       commit(tx);
     } catch (Throwable e) {
-      rollback(tx);
+      rollback(tx, e);
       throw e;
     }
   }
@@ -253,7 +256,7 @@ public class GrafTxn {
       consumer.run();
       commit(tx);
     } catch (Throwable e) {
-      rollback(tx);
+      rollback(tx, e);
       throw e;
     }
   }
@@ -273,7 +276,7 @@ public class GrafTxn {
       commit(tx);
       return result;
     } catch (Throwable e) {
-      rollback(tx);
+      rollback(tx, e);
       throw e;
     }
   }
@@ -298,9 +301,9 @@ public class GrafTxn {
         commitIfFull(tx);
       }
       commit(tx);
-    } catch (Throwable re) {
-      rollback(tx);
-      throw re;
+    } catch (Throwable e) {
+      rollback(tx, e);
+      throw e;
     } finally {
       checkTransactionsClosed();
     }
@@ -314,9 +317,9 @@ public class GrafTxn {
         commitIfFull(tx);
       }
       commit(tx);
-    } catch (Throwable re) {
-      rollback(tx);
-      throw re;
+    } catch (Throwable e) {
+      rollback(tx, e);
+      throw e;
     } finally {
       checkTransactionsClosed();
     }
