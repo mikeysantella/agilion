@@ -14,7 +14,9 @@ import dataengine.api.DatasetApiService;
 import dataengine.api.NotFoundException;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MyDatasetApiService extends DatasetApiService {
   private static final String OBJECT_TYPE = "Dataset";
 
@@ -28,6 +30,7 @@ public class MyDatasetApiService extends DatasetApiService {
   @Override
   public Response getDataset(String id, SecurityContext securityContext)
       throws NotFoundException {
+    log.info("REST {}: getDataset: {}", securityContext.getUserPrincipal(), id);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;

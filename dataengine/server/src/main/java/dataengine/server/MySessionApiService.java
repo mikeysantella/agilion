@@ -33,6 +33,7 @@ public class MySessionApiService extends SessionApiService {
 
   @Override
   public Response createSession(Session session, SecurityContext securityContext) throws NotFoundException {
+    log.info("REST {}: createSession: {}", securityContext.getUserPrincipal(), session);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
@@ -44,7 +45,7 @@ public class MySessionApiService extends SessionApiService {
 
   @Override
   public Response getSession(String id, SecurityContext securityContext) throws NotFoundException {
-    log.debug("getSession: {} context={}", id, securityContext);
+    log.info("REST {}: getSession: {}", securityContext.getUserPrincipal(), id);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
@@ -58,6 +59,7 @@ public class MySessionApiService extends SessionApiService {
   @Override
   public Response setSessionMetadata(String id, @SuppressWarnings("rawtypes") Map props,
       SecurityContext securityContext) throws NotFoundException {
+    log.info("REST {}: setSessionMetadata: {} {}", securityContext.getUserPrincipal(), id, props);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;

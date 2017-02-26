@@ -13,7 +13,9 @@ import dataengine.api.JobApiService;
 import dataengine.api.NotFoundException;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MyJobApiService extends JobApiService {
 
   final RpcClientProvider<SessionsDB_I> sessDb;
@@ -25,6 +27,7 @@ public class MyJobApiService extends JobApiService {
 
   @Override
   public Response getJob(String id, SecurityContext securityContext) throws NotFoundException {
+    log.info("REST {}: getJob: {}", securityContext.getUserPrincipal(), id);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;

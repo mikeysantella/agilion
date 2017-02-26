@@ -27,7 +27,7 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
-      //sessGraphUri.shutdown(); // TODO: move to a shutdown hook
+      //sessGraphUri.shutdown(); // TODO: 4: move to a shutdown hook
     }
     log.info("TinkerGraphSessionsDbModule configured");
   }
