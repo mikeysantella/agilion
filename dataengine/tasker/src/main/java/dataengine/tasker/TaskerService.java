@@ -75,8 +75,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
     for (JobEntry jobE : jobs) {
       log.info("Adding new job "+jobE.job().getId());
       // add job to sessionsDB and submit to jobDispatcher
-      // FIXME: test thenCompose to ensure sequential
-      addJobsChainF.thenCompose((isAdded) -> {
+      addJobsChainF=addJobsChainF.thenCompose((isAdded) -> {
         if (isAdded)
           return addJob(jobE.job, jobE.inputJobIds);
         else
