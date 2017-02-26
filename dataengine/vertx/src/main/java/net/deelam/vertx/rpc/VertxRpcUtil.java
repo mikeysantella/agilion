@@ -51,6 +51,7 @@ public class VertxRpcUtil {
   @SuppressWarnings("unchecked")
   public <T> T createClient(Class<T> iface) {
     log.debug("Creating RPC client for {} at {} ", iface.getSimpleName(), address);
+    final HashMap<Method, String> methods = new HashMap<>();
     final KryoSerDe serde = new KryoSerDe(address+"-client");
     return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
         (proxy, method, args) -> {
@@ -58,7 +59,13 @@ public class VertxRpcUtil {
             return (T) "RPC client proxy for " + iface.getSimpleName();
           }
           try {
-            String methodId = genMethodId(method);
+            String methodIdTemp = methods.get(method);
+            if(methodIdTemp==null){
+              method.setAccessible(true);
+              methodIdTemp=genMethodId(method);
+              methods.put(method, methodIdTemp);
+            }
+            final String methodId=methodIdTemp;
             if (hook != null)
               hook.clientSendsCall(methodId, args);
             DeliveryOptions options = new DeliveryOptions().addHeader(HEADER_METHOD_ID, methodId);
@@ -186,9 +193,14 @@ public class VertxRpcUtil {
     return msgConsumerF.join();
   }
 
+  // Doesn't work with varargs
   static String genMethodId(Method method) {
-    // TODO: 1: make methodId more unique with method.getParameterTypes()?
-    return method.getName(); // Doesn't work with varargs: method.getParameterCount();
+    StringBuilder sb=new StringBuilder(method.getName());
+    sb.append("^");
+    for(Class<?> paramT:method.getParameterTypes()){
+      sb.append(paramT.getSimpleName());
+    }
+    return sb.toString(); 
   }
 
   /**

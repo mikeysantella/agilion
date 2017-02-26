@@ -1,7 +1,6 @@
 package dataengine.sessions;
 
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
-import static net.deelam.graph.GrafTxn.tryOn;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -17,7 +16,6 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import dataengine.api.Session;
-import dataengine.sessions.frames.BaseFrame;
 import dataengine.sessions.frames.SessionFrame;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
