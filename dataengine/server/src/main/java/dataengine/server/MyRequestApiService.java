@@ -20,7 +20,9 @@ import dataengine.api.RequestApiService;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MyRequestApiService extends RequestApiService {
 
   final RpcClientProvider<Tasker_I> tasker;
@@ -39,6 +41,7 @@ public class MyRequestApiService extends RequestApiService {
   @Override
   public Response submitRequest(Request req, SecurityContext securityContext)
       throws NotFoundException {
+    log.info("REST {}: submitRequest: {}", securityContext.getUserPrincipal(), req);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
@@ -54,6 +57,7 @@ public class MyRequestApiService extends RequestApiService {
   @Override
   public Response getRequest(String id, SecurityContext securityContext)
       throws NotFoundException {
+    log.info("REST {}: getRequest: {}", securityContext.getUserPrincipal(), id);
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;

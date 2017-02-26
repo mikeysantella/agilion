@@ -13,7 +13,9 @@ import dataengine.api.NotFoundException;
 import dataengine.api.SessionsApiService;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MySessionsApiService extends SessionsApiService {
 
   final RpcClientProvider<SessionsDB_I> sessDb;
@@ -25,6 +27,7 @@ public class MySessionsApiService extends SessionsApiService {
   
   @Override
   public Response listSessions(SecurityContext securityContext) throws NotFoundException {
+    log.info("REST {}: listSessions", securityContext.getUserPrincipal());
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
@@ -33,6 +36,7 @@ public class MySessionsApiService extends SessionsApiService {
 
   @Override
   public Response listSessionIds(SecurityContext securityContext) throws NotFoundException {
+    log.info("REST {}: listSessionIds", securityContext.getUserPrincipal());
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
@@ -41,6 +45,7 @@ public class MySessionsApiService extends SessionsApiService {
 
   @Override
   public Response listSessionNames(SecurityContext securityContext) throws NotFoundException {
+    log.info("REST {}: listSessionNames", securityContext.getUserPrincipal());
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;

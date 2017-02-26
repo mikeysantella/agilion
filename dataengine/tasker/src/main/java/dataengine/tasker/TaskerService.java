@@ -133,7 +133,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
           .setRequest(sessDbJob)
           .setRequesterAddr(VerticleConsts.jobListenerBroadcastAddr);
       CompletableFuture<Boolean> submitJob = jobDispatcher.rpc().addDepJob(jobDto, inputJobIds);
-      log.info("Added and dispatched job={}", sessDbJob);
+      log.debug("Added and dispatched job={}", sessDbJob);
       return submitJob;
     });
   }
