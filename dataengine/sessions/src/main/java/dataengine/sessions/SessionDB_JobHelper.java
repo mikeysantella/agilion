@@ -60,7 +60,7 @@ public final class SessionDB_JobHelper {
         if (job.getLabel() == null)
           jf.setLabel("job " + (++jobCounter));
         else
-          jf.setLabel(job.getLabel());
+          jf.setLabel(SessionDB_FrameHelper.checkLabel(job.getLabel()));
         
         // Add createdTime so we can order the jobs
         if (job.getCreatedTime() != null)

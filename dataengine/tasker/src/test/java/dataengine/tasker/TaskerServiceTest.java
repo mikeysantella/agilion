@@ -1,6 +1,12 @@
 package dataengine.tasker;
 
-import java.util.Collection;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
@@ -8,6 +14,7 @@ import javax.inject.Singleton;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -15,11 +22,14 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 
 import dataengine.api.Operation;
+import dataengine.api.OperationParam;
+import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.api.Request;
-import dataengine.apis.OperationsRegistry_I;
+import dataengine.apis.OperationConsts;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
+import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.jobboard.DepJobService_I;
 
@@ -28,16 +38,13 @@ public class TaskerServiceTest {
 
   @Before
   public void setUp() throws Exception {
+    CompletableFuture<Vertx> vertxF = CompletableFuture.completedFuture(Vertx.vertx());
     Injector injector = Guice.createInjector(
         new AbstractModule() {
           @Override
           protected void configure() {
-
-            // OperationsRegistry_I used by clients
-            bind(OperationsRegistry_I.class).to(OperationsRegistryRpcService.class);
-            bind(OperationsRegistryRpcService.class).in(Singleton.class);
-            // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
-
+            bind(Vertx.class).toInstance(vertxF.join());
+            
             // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
             OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
             bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
@@ -50,40 +57,117 @@ public class TaskerServiceTest {
           @Provides
           @Singleton
           Supplier<SessionsDB_I> getSessionsDBClient() {
-            return null; //getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
+            return () -> sessDB;
           }
 
           @Provides
           @Singleton
           Supplier<DepJobService_I> getDepJobServiceClient() {
-            return null; //getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr); // blocks
+            return () -> Mockito.mock(DepJobService_I.class);
           }
         });
+    opsReg = injector.getInstance(OperationsRegistryVerticle.class);
+    {
+      Map<String, String> info = new HashMap<>();
+      info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
+      Operation worker1Op = new Operation()
+          .id("INGEST_SOURCE_DATASET")
+          .description("add source dataset")
+          .info(info)
+          .addParamsItem(new OperationParam()
+              .key("inputUri").required(true)
+              .description("location of source dataset")
+              .valuetype(ValuetypeEnum.STRING).isMultivalued(false)
+              .defaultValue(null))
+          .addParamsItem(new OperationParam()
+              .key(OperationConsts.INGEST_DATAFORMAT).required(true)
+              .description("type and format of data")
+              .valuetype(ValuetypeEnum.ENUM).isMultivalued(false)
+              .defaultValue(null)
+              .addPossibleValuesItem("TELEPHONE.CSV"));
+      opsReg.getOperations().put(worker1Op.getId(), worker1Op);
+    }
 
-    //opsRegSvc = injector.getInstance(OperationsRegistry_I.class);
-    //taskerSvc = injector.getInstance(TaskerService.class);
-
+    taskerSvc = injector.getInstance(TaskerService.class);
+    taskerSvc.refreshJobsCreators().join();
   }
 
-  OperationsRegistry_I opsRegSvc;
+  SessionsDB_I sessDB = mock(SessionsDB_I.class);
+  OperationsRegistryVerticle opsReg;
   Tasker_I taskerSvc;
 
   //@Test
-  public void test() throws InterruptedException, ExecutionException {
-    Collection<Operation> ops1 = opsRegSvc.listOperations().get();
-    log.info("ops1={}", ops1);
+  public void testQueryingWorkers() throws InterruptedException, ExecutionException {
+    Map<String, Operation> ops1 = opsReg.getOperations();
+    log.info("before refresh: ops1={}", ops1);
 
-    opsRegSvc.refresh();
-    Collection<Operation> ops2 = opsRegSvc.listOperations().get();
-    log.info("ops2={}", ops2);
+    // simulate REST API call to OperationsApiService.refresh()
+    opsReg.refresh()
+        .thenCompose((none) -> taskerSvc.refreshJobsCreators())
+        .join();
 
-    taskerSvc.refreshJobsCreators().get();
-    Collection<Operation> ops3 = opsRegSvc.listOperations().get();
-    log.info("ops3={}", ops3);
-
-    Request req = null;
-    taskerSvc.submitRequest(req).get();
-    //fail("Not yet implemented");
+    Map<String, Operation> ops2 = opsReg.getOperations();
+    log.info("after refresh: ops2={}", ops2);
   }
 
+  @Test
+  public void testSubmitIncompleteRequest() throws InterruptedException, ExecutionException {
+    Map<String, Operation> ops = opsReg.getOperations();
+    log.info("ops={}", ops);
+    try {
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operationId("addSourceDataset");
+      when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
+      taskerSvc.submitRequest(req).get();
+      fail("Expected exception");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("parameters missing"));
+    }
+  }
+
+  @Test
+  public void testSubmitCompleteRequestButWrongEnum() throws InterruptedException, ExecutionException {
+    try {
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operationId("addSourceDataset");
+      HashMap<String, Object> paramValues = new HashMap<String, Object>();
+      req.operationParams(paramValues);
+      paramValues.put("inputUri", "hdfs://some/where/");
+      paramValues.put("dataFormat", "SOME_UNKNOWN_FORMAT");
+      when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
+      taskerSvc.submitRequest(req).get();
+      fail("Expected exception");
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("Unknown enum"));
+    }
+  }
+
+  @Test
+  public void testSubmitCompleteRequestButWrongValueType() throws InterruptedException, ExecutionException {
+    try {
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operationId("addSourceDataset");
+      HashMap<String, Object> paramValues = new HashMap<String, Object>();
+      req.operationParams(paramValues);
+      paramValues.put("inputUri", "hdfs://some/where/");
+      paramValues.put("dataFormat", 123);
+      when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
+      taskerSvc.submitRequest(req).get();
+      fail("Expected exception");
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains("Cannot convert"));
+    }
+  }
+  
+  @Test
+  public void testSubmitCompleteRequest() throws InterruptedException, ExecutionException {
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operationId("addSourceDataset");
+      HashMap<String, Object> paramValues = new HashMap<String, Object>();
+      req.operationParams(paramValues);
+      paramValues.put("inputUri", "hdfs://some/where/");
+      paramValues.put("dataFormat", "TELEPHONE.CSV");
+      when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
+      taskerSvc.submitRequest(req).get();
+  }
 }

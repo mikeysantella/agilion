@@ -30,14 +30,26 @@ public final class DeServerGuiceInjector {
   final Injector injector;
 
   private DeServerGuiceInjector() {
+    String runAllInSameJvm = System.getProperty("RUN_ALL_IN_SAME_JVM");
+    
     CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
-    ClusteredVertxConfig vertxConfig=new ClusteredVertxConfig();
+    AbstractModule vertxInjectionModule;
+    if(Boolean.valueOf(runAllInSameJvm)){
+      vertxInjectionModule= new AbstractModule() {
+        @Override
+        protected void configure() {
+          vertxF.complete(Vertx.vertx());
+        }
+      };
+    }else{
+      ClusteredVertxConfig vertxConfig=new ClusteredVertxConfig();
+      vertxInjectionModule = new ClusteredVertxInjectionModule(vertxF, vertxConfig);
+    }
     injector = Guice.createInjector(
-        new ClusteredVertxInjectionModule(vertxF, vertxConfig),
+        vertxInjectionModule,
         new VertxRpcClients4ServerModule(vertxF),
         new RestServiceModule());
 
-    String runAllInSameJvm = System.getProperty("RUN_ALL_IN_SAME_JVM");
     if(Boolean.valueOf(runAllInSameJvm)){
       vertxF.join();
       log.info("======== Running all required DataEngine services in same JVM {}", vertxF);

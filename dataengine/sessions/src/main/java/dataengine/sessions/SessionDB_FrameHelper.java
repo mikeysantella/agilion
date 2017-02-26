@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 
+import com.google.common.base.CharMatcher;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.frames.FramedTransactionalGraph;
@@ -23,27 +24,28 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public final class SessionDB_FrameHelper {
 
-  static Comparator<? super BaseFrame> createdTimeComparator=(f1,f2)->f1.getCreatedDate().compareTo(f2.getCreatedDate());
+  static Comparator<? super BaseFrame> createdTimeComparator =
+      (f1, f2) -> f1.getCreatedDate().compareTo(f2.getCreatedDate());
 
   private final FramedTransactionalGraph<TransactionalGraph> graph;
 
-  public boolean hasFrame(String id, String typeValue) {    
+  boolean hasFrame(String id, String typeValue) {
     return tryOn(graph, graph -> {
       Vertex vf = graph.getVertex(id);
-      if(vf == null)
+      if (vf == null)
         return false;
       return typeValue.equals(vf.getProperty(BaseFrame.TYPE_KEY));
     });
   }
 
-  public boolean hasVertexFrame(String id) {
+  boolean hasVertexFrame(String id) {
     return tryOn(graph, graph -> {
       Vertex vf = graph.getVertex(id);
       return (vf != null);
     });
   }
-  
-  public <T> T getVertexFrame(String id, Class<T> clazz) {
+
+  <T> T getVertexFrame(String id, Class<T> clazz) {
     return tryOn(graph, graph -> {
       T vf = graph.getVertex(id, clazz);
       if (vf == null)
@@ -52,8 +54,20 @@ public final class SessionDB_FrameHelper {
     });
   }
 
+  static String checkLabel(String label) {
+    if (label.contains("\n"))
+      throw new IllegalArgumentException("Label cannot have carriage returns: "+label);
+    if (label.contains("\t"))
+      throw new IllegalArgumentException("Label cannot have tabs: "+label);
+    if (label.length() > 255)
+      throw new IllegalArgumentException("Label must be less than 255 characters! Got "+label.length());
+    if(!CharMatcher.ascii().matchesAllOf(label))
+      throw new IllegalArgumentException("Label cannot have non-ASCII characters: "+label);
+    return label;
+  }
+
   @SuppressWarnings("unchecked")
-  public static void saveMapAsProperties(Map<?, ?> map, Vertex v, String propPrefix) {
+  static void saveMapAsProperties(Map<?, ?> map, Vertex v, String propPrefix) {
     for (Map.Entry<String, Object> e : ((Map<String, Object>) map).entrySet()) {
       setVertexProperty(v, propPrefix, e.getKey(), e.getValue());
     }
@@ -71,7 +85,7 @@ public final class SessionDB_FrameHelper {
     }
   }
 
-  public static Map<String, Object> loadPropertiesAsMap(Vertex v, String propPrefix) {
+  static Map<String, Object> loadPropertiesAsMap(Vertex v, String propPrefix) {
     int ppIndex = propPrefix.length();
     Map<String, Object> map = new HashMap<>();
     for (String key : v.getPropertyKeys()) {
@@ -82,9 +96,8 @@ public final class SessionDB_FrameHelper {
     return map;
   }
 
-
   public static OffsetDateTime toOffsetDateTime(DateTime createdTime) {
-    return OffsetDateTime.ofInstant(Instant.ofEpochMilli(createdTime.getMillis()), 
+    return OffsetDateTime.ofInstant(Instant.ofEpochMilli(createdTime.getMillis()),
         ZoneOffset.UTC);
   }
 

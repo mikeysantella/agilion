@@ -10,7 +10,6 @@ import com.tinkerpop.frames.modules.javahandler.JavaHandler;
 import com.tinkerpop.frames.modules.typedgraph.TypeField;
 
 import dataengine.api.State;
-import lombok.extern.slf4j.Slf4j;
 import net.deelam.graph.BpPropertySerializerUtils;
 
 @TypeField(BaseFrame.TYPE_KEY)

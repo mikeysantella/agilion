@@ -46,22 +46,24 @@ public class TaskerService implements Tasker_I, JobListener_I {
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
     log.info("SERV: submitRequest: {}", req);
-    if (!opsRegVert.getOperations().containsKey(req.getOperationId()))
-      throw new IllegalArgumentException("Unknown operationId=" + req.getOperationId());
+    String reqOperationId = req.getOperationId();
+    if (!opsRegVert.getOperations().containsKey(reqOperationId))
+      throw new IllegalArgumentException("Unknown operationId=" + reqOperationId);
 
-    CompletableFuture<Request> f = sessDb.rpc().addRequest(req).thenApply((Request addedReq) -> {
-      return submitJobs(addedReq);
-    });
+    JobsCreator jc = jobsCreatorMap.get(reqOperationId);
+    if (jc == null)
+      throw new UnsupportedOperationException("No JobsCreator found for " + reqOperationId);
+
+    jc.checkValidity(req); // throw exception
+      
+    CompletableFuture<Request> f = sessDb.rpc().addRequest(req)
+        .thenApply((addedReq) ->submitJobs(addedReq, jc));
     return f;
   }
 
-  private Request submitJobs(Request addedReq) {
+  private Request submitJobs(Request addedReq, JobsCreator jc) {
     log.info("  submitJobs for: {}", addedReq);
     // add job(s) to request and submit job(s)
-    JobsCreator jc = jobsCreatorMap.get(addedReq.getOperationId());
-    if (jc == null)
-      throw new UnsupportedOperationException("No JobsCreator found for " + addedReq.getOperationId());
-
     List<JobEntry> jobs = jc.createFrom(addedReq);
 
     CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);

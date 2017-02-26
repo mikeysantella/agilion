@@ -1,11 +1,10 @@
 package dataengine.api;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.ws.rs.ProcessingException;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -78,6 +77,11 @@ public class MySessionApiServiceTest {
     {
       Request req = new Request().sessionId("newSess").label("req1Name")
           .operationId("addSourceDataset");
+      HashMap<String, Object> paramValues = new HashMap<String, Object>();
+      req.operationParams(paramValues);
+      paramValues.put("inputUri", "hdfs://some/where/");
+      paramValues.put("dataFormat", "TELEPHONE.CSV");
+
       Request req2 = reqApi.submitRequest(req);
       req2.setId(null); // ignore
       req2.setCreatedTime(null); // ignore
