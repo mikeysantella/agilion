@@ -31,6 +31,17 @@ public interface JobFrame extends BaseFrame {
   @Adjacency(label = "job", direction = Direction.IN)
   void setRequest(RequestFrame req);
 
+  public static final String INPUT_JOB = "inputJob";
+  
+  @Adjacency(label = INPUT_JOB, direction = Direction.IN)
+  void addInputJob(JobFrame inputJF);
+  
+  @Adjacency(label = INPUT_JOB, direction = Direction.IN)
+  Iterable<JobFrame> getInputJobs();
+
+  @Adjacency(label = INPUT_JOB, direction = Direction.OUT)
+  Iterable<JobFrame> getOutputJobs();
+  
   public static final String INPUT_DATA = "inputData";
 
   @Adjacency(label = INPUT_DATA, direction = Direction.OUT)

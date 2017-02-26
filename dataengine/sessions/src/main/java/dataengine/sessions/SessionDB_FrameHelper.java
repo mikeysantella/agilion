@@ -5,6 +5,7 @@ import static net.deelam.graph.GrafTxn.tryOn;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public final class SessionDB_FrameHelper {
+
+  static Comparator<? super BaseFrame> createdTimeComparator=(f1,f2)->f1.getCreatedDate().compareTo(f2.getCreatedDate());
 
   private final FramedTransactionalGraph<TransactionalGraph> graph;
 

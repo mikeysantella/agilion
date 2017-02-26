@@ -32,6 +32,7 @@ import dataengine.api.Progress;
 import dataengine.api.State;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.io.Serializable;
 
@@ -48,6 +49,9 @@ public class Job  implements Serializable {
 
   @JsonProperty("type")
   private String type = null;
+
+  @JsonProperty("createdTime")
+  private OffsetDateTime createdTime = null;
 
   @JsonProperty("state")
   private State state = null;
@@ -119,6 +123,24 @@ public class Job  implements Serializable {
 
   public void setType(String type) {
     this.type = type;
+  }
+
+  public Job createdTime(OffsetDateTime createdTime) {
+    this.createdTime = createdTime;
+    return this;
+  }
+
+   /**
+   * Get createdTime
+   * @return createdTime
+  **/
+  @ApiModelProperty(required = true, value = "")
+  public OffsetDateTime getCreatedTime() {
+    return createdTime;
+  }
+
+  public void setCreatedTime(OffsetDateTime createdTime) {
+    this.createdTime = createdTime;
   }
 
   public Job state(State state) {
@@ -242,6 +264,7 @@ public class Job  implements Serializable {
     return Objects.equals(this.id, job.id) &&
         Objects.equals(this.requestId, job.requestId) &&
         Objects.equals(this.type, job.type) &&
+        Objects.equals(this.createdTime, job.createdTime) &&
         Objects.equals(this.state, job.state) &&
         Objects.equals(this.progress, job.progress) &&
         Objects.equals(this.label, job.label) &&
@@ -252,7 +275,7 @@ public class Job  implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestId, type, state, progress, label, params, inputDatasetIds, outputDatasetIds);
+    return Objects.hash(id, requestId, type, createdTime, state, progress, label, params, inputDatasetIds, outputDatasetIds);
   }
 
 
@@ -264,6 +287,7 @@ public class Job  implements Serializable {
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    requestId: ").append(toIndentedString(requestId)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
+    sb.append("    createdTime: ").append(toIndentedString(createdTime)).append("\n");
     sb.append("    state: ").append(toIndentedString(state)).append("\n");
     sb.append("    progress: ").append(toIndentedString(progress)).append("\n");
     sb.append("    label: ").append(toIndentedString(label)).append("\n");

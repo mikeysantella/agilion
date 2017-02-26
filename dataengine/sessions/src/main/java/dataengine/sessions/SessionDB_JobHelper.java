@@ -5,9 +5,11 @@ import static java.util.stream.StreamSupport.stream;
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
 import static net.deelam.graph.GrafTxn.tryCAndCloseTxn;
 import static net.deelam.graph.GrafTxn.tryFAndCloseTxn;
+import static net.deelam.graph.GrafTxn.tryOn;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
@@ -44,7 +46,7 @@ public final class SessionDB_JobHelper {
   static int jobCounter = 0;
 
   @SuppressWarnings("unchecked")
-  public void addJobNode(Job job) {
+  public void addJobNode(Job job, String[] inputJobIds) {
     log.debug("addJobNode: {}", job.getId());
     tryAndCloseTxn(graph, graph -> {
       String reqId = job.getRequestId();
@@ -59,9 +61,15 @@ public final class SessionDB_JobHelper {
           jf.setLabel("job " + (++jobCounter));
         else
           jf.setLabel(job.getLabel());
-
-        // TODO: 1: Add createdTime so we can order the jobs
-        // TODO: add edge between jobs to show dependencies, matching DepJobService
+        
+        // Add createdTime so we can order the jobs
+        if (job.getCreatedTime() != null)
+          rf.setCreatedDate((job.getCreatedTime()));
+        
+        // add edge between jobs to model dependencies, matching DepJobService
+        if(inputJobIds!=null)
+          for(String inputJobId:inputJobIds)
+            addJobDependency(jf, inputJobId);
         
         if (job.getType() != null)
           jf.setType(job.getType());
@@ -86,7 +94,39 @@ public final class SessionDB_JobHelper {
     });
   }
 
-
+  public void addJobDependency(String jobId, String inputJobId) {
+    log.debug("addJobDependency: {} {}", jobId, inputJobId);
+    tryCAndCloseTxn(graph, graph -> {
+      JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
+      addJobDependency(jf, inputJobId);
+    });
+  }
+  
+  private void addJobDependency(JobFrame jf, String inputJobId) {
+    tryOn(graph, graph -> {
+      JobFrame inputJF = frameHelper.getVertexFrame(inputJobId, JobFrame.class);
+      jf.addInputJob(inputJF);
+    });
+  }
+  
+  public List<JobFrame> getInputJobs(String jobId) {
+    log.debug("getInputJobs: {}", jobId);
+    return tryFAndCloseTxn(graph, graph -> {
+      JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
+      return StreamSupport.stream( jf.getInputJobs().spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator).collect(toList());
+    });
+  }
+  
+  public List<JobFrame> getOutputJobs(String jobId) {
+    log.debug("getOutputJobs: {}", jobId);
+    return tryFAndCloseTxn(graph, graph -> {
+      JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
+      return StreamSupport.stream( jf.getOutputJobs().spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator).collect(toList());
+    });
+  }
+  
   public static Job toJob(JobFrame jf) {
     log.debug("toJob: {}", jf);
     return new Job().id(jf.getNodeId())

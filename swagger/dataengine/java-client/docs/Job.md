@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 **id** | **String** |  | 
 **requestId** | **String** |  | 
 **type** | **String** |  | 
+**createdTime** | [**OffsetDateTime**](OffsetDateTime.md) |  | 
 **state** | [**State**](State.md) |  | 
 **progress** | [**Progress**](Progress.md) |  | 
 **label** | **String** |  |  [optional]

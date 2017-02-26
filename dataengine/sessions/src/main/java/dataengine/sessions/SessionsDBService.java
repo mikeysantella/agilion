@@ -1,6 +1,9 @@
 package dataengine.sessions;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,6 +20,7 @@ import dataengine.api.Session;
 import dataengine.api.State;
 import dataengine.apis.SessionsDB_I;
 import dataengine.sessions.SessionDB_DatasetHelper.IO;
+import dataengine.sessions.frames.JobFrame;
 import dataengine.sessions.frames.SessionFrame;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -51,11 +55,38 @@ public class SessionsDBService implements SessionsDB_I {
   @Override
   public CompletableFuture<Job> addJob(Job job) {
     log.info("addJob: {}", job.getId());
+    return addJob(job, null);
+  }
+
+  @Override
+  public CompletableFuture<Job> addJob(Job job, String[] inputJobIds) {
+    log.info("addJob: {} {}", job.getId(), Arrays.toString(inputJobIds));
     job.id(useOrGenerateId(job.getId()));
-    sessDB.addJobNode(job);
+    sessDB.addJobNode(job, inputJobIds);
     return getJob(job.getId());
   }
 
+  @Override
+  public CompletableFuture<Boolean> addJobDependency(String jobId, String inputJobId) {
+    log.info("addJobDependency: {} {}", jobId, inputJobId);
+    sessDB.addJobDependency(jobId, inputJobId);
+    return CompletableFuture.completedFuture(true);
+  }
+
+  @Override
+  public CompletableFuture<List<Job>> getInputJobs(String jobId) {
+    log.info("getInputJobs: {}", jobId);
+    List<JobFrame> jobs = sessDB.getInputJobs(jobId);
+    return CompletableFuture.completedFuture(jobs.stream().map(SessionDB_JobHelper::toJob).collect(toList()));
+  }
+
+  @Override
+  public CompletableFuture<List<Job>> getOutputJobs(String jobId) {
+    log.info("getOutputJobs: {}", jobId);
+    List<JobFrame> jobs = sessDB.getOutputJobs(jobId);
+    return CompletableFuture.completedFuture(jobs.stream().map(SessionDB_JobHelper::toJob).collect(toList()));
+  }
+  
   @Override
   public CompletableFuture<Dataset> addOutputDataset(Dataset ds, String jobId) {
     return addDatasetToJob(ds, jobId, IO.OUTPUT);
