@@ -137,8 +137,6 @@ public class VertxRpcUtil {
           Method method = methods.get(methodId);
           Object result = null;
           try {
-            if (hook != null)
-              hook.serverReceivesCall(methodId+" before args are deserialized", null);
             if (method.getParameterTypes().length == 0) {
               if (hook != null)
                 hook.serverReceivesCall(methodId, null);
@@ -232,13 +230,13 @@ public class VertxRpcUtil {
               return new StdInstantiatorStrategy().newInstantiatorOf(type);
             }
           }));
-      log.info("Created new Kryo for {}: {}", name, kryo);
+      log.debug("Created new Kryo for {}: {}", name, kryo);
       return kryo;
     }
 
     public synchronized Registration readClass(Input input) {
       try {
-        log.debug("Using kryo={} to read for {}", kryo, name);
+        //log.debug("Using kryo={} to read for {}", kryo, name);
         return kryo.readClass(input);
       } catch (Throwable t) {
         log.error("Couldn't read input", t);
@@ -248,7 +246,7 @@ public class VertxRpcUtil {
 
     public synchronized Object[] readObjects(Buffer buffer, int count) {
       try {
-        log.debug("Using kryo={} to read for {}", kryo, name);
+        //log.debug("Using kryo={} to read for {}", kryo, name);
         final Input input = new Input(buffer.getBytes());
         Object[] result = new Object[count];
         for (int i = 0; i < count; i++)
@@ -263,7 +261,7 @@ public class VertxRpcUtil {
     @SuppressWarnings("unchecked")
     public synchronized <T> T readObject(Buffer buffer) {
       try {
-        log.debug("Using kryo={} to read for {}", kryo, name);
+        //log.debug("Using kryo={} to read for {}", kryo, name);
         return (T) kryo.readClassAndObject(new Input(buffer.getBytes()));
       } catch (Throwable t) {
         log.error("Couldn't read buffer", t);
@@ -273,7 +271,7 @@ public class VertxRpcUtil {
 
     public synchronized Buffer writeObjects(Object[] objs) {
       try {
-        log.debug("Using kryo={} to write for {}", kryo, name);
+        //log.debug("Using kryo={} to write for {}", kryo, name);
         final Output output = new Output(new ByteArrayOutputStream());
         for (int i = 0; i < objs.length; i++)
           kryo.writeClassAndObject(output, objs[i]);
@@ -289,7 +287,7 @@ public class VertxRpcUtil {
 
     public synchronized Buffer writeObject(Object obj) {
       try {
-        log.debug("Using kryo={} to write for {}", kryo, name);
+        //log.debug("Using kryo={} to write for {}", kryo, name);
         final Output output = new Output(new ByteArrayOutputStream());
         //log.debug("writeObject: " + obj);
         kryo.writeClassAndObject(output, obj);
@@ -339,7 +337,7 @@ public class VertxRpcUtil {
     final String iface;
 
     public void clientSendsCall(String methodId, Object[] args) {
-      log.debug("{} clientSendsCall: {}: {}", iface, methodId, Arrays.toString(args));
+      log.debug("clientSendsCall to {}: {}: {}", iface, methodId, Arrays.toString(args));
     }
 
     public void serverReceivesCall(String methodId, Object[] args) {
@@ -351,11 +349,11 @@ public class VertxRpcUtil {
     }
 
     public void clientReceivesResult(String methodId, Object result) {
-      log.debug("{} clientReceivesResult: {}: {}", iface, methodId, result);
+      log.debug("clientReceivesResult from {}: {}: {}", iface, methodId, result);
     }
 
     public void clientReceivedVoid(String methodId) {
-      log.debug("{} clientReceivedVoid: {}", iface, methodId);
+      log.debug("clientReceivedVoid from {}: {}", iface, methodId);
     }
 
     public void serverRepliesThrowable(String methodId, Throwable e) {
@@ -364,11 +362,11 @@ public class VertxRpcUtil {
     }
 
     public void clientReceivedThrowable(String methodId, Throwable e) {
-      log.debug("{} clientReceivedThrowable: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage());
+      log.debug("clientReceivedThrowable from {}: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage());
     }
 
     public void clientCallFailed(String methodId, Throwable e) {
-      log.debug("{} clientCallFailed: {}: {}", iface, methodId, (e == null) ? e : e.getMessage());
+      log.debug("clientCallFailed to {}: {}: {}", iface, methodId, (e == null) ? e : e.getMessage());
     }
   }
 }
