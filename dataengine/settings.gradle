@@ -14,3 +14,5 @@ include 'workers'
 
 include 'server'
 
+include 'main'
+

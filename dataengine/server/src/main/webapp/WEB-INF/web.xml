@@ -9,8 +9,6 @@
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>
-                io.swagger.jaxrs.listing,
-                io.swagger.sample.resource,
                 dataengine.api
             </param-value>
         </init-param>

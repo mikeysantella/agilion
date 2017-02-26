@@ -53,7 +53,7 @@ public class MyOperationsApiService extends OperationsApiService {
   static long minSecondsBetweenRefresh = 30; // TODO: 6: load minSecondsBetweenRefresh from property file
   long lastRefreshRequest = 0;
 
-  // TODO: add to OperationsApiService REST API
+  // FIXME: add to OperationsApiService REST API
   // @Override
   public Response refresh(SecurityContext securityContext) {
     log.info("REST {}: refresh", securityContext.getUserPrincipal());
