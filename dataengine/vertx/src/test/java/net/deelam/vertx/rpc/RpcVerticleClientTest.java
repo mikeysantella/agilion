@@ -82,7 +82,7 @@ public class RpcVerticleClientTest {
 
   private void startServer() {
     new RpcVerticleServer(vertx, serversBroadcastAddr)
-        .start("myServerAddr", new RemoteSvc());
+        .start("myServerAddr", new RemoteSvc(), true);
   }
 
 }

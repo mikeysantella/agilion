@@ -46,9 +46,10 @@ public class MySessionApiServiceTest {
   public void testSessionsApi() throws ApiException {
     String sessId = "newSess"+System.currentTimeMillis();
     Session session = new Session().id(sessId);
-    sessApi.createSession(session);
+    Session session1 = sessApi.createSession(session);
       
     Session session2 = sessApi.getSession(sessId);
+    assertEquals(session1, session2);
     session2.setLabel(null); // ignore
     session2.setCreatedTime(null); // ignore
     session2.setDefaults(null); // ignore

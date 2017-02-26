@@ -1,6 +1,9 @@
 package net.deelam.vertx;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.google.inject.AbstractModule;
 
@@ -25,10 +28,16 @@ public class ClusteredVertxInjectionModule extends AbstractModule {
       })).start();
     }
     
-    if(!vertxF.isDone())
-      log.info("Waiting for Vertx ... {}", vertxF);
-    bind(Vertx.class).toInstance(vertxF.join());
-    log.info("Got Vertx");
+    try {
+      boolean haveToWait = !vertxF.isDone();
+      if(haveToWait)
+        log.info("Waiting for Vertx ... {}", vertxF);
+      bind(Vertx.class).toInstance(vertxF.get(10, TimeUnit.SECONDS));
+      if(haveToWait)
+        log.info("Got Vertx");
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new RuntimeException(e);
+    }
   }
 
 }

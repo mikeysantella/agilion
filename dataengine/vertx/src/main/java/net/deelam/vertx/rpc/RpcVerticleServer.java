@@ -15,12 +15,12 @@ public class RpcVerticleServer {
   final String serversBroadcastAddr;
 
   public <T> RpcVerticleServer start(String serverAddr, T service) {
-    return start(serverAddr, service, true);
+    return start(serverAddr, service, false);
   }
   public <T> RpcVerticleServer start(String serverAddr, T service, boolean withDebugHook) {
     VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);
     if (withDebugHook)
-      rpc.setHook(new VertxRpcUtil.DebugRpcHook(service.getClass().getSimpleName()));
+      rpc.setHook(new DebugRpcHook(service.getClass().getSimpleName()));
     log.debug("Registering RPC service at {}: {}", serverAddr, service);
     rpc.registerServer(service);
 

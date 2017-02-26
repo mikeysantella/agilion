@@ -19,11 +19,15 @@
    </appender>
 
    <logger name="dataengine">
+      <level value="INFO" />
+   </logger>
+   <logger name="net.deelam.vertx.rpc.VertxRpcUtil">
       <level value="DEBUG" />
    </logger>
-   <logger name="net.deelam">
+   <logger name="net.deelam.vertx.rpc.DebugRpcHook">
       <level value="DEBUG" />
    </logger>
+   
    <!--
       <logger name="org.apache.zookeeper">
       <level value="WARN" />
