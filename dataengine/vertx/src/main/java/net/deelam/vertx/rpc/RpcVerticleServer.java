@@ -15,7 +15,7 @@ public class RpcVerticleServer {
   final String serversBroadcastAddr;
 
   public <T> RpcVerticleServer start(String serverAddr, T service) {
-    return start(serverAddr, service, false);
+    return start(serverAddr, service, true);
   }
   public <T> RpcVerticleServer start(String serverAddr, T service, boolean withDebugHook) {
     VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);

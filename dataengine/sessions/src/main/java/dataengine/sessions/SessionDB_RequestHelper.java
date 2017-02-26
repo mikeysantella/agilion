@@ -47,7 +47,7 @@ public final class SessionDB_RequestHelper {
         if (request.getLabel() == null)
           rf.setLabel("request " + (++requestCounter));
         else
-          rf.setLabel(request.getLabel());
+          rf.setLabel(SessionDB_FrameHelper.checkLabel(request.getLabel()));
         if (request.getCreatedTime() != null)
           rf.setCreatedDate((request.getCreatedTime()));
 //          rf.setCreatedDate(VertexFrameHelper.toOffsetDateTime(request.getCreatedTime()));

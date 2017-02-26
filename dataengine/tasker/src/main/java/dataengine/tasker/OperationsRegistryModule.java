@@ -23,7 +23,6 @@ final class OperationsRegistryModule extends AbstractModule {
     // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
     OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
     bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
-
   }
 
   static void deployOperationsRegistry(Injector injector) {

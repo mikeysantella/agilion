@@ -59,7 +59,7 @@ public final class SessionDB_SessionHelper {
         if (session.getLabel() == null)
           sf.setLabel("session " + (++sessionCounter));
         else
-          sf.setLabel(session.getLabel());
+          sf.setLabel(SessionDB_FrameHelper.checkLabel(session.getLabel()));
 
         if (session.getCreatedTime() != null)
           sf.setCreatedDate((session.getCreatedTime()));
@@ -93,9 +93,9 @@ public final class SessionDB_SessionHelper {
             switch (k.toLowerCase()) {
               case "label":
                 if (val instanceof String)
-                  qs.setLabel((String) val);
+                  qs.setLabel(SessionDB_FrameHelper.checkLabel((String) val));
                 else if (val instanceof Number)
-                  qs.setLabel(val.toString());
+                  qs.setLabel(SessionDB_FrameHelper.checkLabel(val.toString()));
                 else
                   log.warn("Expecting String for key={} but got: {}", k, val.getClass());
                 break;

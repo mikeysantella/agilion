@@ -38,7 +38,7 @@ configure(subprojects) {
       commons_io: 'commons-io:commons-io:2.5',
       xinject: 'javax.inject:javax.inject:1',
       guice: 'com.google.inject:guice:3.0',
-      guava: 'com.google.guava:guava:18.0',
+      guava: 'com.google.guava:guava:21.0',
 
       blueprints: 'com.tinkerpop.blueprints:blueprints-core:'+ver.tinkerpop,
       blueprints_neo: 'com.tinkerpop.blueprints:blueprints-neo4j-graph:'+ver.tinkerpop,

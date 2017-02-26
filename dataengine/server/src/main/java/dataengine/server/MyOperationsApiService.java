@@ -69,10 +69,8 @@ public class MyOperationsApiService extends OperationsApiService {
     if (now - lastRefreshRequest > minSecondsBetweenRefresh) {
       lastRefreshRequest = now;
       log.info("  Refreshing operationsRegistry and jobCreators");
-      CompletableFuture<Void> opsF = opRegistry.rpc().refresh();
-      //        .thenCompose((f) -> opRegistry.rpc().listOperations());
-      CompletableFuture<Void> refreshJcF = opsF.thenCompose((none) -> tasker.rpc().refreshJobsCreators());
-      return refreshJcF
+      return  opRegistry.rpc().refresh()
+          .thenCompose((none) -> tasker.rpc().refreshJobsCreators())
           .thenAccept((a) -> lastRefreshRequest = System.currentTimeMillis())
           .thenApply((a) -> true);
     } else

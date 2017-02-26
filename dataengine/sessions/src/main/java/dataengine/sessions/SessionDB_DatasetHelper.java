@@ -57,7 +57,7 @@ public final class SessionDB_DatasetHelper {
         if (ds.getLabel() == null)
           df.setLabel("dataset " + (++datasetCounter));
         else
-          df.setLabel(ds.getLabel());
+          df.setLabel(SessionDB_FrameHelper.checkLabel(ds.getLabel()));
         if (ds.getCreatedTime() != null)
           df.setCreatedDate((ds.getCreatedTime()));
         if (ds.getUri() != null)
