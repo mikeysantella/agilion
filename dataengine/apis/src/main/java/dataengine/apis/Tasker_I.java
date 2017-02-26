@@ -17,5 +17,7 @@ public interface Tasker_I {
    * @return
    */
   CompletableFuture<Request> submitRequest(Request req);
+
+//  CompletableFuture<Collection<Operation>> getJobCreatorsOperations();
   
 }

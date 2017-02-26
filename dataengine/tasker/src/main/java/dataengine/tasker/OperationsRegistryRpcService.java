@@ -22,13 +22,13 @@ public class OperationsRegistryRpcService implements OperationsRegistry_I {
   
   @Override
   public CompletableFuture<Void> refresh() {
-    log.info("refresh()");
+    log.info("SERV: refresh()");
     return opsRegVert.refresh();
   }
   
   @Override
   public CompletableFuture<Collection<Operation>> listOperations() {
-    log.info("listOperations()");
+    log.info("SERV: listOperations()");
     return CompletableFuture.completedFuture(
         // Can't find Kryo deserializer for Map.values(), so convert to basic List
         new ArrayList<>(opsRegVert.getOperations().values()) 

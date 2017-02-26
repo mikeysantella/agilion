@@ -17,9 +17,9 @@ public class RpcClientProvider<T> {
   private final T rpc = lazyCreateRpcClient();
 
   private T lazyCreateRpcClient() {
-    log.info("Getting RPC client for {}", supplier);
+    log.debug("Getting RPC client for {}", supplier);
     T t = supplier.get();
-    log.info("  Created RPC client for {}", t);
+    log.info("Created RPC client for {}", t);
     return t;
   }
 

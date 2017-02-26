@@ -22,8 +22,8 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
   
   public VertxRpcClients4ServerModule(CompletableFuture<Vertx> vertxF) {
     super(vertxF);
-    debug=true;
-    log.info("VertxRpcClients4ServerModule configured");
+    //debug=true;
+    log.debug("VertxRpcClients4ServerModule configured");
   }
 
   @Provides @Singleton

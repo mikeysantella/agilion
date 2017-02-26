@@ -1,6 +1,7 @@
 package net.deelam.vertx.jobboard;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static java.util.stream.Collectors.toList;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,7 +21,6 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -263,17 +263,21 @@ public class JobBoard extends AbstractVerticle {
   //        return;
         long doneJobCount = jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.DONE)).count();
         long failedJobCount = jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.FAILED)).count();
-        String logMsg = availJobCount+" availJobs -> "+
-            startedJobCount+" .. "+
-            progessingJobCount+" -> "+
+        String logMsg = availJobCount+" avail -> "+
+            startedJobCount+" started .. "+
+            progessingJobCount+" processing -> "+
             doneJobCount+" doneJobs, "+
             failedJobCount+" failed, "+
-            removeCounter+" removed \t:: "+
+            removeCounter+" removed :: "+
             idleWorkers.size()+" idle vs "+
-            pickyWorkers.size()+" picky \t of "+
+            pickyWorkers.size()+" picky of "+
             knownWorkers.size()+" workers";
         if(!logMsg.equals(prevLogMsg)){
-          log.info(logMsg);
+          List<String> availJobsStr=jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.AVAILABLE)).map(jiE->{
+            JobItem ji = jiE.getValue();
+            return ji.getId()+" type="+ji.jobJO.getType();
+          }).collect(toList());
+          log.info(logMsg+"\n"+availJobsStr);
           prevLogMsg=logMsg;
           sameLogMsgCount.set(0);
         } else {

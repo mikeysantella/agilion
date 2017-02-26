@@ -61,7 +61,7 @@ public class JobBoardModule extends AbstractModule {
     // requires that jobProducerProxy be deployed
     DepJobService depJobMgr = new DepJobService(depJobMgrGraf, ()->jobProducer);
     new RpcVerticleServer(vertx, depJobMgrId)
-      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr);
+      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);
     
     if(DEBUG){
       vertx.setPeriodic(10_000, t -> {

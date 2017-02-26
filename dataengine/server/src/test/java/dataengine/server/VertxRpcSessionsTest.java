@@ -54,7 +54,7 @@ public class VertxRpcSessionsTest {
         SessionsDB_I sessVert = injector.getInstance(SessionsDB_I.class);
         log.info("sessVert={}", sessVert);
         new RpcVerticleServer(vertx, VerticleConsts.sessionDbBroadcastAddr)
-            .start("SessionsDBServiceBusAddr", sessVert);
+            .start("SessionsDBServiceBusAddr", sessVert, true);
       } catch (Exception e) {
         e.printStackTrace();
       }

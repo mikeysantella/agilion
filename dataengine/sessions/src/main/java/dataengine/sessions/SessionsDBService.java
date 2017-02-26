@@ -37,7 +37,7 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Session> createSession(Session session) {
-    log.info("createSession: {}", session.getId());
+    log.info("SERV: createSession: {}", session.getId());
     session.id(useOrGenerateId(session.getId()));
     String baseDir = genSessionDir(session);
     sessDB.addSessionNode(session, baseDir);
@@ -46,7 +46,7 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Request> addRequest(Request req) {
-    log.info("addRequest: {}", req.getId());
+    log.info("SERV: addRequest: {}", req.getId());
     req.id(useOrGenerateId(req.getId()));
     sessDB.addRequestNode(req);
     return getRequest(req.getId());
@@ -54,13 +54,12 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Job> addJob(Job job) {
-    log.info("addJob: {}", job.getId());
     return addJob(job, null);
   }
 
   @Override
   public CompletableFuture<Job> addJob(Job job, String[] inputJobIds) {
-    log.info("addJob: {} {}", job.getId(), Arrays.toString(inputJobIds));
+    log.info("SERV: addJob: {} {}", job.getId(), Arrays.toString(inputJobIds));
     job.id(useOrGenerateId(job.getId()));
     sessDB.addJobNode(job, inputJobIds);
     return getJob(job.getId());
@@ -68,21 +67,21 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Boolean> addJobDependency(String jobId, String inputJobId) {
-    log.info("addJobDependency: {} {}", jobId, inputJobId);
+    log.info("SERV: addJobDependency: {} {}", jobId, inputJobId);
     sessDB.addJobDependency(jobId, inputJobId);
     return CompletableFuture.completedFuture(true);
   }
 
   @Override
   public CompletableFuture<List<Job>> getInputJobs(String jobId) {
-    log.info("getInputJobs: {}", jobId);
+    log.info("SERV: getInputJobs: {}", jobId);
     List<JobFrame> jobs = sessDB.getInputJobs(jobId);
     return CompletableFuture.completedFuture(jobs.stream().map(SessionDB_JobHelper::toJob).collect(toList()));
   }
 
   @Override
   public CompletableFuture<List<Job>> getOutputJobs(String jobId) {
-    log.info("getOutputJobs: {}", jobId);
+    log.info("SERV: getOutputJobs: {}", jobId);
     List<JobFrame> jobs = sessDB.getOutputJobs(jobId);
     return CompletableFuture.completedFuture(jobs.stream().map(SessionDB_JobHelper::toJob).collect(toList()));
   }
@@ -98,7 +97,7 @@ public class SessionsDBService implements SessionsDB_I {
   }
 
   private CompletableFuture<Dataset> addDatasetToJob(Dataset ds, String jobId, IO io) {
-    log.info("addDataset: {}", ds.getId());
+    log.info("SERV: addDatasetToJob: {}", ds.getId());
     ds.id(useOrGenerateId(ds.getId()));
     sessDB.addDatasetNode(ds, jobId, io);
     return getDataset(ds.getId());
@@ -123,13 +122,14 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Session> setMetadata(String sId, Map<String, Object> props) {
-    log.info("setMetadata: {}", sId);
+    log.info("SERV: setMetadata: {}", sId);
     sessDB.modifySessionNode(sId, props);
     return getSession(sId);
   }
 
   @Override
   public CompletableFuture<List<Session>> listSessions() {
+    log.info("SERV: listSessions");
     List<SessionFrame> list = sessDB.listSessionFrames();
     List<Session> sessList = list.stream()
         .map(sf -> SessionDB_SessionHelper.toSession(sf))
@@ -139,6 +139,7 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<List<String>> listSessionIds() {
+    log.info("SERV: listSessionIds");
     List<SessionFrame> list = sessDB.listSessionFrames();
     List<String> sessList = list.stream().map(sf -> sf.getNodeId()).collect(Collectors.toList());
     return CompletableFuture.completedFuture(sessList);
@@ -148,6 +149,7 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Map<String, String>> listSessionNames() {
+    log.info("SERV: listSessionNames");
     if (SAFE) { // less efficient
       List<SessionFrame> list = sessDB.listSessionFrames();
       Map<String, String> sessList = list.stream()
@@ -161,49 +163,49 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Boolean> hasSession(String id) {
-    log.trace("hasSession: {}", id);
+    log.debug("SERV: hasSession: {}", id);
     return CompletableFuture.completedFuture(sessDB.hasSession(id));
   }
 
   @Override
   public CompletableFuture<Boolean> hasRequest(String id) {
-    log.trace("hasRequest: {}", id);
+    log.debug("SERV: hasRequest: {}", id);
     return CompletableFuture.completedFuture(sessDB.hasRequest(id));
   }
 
   @Override
   public CompletableFuture<Session> getSession(String id) {
-    log.trace("getSession: {}", id);
+    log.debug("SERV: getSession: {}", id);
     return CompletableFuture.completedFuture(SessionDB_SessionHelper.toSession(sessDB.getSessionFrame(id)));
   }
 
   @Override
   public CompletableFuture<Request> getRequest(String id) {
-    log.trace("getRequest: {}", id);
+    log.debug("SERV: getRequest: {}", id);
     return CompletableFuture.completedFuture(SessionDB_RequestHelper.toRequest(sessDB.getRequestFrame(id)));
   }
 
   @Override
   public CompletableFuture<Job> getJob(String id) {
-    log.trace("getJob: {}", id);
+    log.debug("SERV: getJob: {}", id);
     return CompletableFuture.completedFuture(SessionDB_JobHelper.toJob(sessDB.getJobFrame(id)));
   }
 
   @Override
   public CompletableFuture<Dataset> getDataset(String id) {
-    log.trace("getDataset: {}", id);
+    log.debug("SERV: getDataset: {}", id);
     return CompletableFuture.completedFuture(SessionDB_DatasetHelper.toDataset(sessDB.getDatasetFrame(id)));
   }
 
   @Override
   public void updateJobState(String jobId, State state) {
-    log.trace("updateJobState: {} to {}", jobId, state);
+    log.debug("SERV: updateJobState: {} to {}", jobId, state);
     sessDB.updateJobState(jobId, state);
   }
 
   @Override
   public void updateJobProgress(String jobId, Progress progress) {
-    log.trace("updateJobProgress: {} to {}", jobId, progress);
+    log.debug("SERV: updateJobProgress: {} to {}", jobId, progress);
     sessDB.updateJobProgress(jobId, progress);
   }
 
