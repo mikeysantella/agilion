@@ -53,15 +53,14 @@ public class MyOperationsApiService extends OperationsApiService {
   static long minSecondsBetweenRefresh = 30; // TODO: 6: load minSecondsBetweenRefresh from property file
   long lastRefreshRequest = 0;
 
-  // FIXME: add to OperationsApiService REST API
-  // @Override
-  public Response refresh(SecurityContext securityContext) {
+  @Override
+  public Response refreshOperations(SecurityContext securityContext) throws NotFoundException {
     log.info("REST {}: refresh", securityContext.getUserPrincipal());
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
     
-    return makeResultResponse("operationsList", refreshOperations());
+    return makeResultResponse("refreshOperations", refreshOperations());
   }
 
   private CompletableFuture<Boolean> refreshOperations() {

@@ -6,6 +6,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**getRequest**](RequestsApi.md#getRequest) | **GET** /request/{id} | retrieve request
 [**listOperations**](RequestsApi.md#listOperations) | **GET** /operations | retrieve list of operations for requests
+[**refreshOperations**](RequestsApi.md#refreshOperations) | **GET** /operations/refresh | refresh list of operations
 [**submitRequest**](RequestsApi.md#submitRequest) | **POST** /request | submit a request
 
 
@@ -85,6 +86,47 @@ This endpoint does not need any parameter.
 ### Return type
 
 [**List&lt;Operation&gt;**](Operation.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+<a name="refreshOperations"></a>
+# **refreshOperations**
+> Boolean refreshOperations()
+
+refresh list of operations
+
+refresh operations list from active workers
+
+### Example
+```java
+// Import classes:
+//import dataengine.ApiException;
+//import dataengine.api.RequestsApi;
+
+
+RequestsApi apiInstance = new RequestsApi();
+try {
+    Boolean result = apiInstance.refreshOperations();
+    System.out.println(result);
+} catch (ApiException e) {
+    System.err.println("Exception when calling RequestsApi#refreshOperations");
+    e.printStackTrace();
+}
+```
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+**Boolean**
 
 ### Authorization
 
