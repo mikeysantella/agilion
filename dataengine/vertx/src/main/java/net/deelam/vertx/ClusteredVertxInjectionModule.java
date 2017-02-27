@@ -15,8 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClusteredVertxInjectionModule extends AbstractModule {
   final CompletableFuture<Vertx> vertxF;
-  final ClusteredVertxConfig vertxConfig;// TODO: 2: set cluster IPs from file
+  final ClusteredVertxConfig vertxConfig=new ClusteredVertxConfig();// TODO: 2: set cluster IPs from file
 
+  
   @Override
   protected void configure() {
     // create clustered VertX

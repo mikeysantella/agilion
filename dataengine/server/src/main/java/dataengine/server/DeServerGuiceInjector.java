@@ -16,56 +16,30 @@ import io.vertx.core.Vertx;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Accessors(fluent = true)
 @Slf4j
 public final class DeServerGuiceInjector {
 
+  // complete this vertxF before calling singleton() to provide a vertx
+  // otherwise, this will create its own vertx instance
   @Getter
-  static final Injector singleton = new DeServerGuiceInjector().injector();
+  static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
+
+  public static Injector singleton() {
+    return new DeServerGuiceInjector().injector();
+  }
 
   @Getter
   final Injector injector;
 
   private DeServerGuiceInjector() {
-    String runAllInSameJvm = System.getProperty("RUN_ALL_IN_SAME_JVM");
-    boolean runInSingleJVM = true; //Boolean.getBoolean(runAllInSameJvm);
-    
-    CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
-    AbstractModule vertxInjectionModule;
-    if(runInSingleJVM){
-      vertxInjectionModule= new AbstractModule() {
-        @Override
-        protected void configure() {
-          vertxF.complete(Vertx.vertx());
-        }
-      };
-    }else{
-      ClusteredVertxConfig vertxConfig=new ClusteredVertxConfig();
-      vertxInjectionModule = new ClusteredVertxInjectionModule(vertxF, vertxConfig);
-    }
     injector = Guice.createInjector(
-        vertxInjectionModule,
+        new ClusteredVertxInjectionModule(vertxF),
         new VertxRpcClients4ServerModule(vertxF),
         new RestServiceModule());
-
-    if(runInSingleJVM){
-      vertxF.join();
-      log.info("======== Running all required DataEngine services in same JVM {}", vertxF);
-      startAllInSameJvm(vertxF);
-    }
     log.info("Created DeServerGuiceInjector");
-  }
-
-  private void startAllInSameJvm(CompletableFuture<Vertx> vertxF) {
-    // Only create 1 Vertx instance per JVM! 
-    // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
-    dataengine.sessions.SessionsMain.main(vertxF);
-    dataengine.tasker.TaskerMain.main(vertxF);
-    dataengine.jobmgr.JobManagerMain.main(vertxF);
-    dataengine.workers.WorkerMain.main(vertxF);
   }
 
   static class RestServiceModule extends AbstractModule {

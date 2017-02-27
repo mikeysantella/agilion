@@ -16,11 +16,11 @@ import dataengine.ApiException;
 public class MySessionApiServiceTest {
   
   public static void main(String[] args) throws ApiException {
-    String baseUri = "http://localhost:8080/server/";
+    String baseUri = "http://localhost:8080/main/";
     if(args.length>0)
       baseUri=args[0];
     if(!baseUri.startsWith("http")){
-      baseUri = "http://"+baseUri+":8080/server/";
+      baseUri = "http://"+baseUri+":8080/main/";
     }
     if(!baseUri.contains("DataEngine"))
       baseUri += "deelam/DataEngine/0.0.1";

@@ -38,9 +38,8 @@ public class WorkerMain {
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
-    ClusteredVertxConfig vertxConfig = new ClusteredVertxConfig();
     return Guice.createInjector(
-        new ClusteredVertxInjectionModule(vertxF, vertxConfig),
+        new ClusteredVertxInjectionModule(vertxF),
         new VertxRpcClients4WorkerModule(vertxF),
         new OperationsSubscriberModule(vertxF));
   }
