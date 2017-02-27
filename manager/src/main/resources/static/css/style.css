@@ -56,7 +56,24 @@ body
     padding-bottom:7px;
 }
 
-.formSectionTitle
+.form-section
+{
+
+}
+
+.form-section-body
+{
+
+}
+
+.form-section > .form-section-header
 {
     border-bottom: 1px solid silver;
+    font-size: 24px;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+    margin-bottom: 10px;
+
 }

@@ -38,6 +38,8 @@ dependencies {
 	runtime('org.springframework.boot:spring-boot-devtools')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 
+	compile "agilion:dataengine-client:0.0.1-SNAPSHOT"
+
 
 	compile group: 'org.webjars', name: 'bootstrap', version: '3.3.5'
 	compile group: 'org.webjars', name: 'webjars-locator', version: '0.32'

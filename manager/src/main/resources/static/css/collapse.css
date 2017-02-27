@@ -1,0 +1,21 @@
+.showhide-icon.show-icon:before
+{
+    font-family: FontAwesome;
+    content: "\f067";
+}
+
+.showhide-icon.hide-icon:before
+{
+    font-family: FontAwesome;
+    content: "\f068";
+}
+
+.showhide-text.show-text:before
+{
+    content: "Show ";
+}
+
+.showhide-text.hide-text:before
+{
+    content: "Hide ";
+}
