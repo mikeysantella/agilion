@@ -24,7 +24,6 @@ import dataengine.apis.VerticleConsts;
 import dataengine.sessions.TinkerGraphSessionsDbModule;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
@@ -45,7 +44,7 @@ public class VertxRpcSessionsTest {
     Thread serverThread = new Thread(() -> { // set up service in another vertx
       CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
       Injector injector = Guice.createInjector(
-          new ClusteredVertxInjectionModule(vertxF, new ClusteredVertxConfig()),
+          new ClusteredVertxInjectionModule(vertxF),
           new TinkerGraphSessionsDbModule());
 
       Vertx vertx = injector.getInstance(Vertx.class);

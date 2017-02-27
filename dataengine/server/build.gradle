@@ -7,19 +7,14 @@ apply from: 'gretty.plugin'
 
 dependencies {
   compile project(':apis')
-  compile project(':vertx')
+  compile dep.guava
   compile dep.dataengine_api
   compile dep.guice
+  compile project(':vertx')
   runtime dep.vertx_ignite
 
   testCompile project(':sessions')
   testCompile project(':tasker')
-
-  // TEMPORARY: for easily starting everything in one JVM
-  compile project(':sessions')
-  compile project(':tasker')
-  compile project(':jobmgr')
-  compile project(':workers')
 
 }
 

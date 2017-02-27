@@ -24,9 +24,8 @@ public class SessionsMain {
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
-    ClusteredVertxConfig vertxConfig=new ClusteredVertxConfig();
     return Guice.createInjector(
-        new ClusteredVertxInjectionModule(vertxF, vertxConfig),
+        new ClusteredVertxInjectionModule(vertxF),
         new TinkerGraphSessionsDbModule());
   }
 }

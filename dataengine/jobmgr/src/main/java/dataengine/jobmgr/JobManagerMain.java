@@ -8,7 +8,6 @@ import com.google.inject.Injector;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j
@@ -25,9 +24,8 @@ public class JobManagerMain {
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {
-    ClusteredVertxConfig vertxConfig = new ClusteredVertxConfig();
     return Guice.createInjector(
-        new ClusteredVertxInjectionModule(vertxF, vertxConfig),
+        new ClusteredVertxInjectionModule(vertxF),
         new JobBoardModule(VerticleConsts.jobBoardBroadcastAddr)
         );
   }

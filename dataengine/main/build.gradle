@@ -1,7 +1,16 @@
 
+apply plugin: 'application'
+
+mainClassName = "dataengine.main.MainJetty"
+
 //apply plugin: 'jar'
+apply plugin: 'war'
+
+//apply from: 'http://raw.github.com/akhikhl/gretty/master/pluginScripts/gretty.plugin'
+apply from: 'gretty.plugin'
 
 dependencies {
+  compile dep.guava
   compile project(':server')
   runtime dep.vertx_ignite
 
@@ -13,6 +22,11 @@ dependencies {
   compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-jetty-http', version: '2.25.1'
 
   //  compile 'com.eclipsesource.jaxrs:provider-gson:2.0-SR1'
-
+  
+  // for easily starting everything in one JVM
+  compile project(':sessions')
+  compile project(':tasker')
+  compile project(':jobmgr')
+  compile project(':workers')
 }
 
