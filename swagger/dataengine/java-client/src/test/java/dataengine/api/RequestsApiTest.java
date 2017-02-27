@@ -50,6 +50,21 @@ public class RequestsApiTest {
     }
     
     /**
+     * refresh list of operations
+     *
+     * refresh operations list from active workers
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void refreshOperationsTest() throws ApiException {
+        // Boolean response = api.refreshOperations();
+
+        // TODO: test validations
+    }
+    
+    /**
      * submit a request
      *
      * Submit a new request with given metadata

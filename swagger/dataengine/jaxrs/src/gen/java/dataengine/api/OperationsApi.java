@@ -41,4 +41,15 @@ public class OperationsApi  {
     throws NotFoundException {
         return delegate.listOperations(securityContext);
     }
+    @GET
+    @Path("/refresh")
+    
+    @Produces({ "application/json" })
+    @io.swagger.annotations.ApiOperation(value = "refresh list of operations", notes = "refresh operations list from active workers", response = Boolean.class, tags={ "requests", })
+    @io.swagger.annotations.ApiResponses(value = { 
+        @io.swagger.annotations.ApiResponse(code = 200, message = "whether operations are being refreshed", response = Boolean.class) })
+    public Response refreshOperations(@Context SecurityContext securityContext)
+    throws NotFoundException {
+        return delegate.refreshOperations(securityContext);
+    }
 }

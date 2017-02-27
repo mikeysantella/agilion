@@ -18,4 +18,5 @@ import javax.ws.rs.core.SecurityContext;
 
 public abstract class OperationsApiService {
     public abstract Response listOperations(SecurityContext securityContext) throws NotFoundException;
+    public abstract Response refreshOperations(SecurityContext securityContext) throws NotFoundException;
 }

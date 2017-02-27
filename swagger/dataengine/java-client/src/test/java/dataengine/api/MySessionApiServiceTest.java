@@ -23,7 +23,7 @@ public class MySessionApiServiceTest {
       baseUri = "http://"+baseUri+":8080/main/";
     }
     if(!baseUri.contains("DataEngine"))
-      baseUri += "deelam/DataEngine/0.0.1";
+      baseUri += "DataEngine/0.0.2";
     System.out.println("Using baseUri="+baseUri);
     MySessionApiServiceTest me = new MySessionApiServiceTest(baseUri);
     me.testSessionsApi();

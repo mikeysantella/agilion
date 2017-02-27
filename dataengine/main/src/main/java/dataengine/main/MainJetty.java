@@ -50,7 +50,7 @@ public class MainJetty {
     Server jettyServer = main.startServer(8080, 8083,
         // this contextPath mimics gretty's default behavior
         "/main" // gretty uses the project name
-            + "/deelam/DataEngine/0.0.1", // matches the path in web.xml
+            + "/DataEngine/0.0.2", // matches the path in web.xml
         null, null, false); // TODO: 4: enable SSL
 
     try {

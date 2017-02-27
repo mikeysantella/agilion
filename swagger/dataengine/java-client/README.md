@@ -94,6 +94,7 @@ Class | Method | HTTP request | Description
 *JobsApi* | [**getJob**](docs/JobsApi.md#getJob) | **GET** /job/{id} | retrieve job
 *RequestsApi* | [**getRequest**](docs/RequestsApi.md#getRequest) | **GET** /request/{id} | retrieve request
 *RequestsApi* | [**listOperations**](docs/RequestsApi.md#listOperations) | **GET** /operations | retrieve list of operations for requests
+*RequestsApi* | [**refreshOperations**](docs/RequestsApi.md#refreshOperations) | **GET** /operations/refresh | refresh list of operations
 *RequestsApi* | [**submitRequest**](docs/RequestsApi.md#submitRequest) | **POST** /request | submit a request
 *SessionsApi* | [**createSession**](docs/SessionsApi.md#createSession) | **POST** /session | create a session
 *SessionsApi* | [**getSession**](docs/SessionsApi.md#getSession) | **GET** /session/{id} | retrieve session
