@@ -73,7 +73,7 @@ public class ApiClient {
     this.dateFormat = new RFC3339DateFormat();
 
     // Set default User-Agent.
-    setUserAgent("Swagger-Codegen/0.0.1-SNAPSHOT/java");
+    setUserAgent("Swagger-Codegen/java");
 
     // Setup authentications (key: authentication name, value: authentication).
     authentications = new HashMap<String, Authentication>();
@@ -487,6 +487,7 @@ public class ApiClient {
   /**
    * Deserialize response body to Java object according to the Content-Type.
    */
+  @SuppressWarnings("unchecked")
   public <T> T deserialize(Response response, GenericType<T> returnType) throws ApiException {
     if (response == null || returnType == null) {
       return null;

@@ -12,6 +12,7 @@ task check {
 
 task build {
   dependsOn gradle.includedBuild('dataengine-api').task(':install')
+  dependsOn gradle.includedBuild('dataengine-client').task(':install')
   dependsOn gradle.includedBuild('dataengine').task(':server:build')
 }
 task clean {
