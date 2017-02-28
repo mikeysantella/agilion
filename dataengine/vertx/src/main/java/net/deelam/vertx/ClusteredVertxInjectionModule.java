@@ -1,5 +1,9 @@
 package net.deelam.vertx;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -15,26 +19,41 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClusteredVertxInjectionModule extends AbstractModule {
   final CompletableFuture<Vertx> vertxF;
-  final ClusteredVertxConfig vertxConfig=new ClusteredVertxConfig();// TODO: 2: set cluster IPs from file
+  final ClusteredVertxConfig vertxConfig = new ClusteredVertxConfig();
 
-  
+
   @Override
   protected void configure() {
     // create clustered VertX
-    if(!vertxF.isDone()){
-      new Thread(() -> StartVertx.createClustered(vertxConfig, vertx -> {
-        //System.out.println("=========  Vert.x service registered");
-        vertxF.complete(vertx);
-        log.info("VertX created");
-      })).start();
+    if (!vertxF.isDone()) {
+      // set cluster IPs from file
+      try (FileInputStream is = new FileInputStream("vertx.props")) {
+        Properties props = new Properties();
+        props.load(is);
+      } catch (FileNotFoundException e) {
+        log.info("No vertx.props found.  Creating non-clustered Vertx instance.");
+        vertxF.complete(Vertx.vertx());
+      } catch (IOException e) {
+        log.error("Error reading vertx.props", e);
+      }
+
+      if (!vertxF.isDone()) {
+        new Thread(() -> // Is a separate thread needed since we wait for it later?
+        StartVertx.createClustered(vertxConfig, vertx -> {
+          //System.out.println("=========  Vert.x service registered");
+          vertxF.complete(vertx);
+          log.info("VertX created");
+        }) //
+        , "clusteredVertxCreator").start();
+      }
     }
-    
+
     try {
       boolean haveToWait = !vertxF.isDone();
-      if(haveToWait)
+      if (haveToWait)
         log.info("Waiting for Vertx ... {}", vertxF);
       bind(Vertx.class).toInstance(vertxF.get(10, TimeUnit.SECONDS));
-      if(haveToWait)
+      if (haveToWait)
         log.info("Got Vertx");
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
