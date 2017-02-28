@@ -1,7 +1,5 @@
 package net.deelam.vertx.jobboard;
 
-import net.deelam.vertx.jobboard.HasProgress.ProgressState;
-
 /**
  * Polls process for status.
  * Receives push updates from process.

@@ -20,7 +20,6 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.graph.GrafUri;
 import net.deelam.graph.IdGrafFactoryTinker;
-import net.deelam.vertx.jobboard.HasProgress.ProgressState;
 
 @Slf4j
 public class WorkDoerExample {

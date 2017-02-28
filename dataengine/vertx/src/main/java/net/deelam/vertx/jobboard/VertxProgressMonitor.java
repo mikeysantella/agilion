@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.jobboard.HasProgress.ProgressState;
 
 
 @RequiredArgsConstructor
