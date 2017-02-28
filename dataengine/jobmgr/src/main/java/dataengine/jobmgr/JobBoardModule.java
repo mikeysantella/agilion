@@ -21,14 +21,14 @@ import net.deelam.vertx.rpc.RpcVerticleServer;
 @RequiredArgsConstructor
 @Slf4j
 public class JobBoardModule extends AbstractModule {
-  final String jobMarketId;
+  final String jobBoardId;
   
   @Override
   protected void configure() {
-    JobProducer jobProducerProxy = new JobProducer(jobMarketId);
+    JobProducer jobProducerProxy = new JobProducer(jobBoardId);
     bind(JobProducer.class).toInstance(jobProducerProxy);
 
-    JobBoard jm = new JobBoard(jobMarketId, jobMarketId+System.currentTimeMillis());
+    JobBoard jm = new JobBoard(jobBoardId, jobBoardId+System.currentTimeMillis());
     bind(JobBoard.class).toInstance(jm);
   }
 

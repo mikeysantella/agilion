@@ -1,7 +1,5 @@
 package dataengine.workers;
 
-import java.util.concurrent.CompletableFuture;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 
@@ -13,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 final class OperationsSubscriberModule extends AbstractModule {
-  final CompletableFuture<Vertx> vertxF;
-
   @Override
   protected void configure() {}
 

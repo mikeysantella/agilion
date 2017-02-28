@@ -7,7 +7,6 @@ import com.google.inject.Injector;
 
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j

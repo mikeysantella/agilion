@@ -21,7 +21,6 @@ public class ClusteredVertxInjectionModule extends AbstractModule {
   final CompletableFuture<Vertx> vertxF;
   final ClusteredVertxConfig vertxConfig = new ClusteredVertxConfig();
 
-
   @Override
   protected void configure() {
     // create clustered VertX

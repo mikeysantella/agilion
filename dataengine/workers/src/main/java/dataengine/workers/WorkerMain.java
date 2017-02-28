@@ -5,9 +5,9 @@ import java.util.concurrent.CompletableFuture;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.ClusteredVertxConfig;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j
@@ -41,6 +41,8 @@ public class WorkerMain {
     return Guice.createInjector(
         new ClusteredVertxInjectionModule(vertxF),
         new VertxRpcClients4WorkerModule(vertxF),
-        new OperationsSubscriberModule(vertxF));
+        new OperationsSubscriberModule(),
+        new BaseWorkerModule(VerticleConsts.jobBoardBroadcastAddr)
+        );
   }
 }
