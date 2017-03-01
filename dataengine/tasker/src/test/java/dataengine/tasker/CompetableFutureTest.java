@@ -1,13 +1,10 @@
 package dataengine.tasker;
 
-import static org.junit.Assert.*;
-
 import java.util.concurrent.CompletableFuture;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import dataengine.api.Job;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

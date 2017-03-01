@@ -20,7 +20,7 @@ final class OperationsSubscriberModule extends AbstractModule {
     Vertx vertx = injector.getInstance(Vertx.class);
     OperationsSubscriberVerticle opsRegVert =
         new OperationsSubscriberVerticle(VerticleConsts.opsRegBroadcastAddr,
-            "ops" + (++subscriberCounter) + "-" + worker.getName() + System.currentTimeMillis(),
+            "ops" + (++subscriberCounter) + "-" + worker.name() + System.currentTimeMillis(),
             worker);
     vertx.deployVerticle(opsRegVert);
     log.info("Created OperationsSubscriberVerticle: {} for {}", opsRegVert, worker);

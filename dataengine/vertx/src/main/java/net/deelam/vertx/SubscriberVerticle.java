@@ -1,7 +1,5 @@
 package net.deelam.vertx;
 
-import java.util.Set;
-
 import io.vertx.core.AbstractVerticle;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

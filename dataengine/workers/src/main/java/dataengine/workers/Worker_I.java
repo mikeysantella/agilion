@@ -6,8 +6,8 @@ import dataengine.api.Operation;
 
 public interface Worker_I {
 
-  String getName();
+  String name();
 
-  Collection<Operation> getOperations();
+  Collection<Operation> operations();
 
 }
