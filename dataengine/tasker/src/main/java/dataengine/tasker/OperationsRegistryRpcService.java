@@ -1,7 +1,6 @@
 package dataengine.tasker;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
@@ -27,11 +26,12 @@ public class OperationsRegistryRpcService implements OperationsRegistry_I {
   }
   
   @Override
-  public CompletableFuture<Collection<Operation>> listOperations() {
+  public CompletableFuture<Map<String, Operation>> listOperations() {
     log.info("SERV: listOperations()");
     return CompletableFuture.completedFuture(
         // Can't find Kryo deserializer for Map.values(), so convert to basic List
-        new ArrayList<>(opsRegVert.getOperations().values()) 
+        //new ArrayList<>(opsRegVert.getOperations().values())
+        opsRegVert.getOperations()
         ); 
   }
 

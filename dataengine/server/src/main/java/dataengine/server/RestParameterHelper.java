@@ -93,7 +93,7 @@ public final class RestParameterHelper {
     try {
       String id = getId.apply(inputObj);
       if (id != null && hasObject.apply(id).get()) {
-        String errMsg = "Object already exists of type " + objectType + ": " + hasObject;
+        String errMsg = "Object already exists of type " + objectType + ": " + id;
         log.warn(errMsg);
         return Response.status(Status.CONFLICT)
             .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
