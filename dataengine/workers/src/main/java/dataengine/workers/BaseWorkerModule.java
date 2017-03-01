@@ -1,10 +1,16 @@
 package dataengine.workers;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Named;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 import io.vertx.core.Vertx;
@@ -19,8 +25,10 @@ import net.deelam.vertx.jobboard.VertxProgressMonitor;
 @Slf4j
 @RequiredArgsConstructor
 public class BaseWorkerModule extends AbstractModule {
-  private static final String NAMED_JOB_BOARD_ID = "jobBoardId";
   final String jobBoardId;
+  final List<ProgressingDoer> doers = new ArrayList<>();
+
+  private static final String NAMED_JOB_BOARD_ID = "jobBoardId";
 
   @Override
   protected void configure() {
@@ -29,16 +37,15 @@ public class BaseWorkerModule extends AbstractModule {
     bind(ProgressMonitor.Factory.class).to(VertxProgressMonitor.Factory.class);
   }
 
-  public static void deployDoers(Injector injector, final List<ProgressingDoer> doers) {
-    final Vertx vertx = injector.getInstance(Vertx.class);
-    String jobBoardId=injector.getInstance(Key.get(String.class, Names.named(NAMED_JOB_BOARD_ID)));
-    doers.forEach(doer -> {
-      ProgressMonitor.Factory pmFactory = injector.getInstance(ProgressMonitor.Factory.class);
-      deployReportingWorker(vertx, pmFactory, jobBoardId, doer);
-    });
+  @Provides
+  public List<JobConsumer> deployDoers(Vertx vertx, ProgressMonitor.Factory pmFactory, @Named(NAMED_JOB_BOARD_ID) String jobBoardId) {
+    return doers.stream().map(doer -> {
+      //ProgressMonitor.Factory pmFactory = injector.getInstance(ProgressMonitor.Factory.class);
+      return deployReportingWorker(vertx, pmFactory, jobBoardId, doer);
+    }).collect(toList());
   }
 
-  public static void deployReportingWorker(Vertx vertx, ProgressMonitor.Factory pmFactory, 
+  public static JobConsumer deployReportingWorker(Vertx vertx, ProgressMonitor.Factory pmFactory,
       String jobBoardId, ProgressingDoer doer) {
     ReportingWorker rw = new ReportingWorker(doer, () -> doer.state())
         .setProgressMonitorFactory(pmFactory);
@@ -46,5 +53,6 @@ public class BaseWorkerModule extends AbstractModule {
     JobConsumer jConsumer = new JobConsumer(jobBoardId, doer.jobType()).setWorker(rw);
     log.info("Deploying JobConsumer with ReportingWorker for: {}", doer.name());
     vertx.deployVerticle(jConsumer);
+    return jConsumer;
   }
 }

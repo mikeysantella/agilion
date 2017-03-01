@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
 import dataengine.api.Job;
+import dataengine.api.Operation;
 import dataengine.api.Progress;
 import dataengine.api.Request;
 import dataengine.api.State;
@@ -19,26 +19,19 @@ import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.JobsCreator.JobEntry;
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.jobboard.JobDTO;
 
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class TaskerService implements Tasker_I, JobListener_I {
 
   final OperationsRegistryVerticle opsRegVert;
 
   final RpcClientProvider<SessionsDB_I> sessDb;
   final RpcClientProvider<DepJobService_I> jobDispatcher;
-
-  @Inject
-  TaskerService(Supplier<SessionsDB_I> sessionsDbF, Supplier<DepJobService_I> jobDispatcherF,
-      OperationsRegistryVerticle opsRegVert) {
-    sessDb = new RpcClientProvider<>(sessionsDbF);
-    jobDispatcher = new RpcClientProvider<>(jobDispatcherF);
-    this.opsRegVert = opsRegVert;
-  }
 
   // map keyed on Operation.id in a Request
   Map<String, JobsCreator> jobsCreatorMap = new HashMap<>();
@@ -81,21 +74,28 @@ public class TaskerService implements Tasker_I, JobListener_I {
     return addedReq;
   }
 
-  @Getter(lazy = true, onMethod = @__({@SuppressWarnings("unchecked")}))
-  private final List<JobsCreator> jobCreators = populateJobCreators();
+  //@Getter(lazy = true, onMethod = @__({@SuppressWarnings("unchecked")}))
+  private final List<JobsCreator> jobCreators; // = populateJobCreators();
 
-  private List<JobsCreator> populateJobCreators() {
-    return TaskerModule.getJobCreators(opsRegVert.getOperations());
-  }
+//  private List<JobsCreator> populateJobCreators() {
+//    return TaskerModule.getJobCreators(opsRegVert.getOperations());
+//  }
 
   @Override
   public CompletableFuture<Void> refreshJobsCreators() {
     log.info("SERV: refreshJobsCreators()");
     return CompletableFuture.runAsync(() -> {
       jobsCreatorMap.clear();
-      getJobCreators().forEach(jc -> {
-        jobsCreatorMap.put(jc.getOperation().getId(), jc);
-        opsRegVert.getOperations().put(jc.getOperation().getId(), jc.getOperation());
+      Map<String, Operation> currOps = opsRegVert.getOperations(); // TODO: 2: replace with RPC call and .thenApply
+      
+      jobCreators.forEach(jc -> {
+        jc.update(currOps);
+        JobsCreator oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
+        if(oldJc!=null && oldJc!=jc)
+          log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);
+        
+        // TODO: 2: replace currOps.put with opsRegVert.addOperation
+        currOps.put(jc.getOperation().getId(), jc.getOperation());
       });
     });
   }

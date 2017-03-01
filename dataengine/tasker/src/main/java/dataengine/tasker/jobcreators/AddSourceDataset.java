@@ -1,13 +1,13 @@
 package dataengine.tasker.jobcreators;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import dataengine.api.Job;
 import dataengine.api.Operation;
@@ -24,29 +24,31 @@ public class AddSourceDataset extends AbstractJobCreator {
   private static final String INPUT_URI = "inputUri";
   private static final String DATA_FORMAT = "dataFormat";
 
-  public AddSourceDataset(Map<String, Operation> currOperations) {
+  public AddSourceDataset(){
     operation.id(ADD_SOURCE_DATASET)
         .description("add source dataset");
     operation.addParamsItem(new OperationParam().key(INPUT_URI)
         .required(true)
         .description("location of source dataset")
         .valuetype(ValuetypeEnum.STRING).defaultValue(null).isMultivalued(false));
-
-    // retrieve possible ingest formats from workers
-    List<Operation> ingesterOps = currOperations.values().stream()
-        .filter(op -> OperationConsts.TYPE_INGESTER.equals(op.getInfo().get(OperationConsts.OPERATION_TYPE)))
-        .collect(toList());
-    List<OperationParam> ingestDataFormatParams = ingesterOps.stream().map(Operation::getParams)
-        .flatMap(params -> params.stream()
-            .filter(param -> OperationConsts.INGEST_DATAFORMAT.equals(param.getKey())))
-        .collect(toList());
-    Set<Object> ingestDataFormats =
-        ingestDataFormatParams.stream().flatMap(param -> param.getPossibleValues().stream()).collect(toSet());
     operation.addParamsItem(new OperationParam().key(DATA_FORMAT)
         .required(true)
         .description("type and format of data")
-        .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false)
-        .possibleValues(new ArrayList<>(ingestDataFormats)));
+        .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false));
+  }
+  
+  public void update(Map<String, Operation> currOperations) {
+    // retrieve possible ingest formats from workers
+    Stream<Operation> ingesterOps = currOperations.values().stream()
+        .filter(op -> OperationConsts.TYPE_INGESTER.equals(op.getInfo().get(OperationConsts.OPERATION_TYPE)));
+    Stream<OperationParam> ingestDataFormatParams = ingesterOps
+        .map(Operation::getParams)
+        .flatMap(params -> params.stream()
+            .filter(param -> OperationConsts.INGEST_DATAFORMAT.equals(param.getKey())));
+    Set<Object> ingestDataFormats = ingestDataFormatParams
+        .flatMap(param -> param.getPossibleValues().stream()).collect(toSet());
+    OperationParam opParam = getOperationParam(DATA_FORMAT);
+    opParam.possibleValues(new ArrayList<>(ingestDataFormats));
   }
 
   @Override

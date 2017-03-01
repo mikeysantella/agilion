@@ -16,6 +16,8 @@ import lombok.experimental.Accessors;
 
 public interface JobsCreator {
 
+  void update(Map<String, Operation> currOperations);
+  
   Operation getOperation();
 
   OperationParam getOperationParam(String key);

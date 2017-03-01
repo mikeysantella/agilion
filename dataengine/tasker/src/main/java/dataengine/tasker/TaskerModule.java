@@ -1,19 +1,26 @@
 package dataengine.tasker;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
-import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
 
 import dataengine.api.Operation;
+import dataengine.apis.RpcClientProvider;
+import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
+import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
 final class TaskerModule extends AbstractModule {
@@ -25,20 +32,45 @@ final class TaskerModule extends AbstractModule {
     bind(TaskerService.class).in(Singleton.class);
   }
 
-  static List<JobsCreator> getJobCreators(Map<String, Operation> currOperations) {
-    List<JobsCreator> jobCreators = Lists.newArrayList( // TODO: 5: read jobCreators from file
-        new AddSourceDataset(currOperations));
+  @Provides
+  RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(Supplier<DepJobService_I> jobDispatcherF){
+    return new RpcClientProvider<>(jobDispatcherF);
+  }
+
+  @Provides
+  RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(Supplier<SessionsDB_I> sessDb){
+    return new RpcClientProvider<>(sessDb);
+  }
+  
+  @Provides
+  List<JobsCreator> getJobCreators() {
+    // TODO: 5: read jobCreators from file
+    List<String> classes = new ArrayList<>();
+    {
+      classes.add(AddSourceDataset.class.getCanonicalName());
+    };
+
+    List<JobsCreator> jobCreators = classes.stream().map(jcClassName -> {
+      try {
+        @SuppressWarnings("unchecked")
+        Class<? extends JobsCreator> addSrcDataClazz = (Class<? extends JobsCreator>) Class.forName(jcClassName);
+        JobsCreator jc = addSrcDataClazz.getConstructor().newInstance();
+        return jc;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }).collect(toList());
     return jobCreators;
   }
 
   static void deployTasker(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
-    
+
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
-        .start("TaskerServiceBusAddr"+System.currentTimeMillis(), taskerSvc, true);
+        .start("TaskerServiceBusAddr" + System.currentTimeMillis(), taskerSvc, true);
 
     new RpcVerticleServer(vertx, VerticleConsts.jobListenerBroadcastAddr)
-        .start("JobListenerBusAddr"+System.currentTimeMillis(), taskerSvc, true);
+        .start("JobListenerBusAddr" + System.currentTimeMillis(), taskerSvc, true);
   }
 }
