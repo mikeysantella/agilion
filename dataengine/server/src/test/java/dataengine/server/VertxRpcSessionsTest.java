@@ -26,6 +26,7 @@ import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.rpc.RpcVerticleServer;
+import net.deelam.vertx.rpc.VertxRpcClientsModule;
 
 @Slf4j
 public class VertxRpcSessionsTest {
@@ -34,15 +35,19 @@ public class VertxRpcSessionsTest {
 
   @Before
   public void before() throws InterruptedException, ExecutionException, TimeoutException {
+    CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
+    vertxF.complete(Vertx.vertx());
+
     Thread clientThread = new Thread(() -> {
       // simulate REST server that uses SessionsDB RPC client 
-      Supplier<SessionsDB_I> sessionsDbRpcClientS = DeServerGuiceInjector.singleton().getInstance(
+      Injector injector = Guice.createInjector(
+          new VertxRpcClients4ServerModule(vertxF));
+      Supplier<SessionsDB_I> sessionsDbRpcClientS = injector.getInstance(
           Key.get(new TypeLiteral<Supplier<SessionsDB_I>>() {}));
       sessionsDbRpcClient = sessionsDbRpcClientS.get();
     } , "SessionClient");
 
     Thread serverThread = new Thread(() -> { // set up service in another vertx
-      CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
       Injector injector = Guice.createInjector(
           new ClusteredVertxInjectionModule(vertxF),
           new TinkerGraphSessionsDbModule());
@@ -77,7 +82,7 @@ public class VertxRpcSessionsTest {
     Session createdSession = sessionsDbRpcClient.createSession(session).get();
     log.info("create: " + createdSession);
     log.info("list: " + sessionsDbRpcClient.listSessionIds().get());
-    
+
     {
       Request req = new Request().sessionId(sessId).id("req1").label("req1Name");
       Request req2 = sessionsDbRpcClient.addRequest(req).get();
