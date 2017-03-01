@@ -61,6 +61,8 @@ public class ServiceWaiterBase {
   public void broadcastServerSearch(CompletableFuture<String> serverAddrF) {
     if (consumer == null)
       throw new IllegalStateException("Must createServerMsgConsumer() before broadcastServerSearch()");
+    if (serversBroadcastAddr==null || serversBroadcastAddr.length()==0)
+      throw new IllegalStateException("serversBroadcastAddr="+serversBroadcastAddr);
     Handler<Long> broadcastUntilSuccess =
         createBroadcastUntilSuccess(serversBroadcastAddr, myAddress, serverAddrF);
     broadcastUntilSuccess.handle(0L);

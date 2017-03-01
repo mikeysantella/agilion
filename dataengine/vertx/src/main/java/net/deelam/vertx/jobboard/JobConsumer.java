@@ -34,7 +34,7 @@ public class JobConsumer extends AbstractVerticle {
   @Override
   public void start() throws Exception {
     String myAddr = deploymentID();
-    log.info("Ready: deploymentID={} this={}", deploymentID(), this);
+    log.info("Ready: deploymentID={} jobType={}", deploymentID(), jobType);
 
     EventBus eb = vertx.eventBus();
     KryoMessageCodec.register(eb, JobDTO.class);
