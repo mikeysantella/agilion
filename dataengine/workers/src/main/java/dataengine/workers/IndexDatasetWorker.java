@@ -10,18 +10,28 @@ import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.apis.OperationConsts;
 import lombok.Getter;
+import lombok.experimental.Accessors;
+import net.deelam.vertx.jobboard.ProgressState;
 
+@Accessors(fluent = true)
 public class IndexDatasetWorker implements Worker_I {
 
   @Getter
   private String name = "IndexDatasetWorker-" + System.currentTimeMillis();
 
-  @Override
-  public Collection<Operation> getOperations() {
-    ArrayList<Operation> list = new ArrayList<>();
+  @Getter
+  public String jobType = "INGEST_SOURCE_DATASET";
+
+  @Getter
+  public ProgressState state = new ProgressState();
+
+  @Getter
+  public Collection<Operation> operations = new ArrayList<>();
+
+  {
     Map<String, String> info = new HashMap<>();
     info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_POSTINGEST);
-    list.add(new Operation()
+    operations.add(new Operation()
         .id("INDEX_DATASET")
         .description("index source dataset")
         .info(info)
@@ -32,7 +42,6 @@ public class IndexDatasetWorker implements Worker_I {
             .defaultValue(null))
     //
     );
-    return list;
   }
 
 }

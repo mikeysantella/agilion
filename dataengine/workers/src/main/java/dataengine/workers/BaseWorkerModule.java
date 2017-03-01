@@ -8,8 +8,6 @@ import java.util.List;
 import javax.inject.Named;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.name.Names;
 

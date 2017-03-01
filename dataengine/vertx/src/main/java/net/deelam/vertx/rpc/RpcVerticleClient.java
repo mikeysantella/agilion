@@ -7,7 +7,7 @@ import io.vertx.core.Vertx;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
+//import lombok.extern.slf4j.Slf4j;
 
 /**
  *  Use case: Client initiates call to Server and will wait until Server is available.
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Accessors(fluent = true)
 @RequiredArgsConstructor
-@Slf4j
+//@Slf4j
 public class RpcVerticleClient {
   
   final Vertx vertx;

@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +18,7 @@ import dataengine.api.Job;
 import dataengine.api.NotFoundException;
 import dataengine.api.Request;
 import dataengine.api.Session;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.sessions.TinkerGraphSessionsDbModule;
@@ -26,7 +26,6 @@ import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.rpc.RpcVerticleServer;
-import net.deelam.vertx.rpc.VertxRpcClientsModule;
 
 @Slf4j
 public class VertxRpcSessionsTest {
@@ -42,9 +41,9 @@ public class VertxRpcSessionsTest {
       // simulate REST server that uses SessionsDB RPC client 
       Injector injector = Guice.createInjector(
           new VertxRpcClients4ServerModule(vertxF));
-      Supplier<SessionsDB_I> sessionsDbRpcClientS = injector.getInstance(
-          Key.get(new TypeLiteral<Supplier<SessionsDB_I>>() {}));
-      sessionsDbRpcClient = sessionsDbRpcClientS.get();
+      RpcClientProvider<SessionsDB_I> sessionsDbRpcClientS = injector.getInstance(
+          Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
+      sessionsDbRpcClient = sessionsDbRpcClientS.rpc();
     } , "SessionClient");
 
     Thread serverThread = new Thread(() -> { // set up service in another vertx

@@ -18,7 +18,7 @@ public class OperationsSubscriberVerticle extends HandlingSubscriberVerticle {
   public void registerMsgHandlers() {
     registerMsgBeans(OperationsRegistry_I.msgBodyClasses);
 
-    registerMsgHandler(QUERY_OPS.name(), (Object msgBody) -> worker.getOperations());
+    registerMsgHandler(QUERY_OPS.name(), (Object msgBody) -> worker.operations());
   }
 
 
