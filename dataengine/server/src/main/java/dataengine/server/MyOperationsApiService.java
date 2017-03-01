@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
+//@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyOperationsApiService extends OperationsApiService {
 
   final RpcClientProvider<Tasker_I> tasker;
