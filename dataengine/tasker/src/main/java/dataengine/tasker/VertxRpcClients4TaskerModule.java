@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 
 import com.google.inject.Provides;
 
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
@@ -23,14 +24,25 @@ class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
     //debug = true;
     log.debug("VertxRpcClients4TaskerModule configured");
   }
-
-  @Provides @Singleton
-  Supplier<SessionsDB_I> getSessionsDBClient() {
-    return getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
-  }
+//
+//  @Provides @Singleton
+//  Supplier<SessionsDB_I> getSessionsDBClient() {
+//    return getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
+//  }
+//  
+//  @Provides @Singleton
+//  Supplier<DepJobService_I> getDepJobServiceClient() {
+//    return getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr); // blocks
+//  }
   
-  @Provides @Singleton
-  Supplier<DepJobService_I> getDepJobServiceClient() {
-    return getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr); // blocks
+
+  @Provides
+  RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(){
+    return new RpcClientProvider<>(getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr));
+  }
+
+  @Provides
+  RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
+    return new RpcClientProvider<>(getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr));
   }
 }

@@ -4,8 +4,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import javax.inject.Singleton;
 
@@ -13,14 +11,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 
-import dataengine.api.Operation;
-import dataengine.apis.RpcClientProvider;
-import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
-import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
 final class TaskerModule extends AbstractModule {
@@ -30,16 +24,6 @@ final class TaskerModule extends AbstractModule {
 
     bind(Tasker_I.class).to(TaskerService.class);
     bind(TaskerService.class).in(Singleton.class);
-  }
-
-  @Provides
-  RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(Supplier<DepJobService_I> jobDispatcherF){
-    return new RpcClientProvider<>(jobDispatcherF);
-  }
-
-  @Provides
-  RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(Supplier<SessionsDB_I> sessDb){
-    return new RpcClientProvider<>(sessDb);
   }
   
   @Provides
