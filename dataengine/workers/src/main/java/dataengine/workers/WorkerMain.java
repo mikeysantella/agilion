@@ -9,6 +9,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import dataengine.apis.VerticleConsts;
+import dataengine.workers.BaseWorkerModule.DeployedJobConsumerFactory;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,20 +29,16 @@ public class WorkerMain {
   public static void main(CompletableFuture<Vertx> vertxF) {
     log.info("Starting {}", WorkerMain.class);
     Injector injector = createInjector(vertxF);
+    DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
-    {
-      Worker_I worker = new IngestTelephoneWorker();
+    BaseWorker[] workers = {
+        new IngestTelephoneWorker(),
+        new IngestPeopleWorker(),
+        new IndexDatasetWorker()
+    };
+    for(BaseWorker worker:workers)    {
       OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, worker);
-    }
-
-    {
-      Worker_I worker = new IngestPeopleWorker();
-      OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, worker);
-    }
-
-    {
-      Worker_I worker = new IndexDatasetWorker();
-      OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, worker);
+      jcFactory.create(worker);
     }
     
     WorkerMain workerMain = injector.getInstance(WorkerMain.class);
