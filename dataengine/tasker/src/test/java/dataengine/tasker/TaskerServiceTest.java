@@ -1,6 +1,7 @@
 package dataengine.tasker;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -8,9 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
-
-import javax.inject.Singleton;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +24,7 @@ import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
@@ -45,27 +44,22 @@ public class TaskerServiceTest {
           @Override
           protected void configure() {
             bind(Vertx.class).toInstance(vertxF.join());
-            
+
             // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
             OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
             bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
-
-            // 
-            bind(Tasker_I.class).to(TaskerService.class);
-            bind(TaskerService.class).in(Singleton.class);
           }
 
           @Provides
-          @Singleton
-          Supplier<SessionsDB_I> getSessionsDBClient() {
-            return () -> sessDB;
+          RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient() {
+            return new RpcClientProvider<>(() -> Mockito.mock(DepJobService_I.class));
           }
 
           @Provides
-          @Singleton
-          Supplier<DepJobService_I> getDepJobServiceClient() {
-            return () -> Mockito.mock(DepJobService_I.class);
+          RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient() {
+            return new RpcClientProvider<>(() -> sessDB);
           }
+
         });
     opsReg = injector.getInstance(OperationsRegistryVerticle.class);
     {
@@ -159,16 +153,16 @@ public class TaskerServiceTest {
       assertTrue(e.getMessage().contains("Cannot convert"));
     }
   }
-  
+
   @Test
   public void testSubmitCompleteRequest() throws InterruptedException, ExecutionException {
-      Request req = new Request().sessionId("newSess").label("req1Name")
-          .operationId("addSourceDataset");
-      HashMap<String, Object> paramValues = new HashMap<String, Object>();
-      req.operationParams(paramValues);
-      paramValues.put("inputUri", "hdfs://some/where/");
-      paramValues.put("dataFormat", "TELEPHONE.CSV");
-      when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
-      taskerSvc.submitRequest(req).get();
+    Request req = new Request().sessionId("newSess").label("req1Name")
+        .operationId("addSourceDataset");
+    HashMap<String, Object> paramValues = new HashMap<String, Object>();
+    req.operationParams(paramValues);
+    paramValues.put("inputUri", "hdfs://some/where/");
+    paramValues.put("dataFormat", "TELEPHONE.CSV");
+    when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
+    taskerSvc.submitRequest(req).get();
   }
 }
