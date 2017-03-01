@@ -7,7 +7,6 @@ import static dataengine.server.RestParameterHelper.makeResultResponse;
 import static dataengine.server.RestParameterHelper.tryCreateObject;
 
 import java.util.Map;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -18,19 +17,16 @@ import dataengine.api.Session;
 import dataengine.api.SessionApiService;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MySessionApiService extends SessionApiService {
   private static final String OBJECT_TYPE = "Session";
 
   final RpcClientProvider<SessionsDB_I> sessDb;
   
-  @Inject
-  MySessionApiService(Supplier<SessionsDB_I> sessionsDbF) {
-    sessDb = new RpcClientProvider<>(sessionsDbF);
-  }
-
   @Override
   public Response createSession(Session session, SecurityContext securityContext) throws NotFoundException {
     log.info("REST {}: createSession: {}", securityContext.getUserPrincipal(), session);
