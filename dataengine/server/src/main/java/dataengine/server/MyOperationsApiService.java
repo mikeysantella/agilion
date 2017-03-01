@@ -5,7 +5,6 @@ import static dataengine.server.RestParameterHelper.makeResultResponse;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -21,19 +20,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-//@RequiredArgsConstructor(onConstructor = @__(@Inject) )
+@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyOperationsApiService extends OperationsApiService {
 
   final RpcClientProvider<Tasker_I> tasker;
   final RpcClientProvider<OperationsRegistry_I> opRegistry;
 
   boolean autoRefreshOperations = true; // TODO: 6: load autoRefreshOperations from property file
-
-  @Inject
-  MyOperationsApiService(Supplier<Tasker_I> taskerF, Supplier<OperationsRegistry_I> opsRegF) {
-    tasker = new RpcClientProvider<>(taskerF);
-    opRegistry = new RpcClientProvider<>(opsRegF);
-  }
 
   @Override
   public Response listOperations(SecurityContext securityContext)

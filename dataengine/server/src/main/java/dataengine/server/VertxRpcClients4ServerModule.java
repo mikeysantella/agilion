@@ -1,18 +1,17 @@
 package dataengine.server;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import javax.inject.Singleton;
 
 import com.google.inject.Provides;
 
 import dataengine.apis.OperationsRegistry_I;
+import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.VertxRpcClientsModule;
 
 /// provides verticle clients used by REST services
@@ -25,19 +24,25 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
     //debug=true;
     log.debug("VertxRpcClients4ServerModule configured");
   }
-
-  @Provides @Singleton
-  Supplier<SessionsDB_I> getSessionsDBClient() {
-    return getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
+  
+  @Provides
+  RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(){
+    return new RpcClientProvider<>(getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr));
   }
 
-  @Provides @Singleton
-  Supplier<Tasker_I> getTaskerClient() {
-    return getClientSupplierFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr); // blocks
+  @Provides
+  RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
+    return new RpcClientProvider<>(getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr));
   }
 
-  @Provides @Singleton
-  Supplier<OperationsRegistry_I> getOperationsRegistryClient() {
-    return getClientSupplierFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr); // blocks
+  @Provides
+  RpcClientProvider<OperationsRegistry_I> opsReg_RpcClient(){
+    return new RpcClientProvider<>(getClientSupplierFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr));
   }
+
+  @Provides
+  RpcClientProvider<Tasker_I> tasker_RpcClient(){
+    return new RpcClientProvider<>(getClientSupplierFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr));
+  }
+
 }

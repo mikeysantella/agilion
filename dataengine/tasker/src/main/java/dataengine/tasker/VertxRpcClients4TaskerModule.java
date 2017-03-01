@@ -1,9 +1,6 @@
 package dataengine.tasker;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
-import javax.inject.Singleton;
 
 import com.google.inject.Provides;
 
@@ -24,17 +21,6 @@ class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
     //debug = true;
     log.debug("VertxRpcClients4TaskerModule configured");
   }
-//
-//  @Provides @Singleton
-//  Supplier<SessionsDB_I> getSessionsDBClient() {
-//    return getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr); // blocks
-//  }
-//  
-//  @Provides @Singleton
-//  Supplier<DepJobService_I> getDepJobServiceClient() {
-//    return getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr); // blocks
-//  }
-  
 
   @Provides
   RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(){

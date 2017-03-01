@@ -8,7 +8,6 @@ import static dataengine.server.RestParameterHelper.tryCreateObject;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
@@ -20,19 +19,15 @@ import dataengine.api.RequestApiService;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MyRequestApiService extends RequestApiService {
 
   final RpcClientProvider<Tasker_I> tasker;
   final RpcClientProvider<SessionsDB_I> sessDb;
-
-  @Inject
-  MyRequestApiService(Supplier<Tasker_I> taskerF, Supplier<SessionsDB_I> sessionsDbF) {
-    tasker=new RpcClientProvider<>(taskerF);
-    sessDb=new RpcClientProvider<>(sessionsDbF);
-  }
 
   private static final String OBJECT_TYPE = "Request";
 
