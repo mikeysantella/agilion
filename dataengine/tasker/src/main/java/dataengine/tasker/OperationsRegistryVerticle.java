@@ -17,6 +17,8 @@ import net.deelam.vertx.BroadcastingRegistryVerticle;
 /**
  * Used by OperationsSubscriberVerticle to register themselves
  * and allow themselves to be queried by this verticle. 
+ * 
+ * OperationsRegistryRpcService offers this verticle as an Vertx RPC service
  */
 @Slf4j
 public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
@@ -36,16 +38,20 @@ public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
 
   private OperationsMerger merger = new OperationsMerger();
   
-  public CompletableFuture<Map<String, Operation>> queryOperations() {
+  CompletableFuture<Map<String, Operation>> queryOperations() {
     log.info("queryOperations");
     CompletableFuture<Set<Collection<Operation>>> opsReplySet = query(QUERY_OPS.name(), null);
     return opsReplySet.thenApply(set -> {
       set.forEach(list -> list.forEach(newOp -> {
-        operations.put(newOp.getId(), 
-            merger.mergeOperation(newOp, operations.get(newOp.getId())));
+        mergeOperation(newOp);
       }));
       return operations;
     });
+  }
+
+  void mergeOperation(Operation newOp) {
+    operations.put(newOp.getId(), 
+        merger.mergeOperation(newOp, operations.get(newOp.getId())));
   }
   
   ///

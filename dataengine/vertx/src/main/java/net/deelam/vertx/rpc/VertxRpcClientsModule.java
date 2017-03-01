@@ -22,10 +22,12 @@ public class VertxRpcClientsModule extends AbstractModule {
   @Override
   protected void configure() {
     try {
-      if(!vertxF.isDone())
+      boolean haveToWait = !vertxF.isDone();
+      if (haveToWait)
         log.info("Waiting for Vertx ...");
       vertx = vertxF.get(10, TimeUnit.SECONDS);
-      log.info("Got Vertx");
+      if (haveToWait)
+        log.info("Got Vertx");
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }

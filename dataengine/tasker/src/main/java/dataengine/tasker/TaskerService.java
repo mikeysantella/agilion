@@ -1,10 +1,10 @@
 package dataengine.tasker;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
@@ -34,7 +34,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
   final RpcClientProvider<DepJobService_I> jobDispatcher;
 
   // map keyed on Operation.id in a Request
-  Map<String, JobsCreator> jobsCreatorMap = new HashMap<>();
+  Map<String, JobsCreator> jobsCreatorMap = new ConcurrentHashMap<>();
 
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
@@ -74,18 +74,12 @@ public class TaskerService implements Tasker_I, JobListener_I {
     return addedReq;
   }
 
-  //@Getter(lazy = true, onMethod = @__({@SuppressWarnings("unchecked")}))
-  private final List<JobsCreator> jobCreators; // = populateJobCreators();
-
-//  private List<JobsCreator> populateJobCreators() {
-//    return TaskerModule.getJobCreators(opsRegVert.getOperations());
-//  }
+  private final List<JobsCreator> jobCreators; 
 
   @Override
   public CompletableFuture<Void> refreshJobsCreators() {
     log.info("SERV: refreshJobsCreators()");
     return CompletableFuture.runAsync(() -> {
-      jobsCreatorMap.clear();
       Map<String, Operation> currOps = opsRegVert.getOperations(); // TODO: 2: replace with RPC call and .thenApply
       
       jobCreators.forEach(jc -> {
@@ -93,9 +87,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
         JobsCreator oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
         if(oldJc!=null && oldJc!=jc)
           log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);
-        
-        // TODO: 2: replace currOps.put with opsRegVert.addOperation
-        currOps.put(jc.getOperation().getId(), jc.getOperation());
+        opsRegVert.mergeOperation(jc.getOperation());
       });
     });
   }

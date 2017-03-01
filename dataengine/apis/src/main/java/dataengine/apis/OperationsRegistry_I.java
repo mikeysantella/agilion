@@ -1,8 +1,8 @@
 package dataengine.apis;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import dataengine.api.Operation;
@@ -17,6 +17,6 @@ public interface OperationsRegistry_I {
   
   CompletableFuture<Void> refresh();
 
-  CompletableFuture<Collection<Operation>> listOperations();
+  CompletableFuture<Map<String, Operation>> listOperations();
 
 }
