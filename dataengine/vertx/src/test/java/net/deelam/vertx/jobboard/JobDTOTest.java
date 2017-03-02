@@ -24,8 +24,7 @@ public class JobDTOTest {
 
   @Before
   public void setUp() throws Exception {
-    obj = new JobDTO("job1", "type1");
-    obj.setRequest(new PojoObj());    
+    obj = new JobDTO("job1", "type1", new PojoObj());    
   }
 
   @After

@@ -18,7 +18,7 @@ class VertxRpcClients4WorkerModule extends VertxRpcClientsModule {
 
   public VertxRpcClients4WorkerModule(CompletableFuture<Vertx> vertxF) {
     super(vertxF);
-    debug = true;
+//    debug = true;
     log.debug("VertxRpcClients4WorkerModule configured");
   }
 

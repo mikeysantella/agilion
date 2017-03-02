@@ -11,6 +11,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 
+import dataengine.apis.JobListener_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
@@ -21,7 +22,11 @@ final class TaskerModule extends AbstractModule {
   @Override
   protected void configure() {
     // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
-
+ 
+    
+    bind(JobListener_I.class).to(TaskerJobListener.class);
+    bind(TaskerJobListener.class).in(Singleton.class);
+    
     bind(Tasker_I.class).to(TaskerService.class);
     bind(TaskerService.class).in(Singleton.class);
   }
@@ -49,12 +54,16 @@ final class TaskerModule extends AbstractModule {
 
   static void deployTasker(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
-
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
         .start("TaskerServiceBusAddr" + System.currentTimeMillis(), taskerSvc, true);
-
-    new RpcVerticleServer(vertx, VerticleConsts.jobListenerBroadcastAddr)
-        .start("JobListenerBusAddr" + System.currentTimeMillis(), taskerSvc, true);
+  }
+  
+  static void deployJobListener(Injector injector) {
+    Vertx vertx = injector.getInstance(Vertx.class);
+    TaskerJobListener jobListener = injector.getInstance(TaskerJobListener.class);
+    jobListener.setProgressPollIntervalSeconds(1); // TODO: 4: read from property file
+    
+    vertx.deployVerticle(jobListener);
   }
 }

@@ -9,12 +9,13 @@ import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.apis.OperationConsts;
 import lombok.experimental.Accessors;
 
-@Accessors(fluent=true)
-public class IngestTelephoneWorker  extends BaseWorker {
+@Accessors(fluent = true)
+public class IngestTelephoneWorker extends BaseWorker<Object> {
 
-  public IngestTelephoneWorker(){
-    super("INGEST_SOURCE_DATASET");
+  public IngestTelephoneWorker() {
+    super(OperationConsts.TYPE_INGESTER);
   }
+
   {
     Map<String, String> info = new HashMap<>();
     info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
@@ -33,8 +34,11 @@ public class IngestTelephoneWorker  extends BaseWorker {
             .valuetype(ValuetypeEnum.ENUM).isMultivalued(false)
             .defaultValue(null)
             .addPossibleValuesItem("TELEPHONE.CSV"))
-    //
     );
   }
 
+  @Override
+  protected boolean doWork(Object req) throws Exception {
+    return super.doWork(req);
+  }
 }

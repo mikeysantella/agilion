@@ -10,10 +10,10 @@ import dataengine.apis.OperationConsts;
 import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
-public class IngestPeopleWorker extends BaseWorker {
+public class IngestPeopleWorker extends BaseWorker<Object> {
 
   public IngestPeopleWorker() {
-    super("INGEST_SOURCE_DATASET");
+    super(OperationConsts.TYPE_INGESTER);
   }
 
   {

@@ -21,7 +21,7 @@ public class JobListDTOTest {
   @Before
   public void setUp() throws Exception {
     List<JobDTO> jobs=new ArrayList<>();
-    JobDTO jobDto = new JobDTO("id", "type");
+    JobDTO jobDto = new JobDTO("id", "type", null);
     //jobDto.setRequest(new PojoObj());
     jobs.add(jobDto);
     obj=new JobListDTO(jobs);

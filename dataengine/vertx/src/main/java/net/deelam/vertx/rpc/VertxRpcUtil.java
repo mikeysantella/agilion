@@ -138,8 +138,8 @@ public class VertxRpcUtil {
       try {
         String methodId = r.headers().get(HEADER_METHOD_ID);
         if (!methods.containsKey(methodId)) {
-          log.error("Method not found: {}", methodId);
-          r.fail(1, "Method not found: " + methodId);
+          log.error("Method not found for {} at {}: {}", service.getClass(), address, methodId);
+          r.fail(1, "Method not found for "+service.getClass()+": " + methodId);
         } else {
           Method method = methods.get(methodId);
           Object result = null;

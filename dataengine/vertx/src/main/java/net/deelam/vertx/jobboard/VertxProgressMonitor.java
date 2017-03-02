@@ -1,5 +1,7 @@
 package net.deelam.vertx.jobboard;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -27,6 +29,7 @@ public class VertxProgressMonitor implements ProgressMonitor {
     private final Vertx vertx;
 
     public ProgressMonitor create(String jobId, int pollIntervalInSeconds, String busAddr) {
+      checkNotNull(busAddr);
       return new VertxProgressMonitor(vertx, jobId, pollIntervalInSeconds, busAddr);
     }
   }
@@ -43,7 +46,6 @@ public class VertxProgressMonitor implements ProgressMonitor {
   public void setProgressMaker(HasProgress process) {
     if (progressMaker != null)
       throw new IllegalStateException("Cannot set another progressMaker!");
-
     progressMaker = process;
 
     if (pollIntervalInSeconds > 0) {
@@ -58,6 +60,8 @@ public class VertxProgressMonitor implements ProgressMonitor {
           },
           10, //initial delay
           pollIntervalInSeconds * 1000); //subsequent rate
+    } else {
+      log.warn("Polling timer not set: pollIntervalInSeconds={}", pollIntervalInSeconds);
     }
   }
 
@@ -73,9 +77,8 @@ public class VertxProgressMonitor implements ProgressMonitor {
       doUpdate(); // will call stop() if done or failed; otherwise, timer will continue to monitor progressMaker
       isClosed=true;
       
-      if (!isStopped){
+      if (!isStopped)
         log.warn("Progress monitor has closed but progressMaker is not complete! {}", progressMaker);
-      }
     }
   }
 
