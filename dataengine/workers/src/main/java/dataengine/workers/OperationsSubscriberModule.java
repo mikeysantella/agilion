@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 final class OperationsSubscriberModule extends AbstractModule {
   @Override
-  protected void configure() {}
+  protected void configure() {
+    requireBinding(Vertx.class);
+  }
 
   static int subscriberCounter = 0;
 

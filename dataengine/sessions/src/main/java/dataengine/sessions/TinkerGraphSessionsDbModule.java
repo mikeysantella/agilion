@@ -17,7 +17,9 @@ import net.deelam.vertx.rpc.RpcVerticleServer;
 @Slf4j
 public class TinkerGraphSessionsDbModule extends AbstractModule {
   @Override
-  protected void configure() {            
+  protected void configure() {
+    requireBinding(Vertx.class);
+    
     IdGrafFactoryTinker.register();
     GrafUri sessGraphUri = new GrafUri("tinker:///");
     try {

@@ -9,20 +9,27 @@ import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Provides;
+import com.google.inject.TypeLiteral;
 
+import dataengine.apis.RpcClientProvider;
+import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
+import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
 final class TaskerModule extends AbstractModule {
   @Override
   protected void configure() {
+    requireBinding(Vertx.class);
+    requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
+    requireBinding(Key.get(new TypeLiteral<RpcClientProvider<DepJobService_I>>() {}));
+
     // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
- 
-    
     bind(JobListener_I.class).to(TaskerJobListener.class);
     bind(TaskerJobListener.class).in(Singleton.class);
     

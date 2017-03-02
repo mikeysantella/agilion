@@ -32,6 +32,8 @@ public class BaseWorkerModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    requireBinding(Vertx.class);
+    
     checkNotNull(jobBoardId);
     checkArgument(jobBoardId.length() > 0);
     log.info("jobBoardId={}", jobBoardId);
