@@ -25,6 +25,8 @@ public class JobBoardModule extends AbstractModule {
   
   @Override
   protected void configure() {
+    requireBinding(Vertx.class);
+    
     JobProducer jobProducerProxy = new JobProducer(jobBoardId);
     bind(JobProducer.class).toInstance(jobProducerProxy);
 

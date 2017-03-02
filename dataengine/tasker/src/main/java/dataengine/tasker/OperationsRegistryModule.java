@@ -13,6 +13,8 @@ import net.deelam.vertx.rpc.RpcVerticleServer;
 final class OperationsRegistryModule extends AbstractModule {
   @Override
   protected void configure() {
+    requireBinding(Vertx.class);
+    
     // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
 
     // OperationsRegistry_I used by clients
