@@ -10,14 +10,11 @@ import javax.inject.Inject;
 
 import dataengine.api.Job;
 import dataengine.api.Operation;
-import dataengine.api.Progress;
 import dataengine.api.Request;
-import dataengine.api.State;
 import dataengine.apis.JobListener_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import dataengine.apis.VerticleConsts;
 import dataengine.tasker.JobsCreator.JobEntry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,15 +23,17 @@ import net.deelam.vertx.jobboard.JobDTO;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
-public class TaskerService implements Tasker_I, JobListener_I {
+public class TaskerService implements Tasker_I {
 
   final OperationsRegistryVerticle opsRegVert;
 
   final RpcClientProvider<SessionsDB_I> sessDb;
   final RpcClientProvider<DepJobService_I> jobDispatcher;
-
+  
+  final JobListener_I jobListener;
+  
   // map keyed on Operation.id in a Request
-  Map<String, JobsCreator> jobsCreatorMap = new ConcurrentHashMap<>();
+  final Map<String, JobsCreator> jobsCreatorMap = new ConcurrentHashMap<>();
 
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
@@ -50,7 +49,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
     jc.checkValidity(req); // throw exception
       
     CompletableFuture<Request> f = sessDb.rpc().addRequest(req)
-        .thenApply((addedReq) ->submitJobs(addedReq, jc));
+        .thenApply((addedReq) -> submitJobs(addedReq, jc));
     return f;
   }
 
@@ -99,22 +98,7 @@ public class TaskerService implements Tasker_I, JobListener_I {
 //  }
 
   ///
-
-
-  @Override
-  public void updateJobState(String jobId, State state) {
-    log.info("SERV: updateJobState: {} {}", jobId, state);
-    // placeholder to do any checking
-    sessDb.rpc().updateJobState(jobId, state);
-  }
-
-  @Override
-  public void updateJobProgress(String jobId, Progress progress) {
-    log.info("SERV: updateJobState: {} {}", jobId, progress);
-    // placeholder to do any checking
-    sessDb.rpc().updateJobProgress(jobId, progress);
-  }
-
+  
   @Override
   public CompletableFuture<Boolean> addJob(Job job, String[] inputJobIds) {
     log.info("SERV: addJob {} with inputs={}", job.getId(), Arrays.toString(inputJobIds));
@@ -123,9 +107,8 @@ public class TaskerService implements Tasker_I, JobListener_I {
     return addJobToSessDB.thenCompose((sessDbJob) -> {
       // submit job
       log.info("Submitting job={} to jobDispatcher", job.getId());
-      JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType())
-          .setRequest(sessDbJob)
-          .setRequesterAddr(VerticleConsts.jobListenerBroadcastAddr);
+      JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType(), sessDbJob)
+          .progressAddr(jobListener.getEventBusAddress(), jobListener.getProgressPollIntervalSeconds());
       CompletableFuture<Boolean> submitJob = jobDispatcher.rpc().addDepJob(jobDto, inputJobIds);
       log.debug("Added and dispatched job={}", sessDbJob);
       return submitJob;

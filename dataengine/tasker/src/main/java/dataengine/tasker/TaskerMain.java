@@ -22,6 +22,7 @@ public class TaskerMain {
     
     OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector);
+    TaskerModule.deployJobListener(injector);
   }
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF) {

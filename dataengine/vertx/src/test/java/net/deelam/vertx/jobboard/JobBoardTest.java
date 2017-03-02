@@ -123,14 +123,14 @@ public class JobBoardTest {
     });
 
     {
-      JobDTO job = new JobDTO("id-A", jobTypeA);
+      JobDTO job = new JobDTO("id-A", jobTypeA, null);
       //job.getParams().put("a", "aaaa");
       log.info("Adding job {}", job);
       prod.addJob(job);
     }
 
     {
-      JobDTO jobB = new JobDTO("id-B", jobTypeB);
+      JobDTO jobB = new JobDTO("id-B", jobTypeB, null);
       //jobB.getParams().put("b", "bbbb");
       log.info("Adding job {}", jobB);
       prod.addJob(jobB);

@@ -24,10 +24,11 @@ public class RpcVerticleServer {
     log.debug("Registering RPC service at {}: {}", serverAddr, service);
     rpc.registerServer(service);
 
-    vertx.eventBus().consumer(serversBroadcastAddr, (Message<String> clientAddr) -> {
-      log.info("Got client broadcast from {}", clientAddr.body());
-      vertx.eventBus().send(clientAddr.body(), serverAddr);
-    });
+    if(serversBroadcastAddr!=null)
+      vertx.eventBus().consumer(serversBroadcastAddr, (Message<String> clientAddr) -> {
+        log.info("{} got client broadcast from {}", serverAddr, clientAddr.body());
+        vertx.eventBus().send(clientAddr.body(), serverAddr);
+      });
     return this;
   }
 

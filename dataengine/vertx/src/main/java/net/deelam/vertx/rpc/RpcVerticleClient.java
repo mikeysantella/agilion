@@ -56,7 +56,7 @@ public class RpcVerticleClient {
    * @return proxy for server
    */
   public <T> Supplier<T> createRpcClient(Class<T> clazz) {
-    return createRpcClientSupplier(clazz, false);
+    return createRpcClientSupplier(clazz, true);
   }
 
   /**

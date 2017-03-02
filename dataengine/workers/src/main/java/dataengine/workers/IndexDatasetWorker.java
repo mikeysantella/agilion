@@ -10,10 +10,10 @@ import dataengine.apis.OperationConsts;
 import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
-public class IndexDatasetWorker extends BaseWorker {
+public class IndexDatasetWorker extends BaseWorker<Object> {
 
   public IndexDatasetWorker(){
-    super("INDEX_DATASET");
+    super(OperationConsts.TYPE_POSTINGEST);
   }
 
   {

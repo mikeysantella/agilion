@@ -41,7 +41,7 @@ public class ReportingWorker implements Function<JobDTO, Boolean>, HasProgress {
     if(progressMonitorProvider!=DUMMY_PM_PROVIDER)
       log.warn("Overriding previously set progressMonitorProvider={}", progressMonitorProvider);
     progressMonitorProvider = job -> {
-      return pmFactory.create(job.getId(), job.getProgressPollInterval(), job.getRequesterAddr());
+      return pmFactory.create(job.getId(), job.getProgressPollIntervalSeconds(), job.getProgressVertxAddr());
     };
     return this;
   }

@@ -99,11 +99,8 @@ public class WorkDoerExample {
 
 
     void submit() {
-      JobDTO job = new JobDTO("jsonJobId", JOB_TYPE).setRequesterAddr(jobListenerAddr)
-          .setProgressPollInterval(1)
-          .setRequest(new Request().setId("reqId1"));
-      JobDTO job2 = new JobDTO("jsonJobId2", JOB_TYPE).setRequesterAddr(jobListenerAddr)
-          .setRequest(new Request().setId("reqId2"));
+      JobDTO job = new JobDTO("jsonJobId", JOB_TYPE, new Request().setId("reqId1")).progressAddr(jobListenerAddr,1000);
+      JobDTO job2 = new JobDTO("jsonJobId2", JOB_TYPE, new Request().setId("reqId2")).progressAddr(jobListenerAddr,1000);
       if (jobProducer == null) {
         depJobMgr.addJob(job);
         depJobMgr.addDepJob(job2, new String[]{job.getId()});

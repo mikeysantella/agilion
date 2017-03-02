@@ -2,7 +2,6 @@ package dataengine.workers;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +10,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 import io.vertx.core.Vertx;
@@ -57,29 +55,16 @@ public class BaseWorkerModule extends AbstractModule {
     public JobConsumer create(ProgressingDoer doer) {
       checkNotNull(jobBoardId);
       checkArgument(jobBoardId.length() > 0);
-      return deployReportingWorker(vertx, pmFactory, jobBoardId, doer);
+      
+      ReportingWorker rw = new ReportingWorker(doer, () -> doer.state())
+          .setProgressMonitorFactory(pmFactory);
+      
+      JobConsumer jConsumer = new JobConsumer(jobBoardId, doer.jobType()).setWorker(rw);
+      log.info("Deploying JobConsumer jobBoardId={} with ReportingWorker for: {} type={}", 
+          jobBoardId, doer.name(), doer.jobType());
+      vertx.deployVerticle(jConsumer);
+      return jConsumer;
     }
 
-  }
-
-  @Provides
-  public List<JobConsumer> deployDoers(Vertx vertx, ProgressMonitor.Factory pmFactory,
-      @Named(NAMED_JOB_BOARD_ID) String jobBoardId) {
-    return doers.stream().map(doer -> {
-      //ProgressMonitor.Factory pmFactory = injector.getInstance(ProgressMonitor.Factory.class);
-      return deployReportingWorker(vertx, pmFactory, jobBoardId, doer);
-    }).collect(toList());
-  }
-
-  public static JobConsumer deployReportingWorker(Vertx vertx, ProgressMonitor.Factory pmFactory,
-      String jobBoardId, ProgressingDoer doer) {
-    ReportingWorker rw = new ReportingWorker(doer, () -> doer.state())
-        .setProgressMonitorFactory(pmFactory);
-
-    JobConsumer jConsumer = new JobConsumer(jobBoardId, doer.jobType()).setWorker(rw);
-    log.info("Deploying JobConsumer jobBoardId={} with ReportingWorker for: {} type={}", 
-        jobBoardId, doer.name(), doer.jobType());
-    vertx.deployVerticle(jConsumer);
-    return jConsumer;
   }
 }
