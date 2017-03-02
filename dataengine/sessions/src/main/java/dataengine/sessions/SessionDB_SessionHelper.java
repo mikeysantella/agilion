@@ -132,7 +132,7 @@ public final class SessionDB_SessionHelper {
         //        .createdTime(VertexFrameHelper.toJodaDateTime(sf.getCreatedDate()))
         .defaults(SessionDB_FrameHelper.loadPropertiesAsMap(sf.asVertex(), SESSION_DEFAULTS_PROPPREFIX))
         .requests(SessionDB_RequestHelper.toRequest(sf.getRequests()));
-    log.info("sess={}", sess);
+    log.trace("toSession={}", sess);
     return sess;
   }
 

@@ -57,8 +57,9 @@ public class BaseWorker<T> implements Worker_I, ProgressingDoer {
     log.error("TODO: implement doWork(): {}", req);
     AtomicInteger metricInt=new AtomicInteger();
     state.getMetrics().put("DUMMY_METRIC", metricInt);
-    for(int i=0; i<5; ++i){
-      state.setPercent(i*18).setMessage("DUMMY: status at percent="+i*18);
+    int numSeconds = 30;
+    for(int i=0; i<numSeconds; ++i){
+      state.setPercent(i*(100/(numSeconds+1))).setMessage("DUMMY: status at percent="+i*18);
       metricInt.incrementAndGet();
       Thread.sleep(1000);
     }

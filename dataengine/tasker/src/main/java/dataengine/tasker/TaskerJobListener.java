@@ -4,7 +4,6 @@ import javax.inject.Inject;
 
 import dataengine.api.Progress;
 import dataengine.api.State;
-import dataengine.apis.JobListener_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import io.vertx.core.AbstractVerticle;
@@ -29,14 +28,13 @@ public class TaskerJobListener extends AbstractVerticle implements JobListener_I
   @Getter
   final String eventBusAddress="JobListener-"+System.currentTimeMillis();
 
-  @Override
   public void updateJobState(String jobId, State state) {
     log.info("SERV: updateJobState: {} {}", jobId, state);
     // placeholder to do any checking
-    sessDb.rpc().updateJobState(jobId, state);
+    if(state!=null)
+      sessDb.rpc().updateJobState(jobId, state);
   }
 
-  @Override
   public void updateJobProgress(String jobId, Progress progress) {
     log.info("SERV: updateJobState: {} {}", jobId, progress);
     // placeholder to do any checking
@@ -54,8 +52,18 @@ public class TaskerJobListener extends AbstractVerticle implements JobListener_I
 //      progressState.getMetrics().remove(JobListener_I.METRICS_KEY_JOB);
       Progress progress=new Progress()
           .percent(progressState.getPercent())
-          .stats(progressState.getMetrics());;
+          .stats(progressState.getMetrics());
       updateJobProgress(progressState.getJobId(), progress);
+      
+      
+      State state=null;
+      if(progressState.getPercent()>=100)
+        state=State.COMPLETED;
+      else if(progressState.getPercent()>0)
+        state=State.RUNNING;
+      else if(progressState.getPercent()<0)
+        state=State.FAILED;
+      updateJobState(progressState.getJobId(), state);
     });
   }
   
