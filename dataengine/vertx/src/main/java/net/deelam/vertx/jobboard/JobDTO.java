@@ -3,13 +3,10 @@ package net.deelam.vertx.jobboard;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.experimental.Accessors;
 
 @Accessors(chain = true)
 @Data
-@ToString
 @NoArgsConstructor(access=AccessLevel.PRIVATE)
 public class JobDTO {
   String id;
@@ -21,6 +18,11 @@ public class JobDTO {
     this.type = type;
     this.request = request;
   }
+  
+  @Override
+  public String toString() {
+    return "JobDTO [id=" + id + ", type=" + type + "]";
+  }  
   
   String progressVertxAddr; // Vertx eventbus address; job worker can register itself to this address
   int progressPollIntervalSeconds;
