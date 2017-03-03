@@ -2,6 +2,7 @@ package net.deelam.vertx.jobboard;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.Message;
@@ -20,20 +21,25 @@ import net.deelam.vertx.rpc.ServiceWaiter;
 public class JobProducer extends AbstractVerticle {
   private final String serviceType;
 
+  private Context eventLoopContext;
+
   @Override
   public void start() throws Exception {
+    eventLoopContext = context;
+
     KryoMessageCodec.register(vertx.eventBus(), JobDTO.class);
     KryoMessageCodec.register(vertx.eventBus(), JobListDTO.class);
 
-    waiter=new ServiceWaiter(vertx, serviceType);
+    waiter = new ServiceWaiter(vertx, serviceType);
     waiter.listenAndBroadcast();
-    
+
     log.info("Ready: deploymentID={} JobProducer for: {}", deploymentID(), serviceType);
   }
 
-  @Getter(lazy=true)
+  @Getter(lazy = true)
   private final String jobBoardPrefix = waitUntilReady();
-  private ServiceWaiter waiter;  
+  private ServiceWaiter waiter;
+
   private String waitUntilReady() {
     return waiter.awaitServiceAddress();
   }
@@ -41,7 +47,7 @@ public class JobProducer extends AbstractVerticle {
   private String jobCompletionAddress = null;
   private String jobFailureAddress = null;
 
-  private void waitForEventBus(){
+  private void waitForEventBus() {
     while (vertx == null || vertx.eventBus() == null)
       try {
         log.info("Waiting for Vertx.eventBus to be initialized for " + this);
@@ -66,18 +72,24 @@ public class JobProducer extends AbstractVerticle {
   }
 
   public void addJob(JobDTO job) {
-    DeliveryOptions deliveryOpts = JobBoard.createProducerHeader(jobCompletionAddress, jobFailureAddress, 0);
-    vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.ADD_JOB, job, deliveryOpts, addJobReplyHandler);
+    eventLoopContext.runOnContext((v) -> {
+      DeliveryOptions deliveryOpts = JobBoard.createProducerHeader(jobCompletionAddress, jobFailureAddress, 0);
+      vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.ADD_JOB, job, deliveryOpts, addJobReplyHandler);
+    });
   }
 
   public void removeJob(String jobId, Handler<AsyncResult<Message<JobDTO>>> removeJobReplyHandler) {
-    vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.REMOVE_JOB, jobId,
-        (removeJobReplyHandler == null) ? this.removeJobReplyHandler : removeJobReplyHandler);
+    eventLoopContext.runOnContext((v) -> {
+      vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.REMOVE_JOB, jobId,
+          (removeJobReplyHandler == null) ? this.removeJobReplyHandler : removeJobReplyHandler);
+    });
   }
 
   public void getProgress(String jobId, Handler<AsyncResult<Message<JobDTO>>> handler) {
-    vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.GET_PROGRESS, jobId,
-        (handler == null) ? this.progressReplyHandler : handler);
+    eventLoopContext.runOnContext((v) -> {
+      vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.GET_PROGRESS, jobId,
+          (handler == null) ? this.progressReplyHandler : handler);
+    });
   }
 
   @Setter

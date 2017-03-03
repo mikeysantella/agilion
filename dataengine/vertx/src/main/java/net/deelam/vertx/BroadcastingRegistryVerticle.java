@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
 import io.vertx.core.eventbus.Message;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +22,14 @@ public class BroadcastingRegistryVerticle extends RegistryVerticle {
   public BroadcastingRegistryVerticle(String serviceType) {
     super(serviceType);
   }
-  
+
+  private Context eventLoopContext;
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    eventLoopContext = context;
+  }
   ///
 
   /**
@@ -58,22 +66,24 @@ public class BroadcastingRegistryVerticle extends RegistryVerticle {
    */
   public <T, R> CompletableFuture<Set<R>> query(String method, T argsObj) {
     CompletableFuture<Set<R>> future = new CompletableFuture<>();
-    CountDownLatch latch = new CountDownLatch(subscriberAddresses.size());
-    Set<R> returnedObjs = new HashSet<>();
-    for (String svcAddrPrefix : subscriberAddresses) {
-      log.info("Sending query to {}: {}", svcAddrPrefix + method, argsObj);
-      vertx.eventBus().send(svcAddrPrefix + method, argsObj, (AsyncResult<Message<R>> resp) -> {
-        if (resp.failed()) {
-          log.error("Message failed: msg=" + argsObj, resp.cause());
-        } else {
-          log.debug("  from {}: query response={}", svcAddrPrefix, resp.result().body());
-          returnedObjs.add(resp.result().body());
-        }
-        latch.countDown();
-        if (latch.getCount() == 0)
-          future.complete(returnedObjs);
-      });
-    }
+    eventLoopContext.runOnContext((v) -> {
+      CountDownLatch latch = new CountDownLatch(subscriberAddresses.size());
+      Set<R> returnedObjs = new HashSet<>();
+      for (String svcAddrPrefix : subscriberAddresses) {
+        log.info("Sending query to {}: {}", svcAddrPrefix + method, argsObj);
+        vertx.eventBus().send(svcAddrPrefix + method, argsObj, (AsyncResult<Message<R>> resp) -> {
+          if (resp.failed()) {
+            log.error("Message failed: msg=" + argsObj, resp.cause());
+          } else {
+            log.debug("  from {}: query response={}", svcAddrPrefix, resp.result().body());
+            returnedObjs.add(resp.result().body());
+          }
+          latch.countDown();
+          if (latch.getCount() == 0)
+            future.complete(returnedObjs);
+        });
+      }
+    });
     return future;
   }
 

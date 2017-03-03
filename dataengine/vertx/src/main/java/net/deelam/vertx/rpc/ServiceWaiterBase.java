@@ -4,10 +4,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -37,11 +39,14 @@ public class ServiceWaiterBase {
   private MessageConsumer<?> consumer;
   private String myAddress = UUID.randomUUID().toString();
 
+  @Getter
+  private Context vertxContext;
   /**
    * Creates msg consumer with given registerServer
    * @param registerServer
    */
   public <T> String createServerMsgConsumer(Consumer<T> registerServer, Consumer<Message<T>> gotServiceAddrHook) {
+    vertxContext = vertx.getOrCreateContext();
     if (consumer != null)
       consumer.unregister();
     consumer = vertx.eventBus().consumer(myAddress, (Message<T> msg) -> {
@@ -75,12 +80,14 @@ public class ServiceWaiterBase {
       CompletableFuture<String> serverAddrF) {
     return (time) -> {
       if (!serverAddrF.isDone()) {
-        log.info("broadcastServerSearch from={} to addr={};  waiting for server response ...", myAddr,
-            serversBroadcastAddr);
-        vertx.eventBus().publish(serversBroadcastAddr, myAddr);
-        // check again later
-        vertx.setTimer(broadcastPeriodInSeconds * 1000,
-            createBroadcastUntilSuccess(serversBroadcastAddr, myAddr, serverAddrF));
+        vertxContext.runOnContext((b)->{
+          log.info("broadcastServerSearch from={} to addr={};  waiting for server response ...", myAddr,
+              serversBroadcastAddr);
+          vertx.eventBus().publish(serversBroadcastAddr, myAddr);
+          // check again later
+          vertx.setTimer(broadcastPeriodInSeconds * 1000,
+              createBroadcastUntilSuccess(serversBroadcastAddr, myAddr, serverAddrF));
+        });
       }
     };
   }
