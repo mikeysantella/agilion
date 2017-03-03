@@ -77,8 +77,9 @@ public final class SessionDB_RequestHelper {
         .jobs(SessionDB_JobHelper.toJobs(rf.getJobs()));
   }
 
-  static List<Request> toRequest(Iterable<RequestFrame> requests) {
-    return stream(requests.spliterator(), false)
+  static List<Request> toRequests(Iterable<RequestFrame> requests) {
+    return stream(requests.spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator)
         .map(req -> toRequest(req))
         .collect(toList());
   }
