@@ -9,7 +9,6 @@ import static net.deelam.graph.GrafTxn.tryOn;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.StreamSupport;
 
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
@@ -113,7 +112,7 @@ public final class SessionDB_JobHelper {
     log.debug("getInputJobs: {}", jobId);
     return tryFAndCloseTxn(graph, graph -> {
       JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
-      return StreamSupport.stream( jf.getInputJobs().spliterator(),false)
+      return stream( jf.getInputJobs().spliterator(),false)
         .sorted(SessionDB_FrameHelper.createdTimeComparator).collect(toList());
     });
   }
@@ -122,7 +121,7 @@ public final class SessionDB_JobHelper {
     log.debug("getOutputJobs: {}", jobId);
     return tryFAndCloseTxn(graph, graph -> {
       JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
-      return StreamSupport.stream( jf.getOutputJobs().spliterator(),false)
+      return stream( jf.getOutputJobs().spliterator(),false)
         .sorted(SessionDB_FrameHelper.createdTimeComparator).collect(toList());
     });
   }
@@ -147,7 +146,8 @@ public final class SessionDB_JobHelper {
   }
 
   public static List<Job> toJobs(Iterable<JobFrame> jobs) {
-    return stream(jobs.spliterator(), false)
+    return stream(jobs.spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator)
         .map(req -> toJob(req))
         .collect(toList());
   }

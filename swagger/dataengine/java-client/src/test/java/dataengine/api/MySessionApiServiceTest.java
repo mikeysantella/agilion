@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -14,8 +15,9 @@ import dataengine.ApiException;
 
 @Ignore
 public class MySessionApiServiceTest {
+  static Logger log=Logger.getLogger("MySessionApiServiceTest");
   
-  public static void main(String[] args) throws ApiException {
+  public static void main(String[] args) throws ApiException, InterruptedException {
     String baseUri = "http://localhost:8080/main/";
     if(args.length>0)
       baseUri=args[0];
@@ -31,14 +33,16 @@ public class MySessionApiServiceTest {
   }
 
   final SessionsApi sessApi;
-  final RequestsApi reqApi;
-  final DatasetsApi datasetApi;
+  final RequestsApi reqsApi;
+  final JobsApi jobsApi;
+  final DatasetsApi datasetsApi;
   
   public MySessionApiServiceTest(String basePathUri) {
     ApiClient apiClient = new ApiClient().setBasePath(basePathUri);
     sessApi = new SessionsApi(apiClient);
-    reqApi = new RequestsApi(apiClient);
-    datasetApi = new DatasetsApi(apiClient);
+    reqsApi = new RequestsApi(apiClient);
+    jobsApi = new JobsApi(apiClient);
+    datasetsApi = new DatasetsApi(apiClient);
   }
 
   @Test
@@ -64,8 +68,8 @@ public class MySessionApiServiceTest {
   }
 
   @Test
-  public void testRequestsApi() throws ApiException {
-    List<Operation> ops = reqApi.listOperations();
+  public void testRequestsApi() throws ApiException, InterruptedException {
+    List<Operation> ops = reqsApi.listOperations();
     System.out.println(ops);
     
     try{
@@ -82,24 +86,38 @@ public class MySessionApiServiceTest {
       paramValues.put("inputUri", "hdfs://some/where/");
       paramValues.put("dataFormat", "TELEPHONE.CSV");
 
-      Request req2 = reqApi.submitRequest(req);
-      req2.setId(null); // ignore
-      req2.setCreatedTime(null); // ignore
-      req2.setState(null); // ignore
-      if (req2.getOperationParams().isEmpty())
-        req2.setOperationParams(null); // ignore
-      req2.getJobs().clear();; // ignore
-      assertEquals(req, req2);
-    }    
-    System.out.println(sessApi.listSessionNames());
-    System.out.println(sessApi.listSessions());
+      Request req2 = reqsApi.submitRequest(req);
+      String reqId = req2.getId();
+//      req2.setId(null); // ignore
+//      req2.setCreatedTime(null); // ignore
+//      req2.setState(null); // ignore
+//      if (req2.getOperationParams().isEmpty())
+//        req2.setOperationParams(null); // ignore
+//      req2.getJobs().clear();; // ignore
+//      assertEquals(req, req2);
+      
+      Request req3=req2;
+      System.out.println("req3= " + req3);
+      assertEquals(reqId, req3.getJobs().get(0).getRequestId());
+      assertEquals(reqId, req3.getJobs().get(1).getRequestId());
+      for(Job job:req3.getJobs()){
+        job=jobsApi.getJob(job.getId());
+        while(job.getProgress().getPercent()<100){
+          System.out.println("Waiting for job to complete: "+job);
+          Thread.sleep(2000);
+          job=jobsApi.getJob(job.getId());
+        }
+      }
+      System.out.println(sessApi.listSessionNames());
+      System.out.println(sessApi.listSessions());
+    }
   }
 
   @Test
   public void testDatasetsApi() throws ApiException {
     String id = "id_example"; // String | dataset ID
     try {
-      Dataset result = datasetApi.getDataset(id);
+      Dataset result = datasetsApi.getDataset(id);
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling SessionsApi#getDataset");

@@ -36,7 +36,7 @@ public class TaskerJobListener extends AbstractVerticle implements JobListener_I
   }
 
   public void updateJobProgress(String jobId, Progress progress) {
-    log.info("SERV: updateJobState: {} {}", jobId, progress);
+    log.info("SERV: updateJobProgress: {} {}", jobId, progress);
     // placeholder to do any checking
     sessDb.rpc().updateJobProgress(jobId, progress);
   }

@@ -48,11 +48,11 @@ public class TaskerService implements Tasker_I {
     jc.checkValidity(req); // throw exception
       
     CompletableFuture<Request> f = sessDb.rpc().addRequest(req)
-        .thenApply((addedReq) -> submitJobs(addedReq, jc));
+        .thenCompose((addedReq) -> submitJobs(addedReq, jc));
     return f;
   }
 
-  private Request submitJobs(Request addedReq, JobsCreator jc) {
+  private CompletableFuture<Request> submitJobs(Request addedReq, JobsCreator jc) {
     log.info("  submitJobs for: {}", addedReq);
     // add job(s) to request and submit job(s)
     List<JobEntry> jobs = jc.createFrom(addedReq);
@@ -69,7 +69,13 @@ public class TaskerService implements Tasker_I {
               "Previous job was not added!  Not continuing to add job: " + jobE.job.getId());
       });
     }
-    return addedReq;
+    return addJobsChainF.thenCompose((isAdded) -> {
+      if (isAdded)
+        return sessDb.rpc().getRequest(addedReq.getId());
+      else
+        throw new IllegalStateException(
+            "Last job was not added!");
+    });
   }
 
   private final List<JobsCreator> jobCreators; 

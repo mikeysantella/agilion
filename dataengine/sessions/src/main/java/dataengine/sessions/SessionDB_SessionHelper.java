@@ -1,5 +1,7 @@
 package dataengine.sessions;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
 
 import java.time.Instant;
@@ -131,9 +133,16 @@ public final class SessionDB_SessionHelper {
         .createdTime((sf.getCreatedDate()))
         //        .createdTime(VertexFrameHelper.toJodaDateTime(sf.getCreatedDate()))
         .defaults(SessionDB_FrameHelper.loadPropertiesAsMap(sf.asVertex(), SESSION_DEFAULTS_PROPPREFIX))
-        .requests(SessionDB_RequestHelper.toRequest(sf.getRequests()));
+        .requests(SessionDB_RequestHelper.toRequests(sf.getRequests()));
     log.trace("toSession={}", sess);
     return sess;
+  }
+  
+  static List<Session> toSessions(Iterable<SessionFrame> sessions) {
+    return stream(sessions.spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator)
+        .map(req -> toSession(req))
+        .collect(toList());
   }
 
   public Map<String, String> getSessionIdsWithProperty(String propForValue) {

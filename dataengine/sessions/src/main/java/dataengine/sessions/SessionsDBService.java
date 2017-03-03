@@ -21,7 +21,6 @@ import dataengine.api.State;
 import dataengine.apis.SessionsDB_I;
 import dataengine.sessions.SessionDB_DatasetHelper.IO;
 import dataengine.sessions.frames.JobFrame;
-import dataengine.sessions.frames.SessionFrame;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -130,18 +129,14 @@ public class SessionsDBService implements SessionsDB_I {
   @Override
   public CompletableFuture<List<Session>> listSessions() {
     log.info("SERV: listSessions");
-    List<SessionFrame> list = sessDB.listSessionFrames();
-    List<Session> sessList = list.stream()
-        .map(sf -> SessionDB_SessionHelper.toSession(sf))
-        .collect(Collectors.toList());
-    return CompletableFuture.completedFuture(sessList);
+    return CompletableFuture.completedFuture(SessionDB_SessionHelper.toSessions(sessDB.listSessionFrames()));
   }
 
   @Override
   public CompletableFuture<List<String>> listSessionIds() {
     log.info("SERV: listSessionIds");
-    List<SessionFrame> list = sessDB.listSessionFrames();
-    List<String> sessList = list.stream().map(sf -> sf.getNodeId()).collect(Collectors.toList());
+    List<Session> list = listSessions().join();
+    List<String> sessList = list.stream().map(s -> s.getId()).collect(Collectors.toList());
     return CompletableFuture.completedFuture(sessList);
   }
 
@@ -151,9 +146,9 @@ public class SessionsDBService implements SessionsDB_I {
   public CompletableFuture<Map<String, String>> listSessionNames() {
     log.info("SERV: listSessionNames");
     if (SAFE) { // less efficient
-      List<SessionFrame> list = sessDB.listSessionFrames();
+      List<Session> list = listSessions().join();
       Map<String, String> sessList = list.stream()
-          .collect(Collectors.toMap(sf -> sf.getLabel(), sf -> sf.getNodeId()));
+          .collect(Collectors.toMap(s -> s.getLabel(), s -> s.getId()));
       return CompletableFuture.completedFuture(sessList);
     } else { // faster
       Map<String, String> sessList = sessDB.getSessionIdsWithProperty("label");
