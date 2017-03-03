@@ -46,7 +46,7 @@ public class SessionDB_JobsTest {
     {
       Job job = new Job().requestId("req1").id("req1.jobA").label("jobAName");
       Job job2 = sess.addJob(job).get();
-      //log.info("job2={}", job2);
+      log.info("job2={}", job2);
       job2.setState(null); // ignore
       job2.setProgress(null); // ignore
       if (job2.getParams().isEmpty())
