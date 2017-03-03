@@ -63,7 +63,7 @@ public final class SessionDB_JobHelper {
         
         // Add createdTime so we can order the jobs
         if (job.getCreatedTime() != null)
-          rf.setCreatedDate((job.getCreatedTime()));
+          jf.setCreatedDate((job.getCreatedTime()));
         
         // add edge between jobs to model dependencies, matching DepJobService
         if(inputJobIds!=null)
@@ -132,6 +132,7 @@ public final class SessionDB_JobHelper {
         .label(jf.getLabel())
         .requestId(jf.getRequest().getNodeId())
         .type(jf.getType())
+        .createdTime(jf.getCreatedDate())
         .state(jf.getState())
         .progress(toProgress(jf.getProgress(), jf.asVertex(), JOB_STATS_PROPPREFIX))
         .params(SessionDB_FrameHelper.loadPropertiesAsMap(jf.asVertex(), JOB_PARAMS_PROPPREFIX))
