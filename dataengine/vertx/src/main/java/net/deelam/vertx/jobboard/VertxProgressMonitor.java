@@ -150,10 +150,10 @@ public class VertxProgressMonitor implements ProgressMonitor {
     if (state.getPercent() < 0 || state.getPercent() >= 100) {
       stop();
     }
-    send(messageProvider.apply(this, state));
+    broadcast(messageProvider.apply(this, state));
   }
 
-  private void send(JsonObject msgObj) {
+  private void broadcast(JsonObject msgObj) {
     vertx.eventBus().publish(busAddr, msgObj);
 
     if (otherBusAddrs != null) {

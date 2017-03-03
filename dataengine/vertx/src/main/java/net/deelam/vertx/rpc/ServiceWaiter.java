@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import lombok.experimental.Accessors;
@@ -16,6 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceWaiter {
 
   final ServiceWaiterBase base;
+  
+  public Context vertxContext(){
+    return base.vertxContext();
+  }
 
   public ServiceWaiter(Vertx vertx, String serversBroadcastAddr) {
     base = new ServiceWaiterBase(vertx, serversBroadcastAddr);

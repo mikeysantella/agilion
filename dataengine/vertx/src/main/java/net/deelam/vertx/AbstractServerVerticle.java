@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import lombok.RequiredArgsConstructor;

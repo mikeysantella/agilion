@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -64,17 +65,18 @@ public class VerticleClient {
    * @return Future containing the sent argsObj
    */
   public <T> Future<T> notify(String method, T argsObj) {
-    //threadPool.execute(()->{
-    log.info("Sending msg to {}: {}", getSvcAddrPrefix() + method, argsObj);
     CompletableFuture<T> future = new CompletableFuture<>();
-    vertx.eventBus().send(getSvcAddrPrefix() + method, argsObj, (AsyncResult<Message<T>> resp) -> {
-      if (resp.failed()) {
-        log.error("Message failed: msg=" + argsObj, resp.cause());
-        future.completeExceptionally(resp.cause());
-      } else if (resp.succeeded()) {
-        log.debug("send response={}", resp.result().body());
-        future.complete(argsObj);
-      }
+    waiter.vertxContext().runOnContext((v) -> {
+      log.info("Sending msg to {}: {}", getSvcAddrPrefix() + method, argsObj);
+      vertx.eventBus().send(getSvcAddrPrefix() + method, argsObj, (AsyncResult<Message<T>> resp) -> {
+        if (resp.failed()) {
+          log.error("Message failed: msg=" + argsObj, resp.cause());
+          future.completeExceptionally(resp.cause());
+        } else if (resp.succeeded()) {
+          log.debug("send response={}", resp.result().body());
+          future.complete(argsObj);
+        }
+      });
     });
     return future;
   }
