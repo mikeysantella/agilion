@@ -15,32 +15,34 @@ import dataengine.apis.SessionsDB_I;
 import lombok.experimental.Accessors;
 
 @Accessors(fluent = true)
-public class IngestPeopleWorker extends BaseWorker<Job> {
+public class PostRequestWorker extends BaseWorker<Job> {
 
   @Inject
-  public IngestPeopleWorker(RpcClientProvider<SessionsDB_I> sessDb) {
-    super(OperationConsts.TYPE_INGESTER, sessDb);
+  public PostRequestWorker(RpcClientProvider<SessionsDB_I> sessDb) {
+    super(OperationConsts.TYPE_POSTREQUEST, sessDb);
   }
 
   @Override
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
-    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
+    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_POSTINGEST);
     return new Operation()
         .id(jobType())
-        .description("add source dataset 2")
+        .description("connect request to dataset")
         .info(info)
         .addParamsItem(new OperationParam()
-            .key("inputUri").required(true)
-            .description("location of source dataset")
+            .key(OperationConsts.PREV_JOBID).required(true)
             .valuetype(ValuetypeEnum.STRING).isMultivalued(false)
-            .defaultValue(null))
-        .addParamsItem(new OperationParam()
-            .key(OperationConsts.DATA_FORMAT).required(false)
-            .description("type and format of data 2")
-            .valuetype(ValuetypeEnum.ENUM).isMultivalued(true)
-            .defaultValue(null)
-            .addPossibleValuesItem("PEOPLE.CSV"));
+            );
+    
+//    requiredParams = OperationUtils.getRequiredParams(getOperation());
+  }
+
+  @Override
+  protected boolean doWork(Job job) throws Exception {
+    getPrevJobDatasetId(job).thenAccept(datasetId->
+      sessDb.rpc().connectAsOutputDatasetNode(job.getRequestId(), datasetId));
+    return true;
   }
 
 }

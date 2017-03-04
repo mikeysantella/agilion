@@ -313,7 +313,7 @@ public class VertxRpcUtil {
           //log.error("t",t);
           return writeObject(Json.encode(obj));
         } catch (Throwable t2) {
-          // TODO: 3: determine appropriate kryo serializer
+          // TODO: 6: determine appropriate kryo serializer
           //log.error("t2",t2);
           String objStr = obj.toString();
           log.error("Couldn't write object of {}; serializing as string instead: {}", obj.getClass(), objStr);

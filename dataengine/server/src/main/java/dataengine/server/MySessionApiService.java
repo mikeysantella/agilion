@@ -69,7 +69,7 @@ public class MySessionApiService extends SessionApiService {
         return makeBadRequestResponse(
             "All keys in property map must be strings! Found: " + k.getClass() + " for key=" + k);
 
-    return makeResultResponse(OBJECT_TYPE, "session/", id, sessDb.rpc().setMetadata(id, props));
+    return makeResultResponse(OBJECT_TYPE, "session/", id, sessDb.rpc().setSessionMetadata(id, props));
   }
 
 }

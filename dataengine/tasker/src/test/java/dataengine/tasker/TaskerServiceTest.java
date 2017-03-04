@@ -12,13 +12,17 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 
+import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
@@ -75,7 +79,7 @@ public class TaskerServiceTest {
               .valuetype(ValuetypeEnum.STRING).isMultivalued(false)
               .defaultValue(null))
           .addParamsItem(new OperationParam()
-              .key(OperationConsts.INGEST_DATAFORMAT).required(true)
+              .key(OperationConsts.DATA_FORMAT).required(true)
               .description("type and format of data")
               .valuetype(ValuetypeEnum.ENUM).isMultivalued(false)
               .defaultValue(null)
@@ -163,6 +167,13 @@ public class TaskerServiceTest {
     paramValues.put("inputUri", "hdfs://some/where/");
     paramValues.put("dataFormat", "TELEPHONE.CSV");
     when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
-    taskerSvc.submitRequest(req).get();
+//    when(sessDB.addJob(Matchers.any(Job.class))).thenAnswer(new Answer<CompletableFuture<Job>>() {
+//      @Override
+//      public CompletableFuture<Job> answer(InvocationOnMock invocation) throws Throwable {
+//        Object[] args = invocation.getArguments();
+//        return CompletableFuture.completedFuture((Job) args[0]);
+//      }
+//    });
+//    taskerSvc.submitRequest(req).get();
   }
 }

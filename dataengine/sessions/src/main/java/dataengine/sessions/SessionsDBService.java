@@ -102,6 +102,12 @@ public class SessionsDBService implements SessionsDB_I {
     return getDataset(ds.getId());
   }
 
+  @Override
+  public CompletableFuture<Void> connectAsOutputDatasetNode(String requestId, String datasetId) {
+    sessDB.connectAsOutputDatasetNode(requestId, datasetId);
+    return CompletableFuture.completedFuture(null);
+  }
+
   private String useOrGenerateId(String sId) {
     if (sId != null) {
       if (sessDB.hasNode(sId))
@@ -120,7 +126,7 @@ public class SessionsDBService implements SessionsDB_I {
   }
 
   @Override
-  public CompletableFuture<Session> setMetadata(String sId, Map<String, Object> props) {
+  public CompletableFuture<Session> setSessionMetadata(String sId, Map<String, Object> props) {
     log.info("SERV: setMetadata: {}", sId);
     sessDB.modifySessionNode(sId, props);
     return getSession(sId);
@@ -190,6 +196,12 @@ public class SessionsDBService implements SessionsDB_I {
   public CompletableFuture<Dataset> getDataset(String id) {
     log.debug("SERV: getDataset: {}", id);
     return CompletableFuture.completedFuture(SessionDB_DatasetHelper.toDataset(sessDB.getDatasetFrame(id)));
+  }
+  
+  @Override
+  public void setJobParam(String jobId, String key, Object value){
+    log.debug("SERV: setJobParam of {}: {}={}", jobId, key, value);
+    sessDB.setJobParam(jobId, key, value);;
   }
 
   @Override

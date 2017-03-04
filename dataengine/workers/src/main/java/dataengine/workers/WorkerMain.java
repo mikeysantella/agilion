@@ -27,10 +27,16 @@ public class WorkerMain {
     Injector injector = createInjector(vertxF);
     DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
+    BaseWorker<?>[] hiddenWorkers = {
+        injector.getInstance(PostRequestWorker.class)        
+    };
+    for(BaseWorker<?> worker:hiddenWorkers)    {
+      jcFactory.create(worker);
+    }    
     BaseWorker<?>[] workers = {
-        new IngestTelephoneWorker(),
-        new IngestPeopleWorker(),
-        new IndexDatasetWorker()
+        injector.getInstance(IngestTelephoneWorker.class),
+        injector.getInstance(IngestPeopleWorker.class),
+        injector.getInstance(IndexDatasetWorker.class)
     };
     for(BaseWorker<?> worker:workers)    {
       OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, worker);

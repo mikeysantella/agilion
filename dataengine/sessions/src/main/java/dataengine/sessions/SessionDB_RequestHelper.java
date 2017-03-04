@@ -10,6 +10,8 @@ import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import dataengine.api.Request;
+import dataengine.sessions.frames.DatasetFrame;
+import dataengine.sessions.frames.JobFrame;
 import dataengine.sessions.frames.RequestFrame;
 import dataengine.sessions.frames.SessionFrame;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +65,15 @@ public final class SessionDB_RequestHelper {
       } else {
         throw new IllegalArgumentException("Request.id already exists: " + reqId);
       }
+    });
+  }
+  
+  public void connectAsOutputDatasetNode(String requestId, String datasetId){
+    log.debug("connectAsOutputDatasetNode: reqId={} dsId={}", requestId, datasetId);
+    tryAndCloseTxn(graph, graph -> {
+      RequestFrame rf = frameHelper.getVertexFrame(requestId, RequestFrame.class);
+      DatasetFrame df = frameHelper.getVertexFrame(datasetId, DatasetFrame.class);
+      rf.addOutputDataset(df);
     });
   }
 

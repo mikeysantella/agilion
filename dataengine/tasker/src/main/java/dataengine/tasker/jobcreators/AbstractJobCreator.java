@@ -1,14 +1,12 @@
 package dataengine.tasker.jobcreators;
 
-import static java.util.stream.Collectors.toList;
-
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.Request;
+import dataengine.apis.OperationUtils;
 import dataengine.tasker.JobsCreator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -17,43 +15,30 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractJobCreator implements JobsCreator {
 
   @Getter
-  protected final Operation operation = new Operation();
+  protected final Operation operation;
+  protected final Map<String, OperationParam> opParamsMap;
+  protected final List<OperationParam> requiredParams;
 
-  @Getter(lazy = true, onMethod = @__({@SuppressWarnings("unchecked")}) )
-  private final Map<String, OperationParam> opParamsMap = _initMap();
+  public AbstractJobCreator() {
+    operation = initOperation();
+    opParamsMap = OperationUtils.initMap(operation);
+    requiredParams = OperationUtils.getRequiredParams(operation);
+  }
 
-  private final Map<String, OperationParam> _initMap() {
-    Map<String, OperationParam> map = new HashMap<>();
-    operation.getParams().forEach(p -> map.put(p.getKey(), p));
-    return map;
+  protected Operation initOperation() {
+    log.warn("JobsCreator.operation not initialized: {}", this);
+    // subclasses should populate operation
+    return new Operation();
   }
 
   @Override
   public OperationParam getOperationParam(String key) {
-    return getOpParamsMap().get(key);
+    return opParamsMap.get(key);
   }
 
   @Override
   public void checkValidity(Request req) {
-    checkForRequiredParams(req.getOperationParams());
-  }
-
-  void checkForRequiredParams(@SuppressWarnings("rawtypes") Map params) {
-    List<OperationParam> requiredParams =
-        getOperation().getParams().stream().filter(OperationParam::getRequired).collect(toList());
-    log.debug("requiredParams={}", requiredParams);
-    if (params == null)
-      if (!requiredParams.isEmpty())
-        throw new IllegalArgumentException("Required parameters missing: " +
-            requiredParams.stream().map(OperationParam::getKey).collect(toList()));
-      else
-        return;
-
-    List<OperationParam> missingParams =
-        requiredParams.stream().filter((opParam) -> !params.containsKey(opParam.getKey())).collect(toList());
-    if (!missingParams.isEmpty())
-      throw new IllegalArgumentException("Missing required parameters: " +
-          missingParams.stream().map(OperationParam::getKey).collect(toList()));
+    OperationUtils.checkForRequiredParams(requiredParams, req.getOperationParams());
   }
 
   String getJobIdPrefix(Request req) {
