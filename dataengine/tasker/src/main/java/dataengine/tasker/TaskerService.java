@@ -84,10 +84,10 @@ public class TaskerService implements Tasker_I {
   public CompletableFuture<Void> refreshJobsCreators() {
     log.info("SERV: refreshJobsCreators()");
     return CompletableFuture.runAsync(() -> {
-      Map<String, Operation> currOps = opsRegVert.getOperations(); // TODO: 2: replace with RPC call and .thenApply
+      Map<String, Operation> currOps = opsRegVert.getOperations(); // TODO: 4: replace with RPC call and .thenApply
       
       jobCreators.forEach(jc -> {
-        jc.update(currOps);
+        jc.updateOperationParams(currOps);
         JobsCreator oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
         if(oldJc!=null && oldJc!=jc)
           log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);

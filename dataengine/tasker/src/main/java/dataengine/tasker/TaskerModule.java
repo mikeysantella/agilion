@@ -38,7 +38,7 @@ final class TaskerModule extends AbstractModule {
   }
   
   @Provides
-  List<JobsCreator> getJobCreators() {
+  List<JobsCreator> getJobCreators(Injector injector) {
     // TODO: 5: read jobCreators from file
     List<String> classes = new ArrayList<>();
     {
@@ -49,7 +49,7 @@ final class TaskerModule extends AbstractModule {
       try {
         @SuppressWarnings("unchecked")
         Class<? extends JobsCreator> addSrcDataClazz = (Class<? extends JobsCreator>) Class.forName(jcClassName);
-        JobsCreator jc = addSrcDataClazz.getConstructor().newInstance();
+        JobsCreator jc = injector.getInstance(addSrcDataClazz);
         return jc;
       } catch (Exception e) {
         throw new RuntimeException(e);

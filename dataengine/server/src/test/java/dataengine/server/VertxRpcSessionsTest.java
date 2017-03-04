@@ -97,6 +97,7 @@ public class VertxRpcSessionsTest {
       Job job2 = sessionsDbRpcClient.addJob(job).get();
       //log.info("job2={}", job2);
       job2.setState(null); // ignore
+      job2.setCreatedTime(null); // ignore
       job2.setProgress(null); // ignore
       if (job2.getParams().isEmpty())
         job2.setParams(null); // ignore

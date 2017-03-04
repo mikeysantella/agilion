@@ -304,8 +304,8 @@ public class JsonSetPropertyMerger implements PropertyMerger {
       }
     }
   }
-  // TODO: 3: set limit on size of Set
-  // TODO: 3: add supernode detection and warning
+  // TODO: 7: set limit on size of Set
+  // TODO: 7: add supernode detection and warning
 
   public Map<String, Object> convertToJson(Map<String, Object> props){
     Map<String, Object> newMap=new HashMap<>();

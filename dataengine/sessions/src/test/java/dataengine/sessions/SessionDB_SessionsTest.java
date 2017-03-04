@@ -101,31 +101,31 @@ public class SessionDB_SessionsTest {
     Map<String, Object> props = Maps.newHashMap();
     {
       props.put("label", "new name");
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals("new name", modSess.getLabel());
     }
     {
       props.clear();
       props.put("Label", "new Name");
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals("new Name", modSess.getLabel());
     }
     {
       props.clear();
       props.put("LabeL", "new NamE");
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals("new NamE", modSess.getLabel());
     }
     {
       props.clear();
       props.put("LaBeL", null);
-      Session modSess = sess.setMetadata("newSess", props).get(); // ignored
+      Session modSess = sess.setSessionMetadata("newSess", props).get(); // ignored
       assertEquals("new NamE", modSess.getLabel()); // unchanged
     }
     {
       props.clear();
       props.put("Label", 123);
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals("123", modSess.getLabel());
     }
 
@@ -133,14 +133,14 @@ public class SessionDB_SessionsTest {
       props.clear();
       OffsetDateTime d = OffsetDateTime.now();
       props.put("createdTime", d);
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals(d.toString(), modSess.getCreatedTime().toString());
     }
     {
       props.clear();
       OffsetDateTime d = OffsetDateTime.now();
       props.put("createdTime", d.toString());
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals(d.toString(), modSess.getCreatedTime().toString());
     }
     {
@@ -148,14 +148,14 @@ public class SessionDB_SessionsTest {
       OffsetDateTime d = OffsetDateTime.now().atZoneSameInstant(ZoneId.of("Z")).toOffsetDateTime();
       {
         props.put("createdTime", d.toInstant().toEpochMilli());
-        Session modSess = sess.setMetadata("newSess", props).get();
+        Session modSess = sess.setSessionMetadata("newSess", props).get();
         assertEquals(d.toString(), modSess.getCreatedTime().toString());
       }
 
       {
         props.clear();
         props.put("createdTime", 123f);
-        Session modSess2 = sess.setMetadata("newSess", props).get(); // ignored
+        Session modSess2 = sess.setSessionMetadata("newSess", props).get(); // ignored
         assertEquals(d.toString(), modSess2.getCreatedTime().toString()); //unchanged
       }
     }
@@ -163,7 +163,7 @@ public class SessionDB_SessionsTest {
     {
       props.clear();
       props.put("userNamE", "agilion");
-      Session modSess = sess.setMetadata("newSess", props).get();
+      Session modSess = sess.setSessionMetadata("newSess", props).get();
       assertEquals("agilion", modSess.getUsername());
     }
 
@@ -171,7 +171,7 @@ public class SessionDB_SessionsTest {
       props.clear();
       URI uri = URI.create("file:///path/to/my/file");
       props.put("myUri", uri);
-      Session modSess = sess.setMetadata("newSess", props).get(); // Storing as string
+      Session modSess = sess.setSessionMetadata("newSess", props).get(); // Storing as string
       //System.out.println(modSess);
       assertEquals(uri.toString(), modSess.getDefaults().get("myUri"));
     }
@@ -179,7 +179,7 @@ public class SessionDB_SessionsTest {
       props.clear();
       OffsetDateTime d = OffsetDateTime.now();
       props.put("myDate", d);
-      Session modSess = sess.setMetadata("newSess", props).get(); // Storing as string
+      Session modSess = sess.setSessionMetadata("newSess", props).get(); // Storing as string
       //System.out.println(modSess);
       assertEquals(d.toString(), modSess.getDefaults().get("myDate"));
     }

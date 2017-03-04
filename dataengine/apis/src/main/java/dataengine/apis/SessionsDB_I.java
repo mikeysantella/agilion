@@ -27,7 +27,7 @@ public interface SessionsDB_I {
 
   CompletableFuture<Map<String, String>> listSessionNames();
 
-  CompletableFuture<Session> setMetadata(String id, Map<String, Object> props);
+  CompletableFuture<Session> setSessionMetadata(String id, Map<String, Object> props);
   
   /// Request
 
@@ -51,6 +51,8 @@ public interface SessionsDB_I {
   
   CompletableFuture<List<Job>> getOutputJobs(String jobId);
   
+  void setJobParam(String jobId, String key, Object value);
+  
   void updateJobState(String jobId, State state);
 
   void updateJobProgress(String jobId, Progress progress);
@@ -62,5 +64,8 @@ public interface SessionsDB_I {
   /// Dataset
 
   CompletableFuture<Dataset> getDataset(String id);
+
+  CompletableFuture<Void> connectAsOutputDatasetNode(String requestId, String datasetId);
+
 
 }

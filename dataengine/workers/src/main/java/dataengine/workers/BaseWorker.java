@@ -1,10 +1,17 @@
 package dataengine.workers;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import dataengine.api.Job;
 import dataengine.api.Operation;
+import dataengine.api.OperationParam;
+import dataengine.apis.OperationConsts;
+import dataengine.apis.OperationUtils;
+import dataengine.apis.RpcClientProvider;
+import dataengine.apis.SessionsDB_I;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,32 +25,43 @@ import net.deelam.vertx.jobboard.ProgressingDoer;
 @Accessors(fluent = true)
 @Getter
 @Slf4j
-public class BaseWorker<T> implements Worker_I, ProgressingDoer {
+abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
+
+  final RpcClientProvider<SessionsDB_I> sessDb;
 
   private final String jobType;
 
   private final String name;
 
-  protected BaseWorker(String jobType) {
+  protected final Operation operation;
+  protected final Map<String, OperationParam> opParamsMap;
+  protected final List<OperationParam> requiredParams;
+
+  protected BaseWorker(String jobType, RpcClientProvider<SessionsDB_I> sessDb) {
     this.jobType = jobType;
+    this.sessDb=sessDb;
     name = this.getClass().getSimpleName() + "-" + System.currentTimeMillis();
+    operation=initOperation();
+    opParamsMap = OperationUtils.initMap(operation);
+    requiredParams = OperationUtils.getRequiredParams(operation);
   }
 
+  abstract protected Operation initOperation();
+  
   protected final ProgressState state = new ProgressState();
 
-  protected final Collection<Operation> operations = new ArrayList<>();
-
   @Override
-  public void accept(JobDTO job) {
-    state.starting(job.getId(), job);
+  public void accept(JobDTO jobDto) {
+    state.starting(jobDto.getId(), jobDto);
     //state.getMetrics().put(JobListener_I.METRICS_KEY_JOB, job);
     @SuppressWarnings("unchecked")
-    T req = (T) job.getRequest();
+    T job = (T) jobDto.getRequest();
     try {
-      if (doWork(req))
-        state.done(job);
+      OperationUtils.checkForRequiredParams(requiredParams, job.getParams());
+      if (doWork(job))
+        state.done(jobDto);
       else
-        state.failed("doWork() returned false for request=" + req);
+        state.failed("doWork() returned false for job=" + job);
     } catch (RuntimeException e) {
       state.failed(e);
       throw e;
@@ -53,8 +71,8 @@ public class BaseWorker<T> implements Worker_I, ProgressingDoer {
     }
   }
 
-  protected boolean doWork(T req) throws Exception {
-    log.error("TODO: implement doWork(): {}", req);
+  protected boolean doWork(T job) throws Exception {
+    log.error("TODO: implement doWork(): {}", job);
     AtomicInteger metricInt=new AtomicInteger();
     state.getMetrics().put("DUMMY_METRIC", metricInt);
     int numSeconds = 30;
@@ -65,7 +83,13 @@ public class BaseWorker<T> implements Worker_I, ProgressingDoer {
     }
     return true;
   }
-
+  
+  CompletableFuture<String> getPrevJobDatasetId(Job job) {
+    String prevJobId = (String) job.getParams().get(OperationConsts.PREV_JOBID);
+    return sessDb.rpc().getJob(prevJobId)
+        .thenApply(prevJob -> (String) prevJob.getParams().get(OperationConsts.OUTPUT_URI));
+  }
+  
   @RequiredArgsConstructor
   static class SubjobFactory {
     final String jobListenerAddr;

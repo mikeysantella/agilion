@@ -92,6 +92,11 @@ public final class SessionDB_JobHelper {
       }
     });
   }
+  
+  public void setJobParam(String jobId, String key, Object value){
+    JobFrame existingJf = graph.getVertex(jobId, JobFrame.class);
+    SessionDB_FrameHelper.setVertexProperty(existingJf.asVertex(), JOB_PARAMS_PROPPREFIX, key, value);
+  }
 
   public void addJobDependency(String jobId, String inputJobId) {
     log.debug("addJobDependency: {} {}", jobId, inputJobId);

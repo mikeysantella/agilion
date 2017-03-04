@@ -25,6 +25,12 @@ public interface RequestFrame extends BaseFrame {
   @Adjacency(label = "job", direction = Direction.OUT)
   Iterable<JobFrame> getJobs();
 
+  @Adjacency(label = JobFrame.OUTPUT_DATA, direction = Direction.OUT)
+  void addOutputDataset(DatasetFrame ds);
+
+  @Adjacency(label = JobFrame.OUTPUT_DATA, direction = Direction.OUT)
+  Iterable<DatasetFrame> getOutputDatasets();
+  
   // must be called "Impl"
   abstract class Impl extends BaseFrame.Impl implements RequestFrame {
     @Initializer

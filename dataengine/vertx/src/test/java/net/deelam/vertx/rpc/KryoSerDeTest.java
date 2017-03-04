@@ -63,7 +63,7 @@ public class KryoSerDeTest {
           .params(params));
       params.add(new OperationParam().key("inputUri").required(true).description("location of source dataset")
           .valuetype(ValuetypeEnum.STRING).defaultValue(null).isMultivalued(false));
-      params.add(new OperationParam().key(OperationConsts.INGEST_DATAFORMAT).required(true)
+      params.add(new OperationParam().key(OperationConsts.DATA_FORMAT).required(true)
           .description("type and format of data")
           .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false)
           .addPossibleValuesItem("TELEPHONE.CSV").addPossibleValuesItem("PEOPLE.CSV"));
@@ -78,7 +78,7 @@ public class KryoSerDeTest {
           .params(params));
       params.add(new OperationParam().key("inputUri").required(true).description("location of source dataset")
           .valuetype(ValuetypeEnum.STRING).defaultValue(null).isMultivalued(false));
-      params.add(new OperationParam().key(OperationConsts.INGEST_DATAFORMAT).required(true)
+      params.add(new OperationParam().key(OperationConsts.DATA_FORMAT).required(true)
           .description("type and format of data")
           .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false)
           .addPossibleValuesItem("TELEPHONE.CSV").addPossibleValuesItem("PEOPLE.CSV"));
