@@ -17,6 +17,7 @@ public final class OperationConsts {
   
   /// DATA_FORMAT values:
   public static final String DATA_FORMAT_PARQUET = "parquet";
+  public static final String DATA_FORMAT_LUCENE = "lucene";
 
 
 }

@@ -14,6 +14,7 @@ import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.apis.OperationConsts;
+import dataengine.apis.OperationsMerger;
 
 public class OperationsMergerTest {
 

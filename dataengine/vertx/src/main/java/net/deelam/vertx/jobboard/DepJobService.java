@@ -102,7 +102,7 @@ public class DepJobService implements DepJobService_I {
 
   public String toStringRemainingJobs(String... propsToPrint) {
     StringBuilder sb = new StringBuilder("Incomplete jobs:\n");
-    GrafTxn.tryAndCloseTxn(graph, () -> {
+    GrafTxn.tryOn(graph, () -> {
       int nodeCount = 0;
       //log.info(GraphUtils.toString(graph, 100, "state", "order"));
       for (DepJobFrame jobV : graph.getVertices(DepJobFrame.TYPE_KEY, DepJobFrame.TYPE_VALUE,
@@ -157,7 +157,7 @@ public class DepJobService implements DepJobService_I {
   public synchronized CompletableFuture<Boolean> addJob(boolean addToQueue, JobDTO job, String... inJobIds) {
     String jobId = job.getId();
     // add to graph
-    GrafTxn.tryAndCloseTxn(graph, () -> {
+    GrafTxn.tryOn(graph, () -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       if (jobV == null) {
         jobV = graph.addVertex(jobId, DepJobFrame.class);
@@ -192,7 +192,7 @@ public class DepJobService implements DepJobService_I {
 
   public synchronized Collection<String> listJobs(DepJobFrame.STATE state) {
     Collection<String> col = new ArrayList<>();
-    GrafTxn.tryAndCloseTxn(graph, () -> {
+    GrafTxn.tryOn(graph, () -> {
       if (state == null) {
         for (Vertex v : graph.getVertices()) {
           col.add((String) v.getId());
@@ -212,7 +212,7 @@ public class DepJobService implements DepJobService_I {
    * @param jobId
    */
   public synchronized void reAddJob(String jobId) {
-    GrafTxn.tryAndCloseTxn(graph, () -> {
+    GrafTxn.tryOn(graph, () -> {
       // add to graph
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       if (jobV == null) {
@@ -247,7 +247,7 @@ public class DepJobService implements DepJobService_I {
 
   public synchronized void addDependentJobs(String jobId, String... inJobIds) {
     synchronized (graph) {
-      GrafTxn.tryAndCloseTxn(graph, () -> {
+      GrafTxn.tryOn(graph, () -> {
         DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
         if (jobV == null) {
           throw new IllegalArgumentException("Job with id does not exist: " + jobId);
@@ -273,7 +273,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public boolean hasJob(String jobId) {
-    return GrafTxn.tryAndCloseTxn(graph, (graph) -> {
+    return GrafTxn.tryOn(graph, (graph) -> {
       Vertex inputJobV = graph.getVertex(jobId);
       boolean exists = (inputJobV != null);
       return exists;
@@ -294,7 +294,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public synchronized boolean cancelJob(String jobId) {
-    return GrafTxn.tryAndCloseTxn(graph, (graph) -> {
+    return GrafTxn.tryOn(graph, (graph) -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       if (jobV == null)
         throw new IllegalArgumentException("Unknown jobId=" + jobId);
@@ -338,7 +338,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public void cancelJobsDependentOn(String jobId, List<String> canceledJobs) {
-    GrafTxn.tryAndCloseTxn(graph, (graph) -> {
+    GrafTxn.tryOn(graph, (graph) -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       for (DepJobFrame outJ : jobV.getOutputJobs()) {
         boolean cancelled = cancelJob(outJ.getNodeId());
@@ -365,7 +365,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public STATE getJobStatus(String jobId) {
-    return GrafTxn.tryAndCloseTxn(graph, (graph) -> {
+    return GrafTxn.tryOn(graph, (graph) -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       checkNotNull(jobV, "Cannot find " + jobId);
       return jobV.getState();

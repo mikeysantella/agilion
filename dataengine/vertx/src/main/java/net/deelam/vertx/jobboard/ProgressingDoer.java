@@ -8,4 +8,6 @@ public interface ProgressingDoer extends Consumer<JobDTO> {
   ProgressState state();
 
   String jobType();
+
+  boolean canDo(JobDTO job);
 }

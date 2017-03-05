@@ -118,7 +118,7 @@ public class VertxRpcUtil {
                   "Unsupported method '" + method + "' with return type=" + returnType);
             }
           } catch (Throwable e) {
-            log.error("Client-side error", e);
+            log.error("RPC client-side error", e);
             return null;
           }
         });
@@ -138,7 +138,7 @@ public class VertxRpcUtil {
       try {
         String methodId = r.headers().get(HEADER_METHOD_ID);
         if (!methods.containsKey(methodId)) {
-          log.error("Method not found for {} at {}: {}", service.getClass(), address, methodId);
+          log.error("RPC method not found for {} at {}: {}", service.getClass(), address, methodId);
           r.fail(1, "Method not found for "+service.getClass()+": " + methodId);
         } else {
           Method method = methods.get(methodId);
@@ -164,6 +164,7 @@ public class VertxRpcUtil {
                 } else {
                   if (hook != null)
                     hook.serverRepliesThrowable(methodId, e);
+                  log.error("RPC server-side error running method: {}", methodId, e);
                   DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
                   r.reply(serde.writeObject(e), options);
                 }
@@ -174,17 +175,19 @@ public class VertxRpcUtil {
             //checkNotNull(e, ex.getCause());
             if (hook != null)
               hook.serverRepliesThrowable("invoking " + methodId, e);
+            log.error("RPC server-side error: {}", methodId, e);
             DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
             r.reply(serde.writeObject(e), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
           } catch (IllegalArgumentException|IllegalAccessException e){
             if (hook != null)
               hook.serverRepliesThrowable("invoking " + methodId, e);
+            log.error("RPC server-side method call error: {}", methodId, e);
             DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
             r.reply(serde.writeObject(e), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
           }
         }
       } catch (Throwable e) {
-        log.error(e.getMessage(), e);
+        log.error("RPC unexpected: "+e.getMessage(), e);
         r.fail(-1, e.getMessage());
       }
     });
@@ -242,7 +245,7 @@ public class VertxRpcUtil {
               return new StdInstantiatorStrategy().newInstantiatorOf(type);
             }
           }));
-      log.trace("Created new Kryo for {}: {}", name, kryo);
+      log.trace("RPC Created new Kryo for {}: {}", name, kryo);
       return kryo;
     }
 
@@ -251,7 +254,7 @@ public class VertxRpcUtil {
         //log.debug("Using kryo={} to read for {}", kryo, name);
         return kryo.readClass(input);
       } catch (Throwable t) {
-        log.error("Couldn't read input", t);
+        log.error("RPC Couldn't read input", t);
         throw t; //return null;
       }
     }
@@ -265,7 +268,7 @@ public class VertxRpcUtil {
           result[i] = kryo.readClassAndObject(input);
         return result;
       } catch (Throwable t) {
-        log.error("Couldn't read buffer", t);
+        log.error("RPC Couldn't read buffer", t);
         throw t;
       }
     }
@@ -276,7 +279,7 @@ public class VertxRpcUtil {
         //log.debug("Using kryo={} to read for {}", kryo, name);
         return (T) kryo.readClassAndObject(new Input(buffer.getBytes()));
       } catch (Throwable t) {
-        log.error("Couldn't read buffer", t);
+        log.error("RPC Couldn't read buffer", t);
         throw t; //return null;
       }
     }
@@ -290,7 +293,7 @@ public class VertxRpcUtil {
         return Buffer.buffer(output.toBytes());
       } catch (Throwable t) {
         String arrayStr = Arrays.toString(objs);
-        log.error("Couldn't write object of type={}; serializing as string instead: {}", objs.getClass(), arrayStr);
+        log.error("RPC Couldn't write object of type={}; serializing as string instead: {}", objs.getClass(), arrayStr);
         final Output output = new Output(new ByteArrayOutputStream());
         kryo.writeClassAndObject(output, arrayStr);
         return Buffer.buffer(output.toBytes());
@@ -316,7 +319,7 @@ public class VertxRpcUtil {
           // TODO: 6: determine appropriate kryo serializer
           //log.error("t2",t2);
           String objStr = obj.toString();
-          log.error("Couldn't write object of {}; serializing as string instead: {}", obj.getClass(), objStr);
+          log.error("RPC Couldn't write object of {}; serializing as string instead: {}", obj.getClass(), objStr);
           return writeObject(objStr);
         }
       }

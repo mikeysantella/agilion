@@ -12,35 +12,35 @@ public class DebugRpcHook implements RpcHook {
   final String iface;
 
   public void clientSendsCall(String methodId, Object[] args) {
-    log.debug("clientSendsCall to {}: {}: {}", iface, methodId, Arrays.toString(args));
+    log.debug("rpcClientSendsCall to {}: {}: {}", iface, methodId, Arrays.toString(args));
   }
 
   public void serverReceivesCall(String methodId, Object[] args) {
-    log.debug("{} serverReceivesCall: {}: {}", iface, methodId, Arrays.toString(args));
+    log.debug("{} rpcServerReceivesCall: {}: {}", iface, methodId, Arrays.toString(args));
   }
 
   public void serverReplies(String methodId, Object result) {
-    log.debug("{} serverReplies: {}: {}", iface, methodId, result);
+    log.debug("{} rpcServerReplies: {}: {}", iface, methodId, result);
   }
 
   public void clientReceivesResult(String methodId, Object result) {
-    log.debug("clientReceivesResult from {}: {}: {}", iface, methodId, result);
+    log.debug("rpcClientReceivesResult from {}: {}: {}", iface, methodId, result);
   }
 
   public void clientReceivedVoid(String methodId) {
-    log.debug("clientReceivedVoid from {}: {}", iface, methodId);
+    log.debug("rpcClientReceivedVoid from {}: {}", iface, methodId);
   }
 
   public void serverRepliesThrowable(String methodId, Throwable e) {
-    log.debug(iface+" serverRepliesThrowable: "+methodId+": "+ e);
+    log.error(iface+" rpcServerRepliesThrowable: "+methodId+": "+ e);
     //log.debug("{} serverRepliesThrowable: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage()); // in case getMessage()==null
   }
 
   public void clientReceivedThrowable(String methodId, Throwable e) {
-    log.debug("clientReceivedThrowable from {}: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage());
+    log.error("rpcClientReceivedThrowable from {}: {}: {}", iface, methodId, (e == null) ? e : e.toString()+" msg="+e.getMessage());
   }
 
   public void clientCallFailed(String methodId, Throwable e) {
-    log.debug("clientCallFailed to {}: {}: {}", iface, methodId, (e == null) ? e : e.getMessage());
+    log.error("rpcClientCallFailed to {}: {}: {}", iface, methodId, (e == null) ? e : e.getMessage());
   }
 }

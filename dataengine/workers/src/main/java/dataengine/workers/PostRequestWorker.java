@@ -2,6 +2,7 @@ package dataengine.workers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -26,22 +27,21 @@ public class PostRequestWorker extends BaseWorker<Job> {
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
     info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_POSTINGEST);
-    return new Operation()
-        .id(jobType())
+    return new Operation().level(1).id(jobType())
         .description("connect request to dataset")
         .info(info)
         .addParamsItem(new OperationParam()
             .key(OperationConsts.PREV_JOBID).required(true)
-            .valuetype(ValuetypeEnum.STRING).isMultivalued(false)
-            );
+            .valuetype(ValuetypeEnum.STRING));
     
 //    requiredParams = OperationUtils.getRequiredParams(getOperation());
   }
 
   @Override
   protected boolean doWork(Job job) throws Exception {
-    getPrevJobDatasetId(job).thenAccept(datasetId->
+    CompletableFuture<Void> connectF = getPrevJobDatasetId(job).thenCompose(datasetId->
       sessDb.rpc().connectAsOutputDatasetNode(job.getRequestId(), datasetId));
+    connectF.get(); // call get so that exception can be thrown
     return true;
   }
 

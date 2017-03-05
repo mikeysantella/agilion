@@ -9,6 +9,7 @@ dependencies {
   compile dep.guice
   compile dep.guava
   compile project(':vertx')
+  compile dep.commons_io
   runtime dep.vertx_ignite
     
   testCompile dep.vertx_unittest

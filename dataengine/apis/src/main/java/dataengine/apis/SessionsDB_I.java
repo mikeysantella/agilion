@@ -51,7 +51,7 @@ public interface SessionsDB_I {
   
   CompletableFuture<List<Job>> getOutputJobs(String jobId);
   
-  void setJobParam(String jobId, String key, Object value);
+  CompletableFuture<Void> setJobParam(String jobId, String key, Object value);
   
   void updateJobState(String jobId, State state);
 

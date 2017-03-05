@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import dataengine.api.Operation;
+import dataengine.apis.OperationsMerger;
 import dataengine.apis.OperationsRegistry_I;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

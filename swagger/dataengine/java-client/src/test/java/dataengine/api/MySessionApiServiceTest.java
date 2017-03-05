@@ -2,6 +2,7 @@ package dataengine.api;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,8 +84,9 @@ public class MySessionApiServiceTest {
           .operationId("addSourceDataset");
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
       req.operationParams(paramValues);
-      paramValues.put("inputUri", "hdfs://some/where/");
+      paramValues.put("inputUri", new File("README.md").toURI().toASCIIString());
       paramValues.put("dataFormat", "TELEPHONE.CSV");
+      paramValues.put("workTime", "10");
 
       Request req2 = reqsApi.submitRequest(req);
       String reqId = req2.getId();
@@ -106,6 +108,8 @@ public class MySessionApiServiceTest {
           System.out.println("Waiting for job to complete: "+job);
           Thread.sleep(2000);
           job=jobsApi.getJob(job.getId());
+          if(job.getProgress().getPercent()<0)
+            throw new RuntimeException("Job failed: "+job.getId());
         }
       }
       System.out.println(sessApi.listSessionNames());
