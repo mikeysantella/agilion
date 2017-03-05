@@ -9,7 +9,7 @@ configure(subprojects) {
   apply plugin: 'eclipse'
 
   group = 'agilion'
-  version = '0.0.2-SNAPSHOT'
+  version = '0.0.3-SNAPSHOT'
 
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
@@ -33,7 +33,7 @@ configure(subprojects) {
     ]
 
     dep = [
-      dataengine_api: 'agilion:dataengine-api:0.0.2-SNAPSHOT',
+      dataengine_api: 'agilion:dataengine-api:0.0.3-SNAPSHOT',
 
       commons_io: 'commons-io:commons-io:2.5',
       xinject: 'javax.inject:javax.inject:1',
@@ -91,6 +91,9 @@ configure([
   project(':workers')
 ]) {
   afterEvaluate {
+    dependencies {
+      compile project(':utils')
+    }
     jar {
       manifest {
         attributes 'Main-Class': mainClassName

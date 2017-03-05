@@ -2,6 +2,7 @@ package dataengine.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
@@ -73,11 +74,15 @@ public class MainJetty {
     if (runInSingleJVM) {
       vertxF.join();
       log.info("======== Running all required DataEngine services in same JVM {}", vertxF);
-      startAllInSameJvm(vertxF);
+      try {
+        startAllInSameJvm(vertxF);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
-  private static void startAllInSameJvm(CompletableFuture<Vertx> vertxF) {
+  private static void startAllInSameJvm(CompletableFuture<Vertx> vertxF) throws IOException {
     // Only create 1 Vertx instance per JVM! 
     // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
     dataengine.sessions.SessionsMain.main(vertxF);

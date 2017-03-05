@@ -2,9 +2,11 @@ package dataengine.tasker;
 
 import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.google.inject.AbstractModule;
@@ -19,15 +21,21 @@ import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
+import lombok.RequiredArgsConstructor;
 import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
+@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 final class TaskerModule extends AbstractModule {
+  final Properties properties;
+  
   @Override
   protected void configure() {
     requireBinding(Vertx.class);
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<DepJobService_I>>() {}));
+    
+    bind(Properties.class).toInstance(properties);
 
     // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
     bind(JobListener_I.class).to(TaskerJobListener.class);
@@ -39,12 +47,12 @@ final class TaskerModule extends AbstractModule {
   
   @Provides
   List<JobsCreator> getJobCreators(Injector injector) {
-    // TODO: 5: read jobCreators from file
-    List<String> classes = new ArrayList<>();
-    {
-      classes.add(AddSourceDataset.class.getCanonicalName());
+    // read jobCreators from file
+    String[] jobCreatorClasses={
+      AddSourceDataset.class.getCanonicalName()
     };
-
+    String jobCreatorsStr = properties.getProperty("jobCreators",String.join(" ",jobCreatorClasses));
+    List<String> classes = Arrays.asList(jobCreatorsStr.split(" "));
     List<JobsCreator> jobCreators = classes.stream().map(jcClassName -> {
       try {
         @SuppressWarnings("unchecked")
@@ -68,7 +76,9 @@ final class TaskerModule extends AbstractModule {
   static void deployJobListener(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
     TaskerJobListener jobListener = injector.getInstance(TaskerJobListener.class);
-    jobListener.setProgressPollIntervalSeconds(1); // TODO: 4: read from property file
+    Properties props = injector.getInstance(Properties.class);
+    int progressPollIntervalSeconds=Integer.valueOf(props.getProperty("jobListener.progressPollIntervalSeconds", "2"));
+    jobListener.setProgressPollIntervalSeconds(progressPollIntervalSeconds);
     
     vertx.deployVerticle(jobListener);
   }

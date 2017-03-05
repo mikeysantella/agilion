@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -43,7 +44,7 @@ public class TaskerServiceTest {
   public void setUp() throws Exception {
     CompletableFuture<Vertx> vertxF = CompletableFuture.completedFuture(Vertx.vertx());
     Injector injector = Guice.createInjector(
-        new TaskerModule(),
+        new TaskerModule(new Properties()),
         new AbstractModule() {
           @Override
           protected void configure() {
