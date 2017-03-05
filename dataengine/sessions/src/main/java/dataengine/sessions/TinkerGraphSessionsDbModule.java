@@ -16,6 +16,7 @@ import net.deelam.vertx.rpc.RpcVerticleServer;
 
 @Slf4j
 public class TinkerGraphSessionsDbModule extends AbstractModule {
+
   @Override
   protected void configure() {
     requireBinding(Vertx.class);
@@ -29,11 +30,14 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
     } catch (IOException e) {
       e.printStackTrace();
     } finally {
-      //sessGraphUri.shutdown(); // TODO: 4: move to a shutdown hook
+      Thread shutdownSessionGraphThread=new Thread(()->{
+        sessGraphUri.shutdown();
+      });
+      Runtime.getRuntime().addShutdownHook(shutdownSessionGraphThread);
     }
     log.info("TinkerGraphSessionsDbModule configured");
   }
-
+  
   static void deploySessionDb(Injector injector) {
     SessionsDB_I sessVert = injector.getInstance(SessionsDB_I.class);
     Vertx vertx = injector.getInstance(Vertx.class);

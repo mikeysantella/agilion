@@ -2,6 +2,7 @@
 rootProject.name = 'dataengine'
 
 include 'apis'
+include 'utils'
 
 include 'graph'
 include 'vertx'
@@ -9,10 +10,9 @@ include 'vertx'
 include 'sessions'
 include 'tasker'
 include 'jobmgr'
+include 'server'
 
 include 'workers'
-
-include 'server'
 
 include 'main'
 
