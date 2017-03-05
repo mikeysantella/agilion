@@ -1,5 +1,7 @@
 package dataengine.workers;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +52,16 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
   
   protected final ProgressState state = new ProgressState();
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public boolean canDo(JobDTO jobDto) {
+    return canDo((T) jobDto.getRequest());
+  }
+  
+  public boolean canDo(Job job) {
+    return true;
+  }
+  
   @Override
   public void accept(JobDTO jobDto) {
     state.starting(jobDto.getId(), jobDto);
@@ -58,7 +70,8 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
     T job = (T) jobDto.getRequest();
     try {
       OperationUtils.checkForRequiredParams(requiredParams, job.getParams());
-      if (doWork(job))
+      // within doWork(), remember to call Future.get() to wait for work to finish or throw exception
+      if (doWork(job)) 
         state.done(jobDto);
       else
         state.failed("doWork() returned false for job=" + job);
@@ -72,10 +85,10 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
   }
 
   protected boolean doWork(T job) throws Exception {
-    log.error("TODO: implement doWork(): {}", job);
+    log.error("WORKER: TODO: implement doWork(): {}", job);
     AtomicInteger metricInt=new AtomicInteger();
     state.getMetrics().put("DUMMY_METRIC", metricInt);
-    int numSeconds = 30;
+    int numSeconds = 5;
     for(int i=0; i<numSeconds; ++i){
       state.setPercent(i*(100/(numSeconds+1))).setMessage("DUMMY: status at percent="+i*18);
       metricInt.incrementAndGet();
@@ -86,8 +99,13 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
   
   CompletableFuture<String> getPrevJobDatasetId(Job job) {
     String prevJobId = (String) job.getParams().get(OperationConsts.PREV_JOBID);
+    checkNotNull(prevJobId);
     return sessDb.rpc().getJob(prevJobId)
-        .thenApply(prevJob -> (String) prevJob.getParams().get(OperationConsts.OUTPUT_URI));
+        .thenApply(prevJob -> {
+          String prevDatasetId=(String) prevJob.getParams().get(OperationConsts.OUTPUT_URI);
+          checkNotNull(prevDatasetId);
+          return prevDatasetId;
+          });
   }
   
   @RequiredArgsConstructor

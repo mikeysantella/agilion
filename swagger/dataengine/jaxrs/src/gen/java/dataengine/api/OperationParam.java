@@ -52,6 +52,8 @@ public class OperationParam  implements Serializable {
   public enum ValuetypeEnum {
     STRING("string"),
     
+    URI("uri"),
+    
     INT("int"),
     
     LONG("long"),

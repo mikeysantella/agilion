@@ -199,9 +199,10 @@ public class SessionsDBService implements SessionsDB_I {
   }
   
   @Override
-  public void setJobParam(String jobId, String key, Object value){
+  public CompletableFuture<Void> setJobParam(String jobId, String key, Object value){
     log.debug("SERV: setJobParam of {}: {}={}", jobId, key, value);
     sessDB.setJobParam(jobId, key, value);;
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override

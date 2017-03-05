@@ -34,9 +34,9 @@ public class WorkerMain {
       jcFactory.create(worker);
     }    
     BaseWorker<?>[] workers = {
-        injector.getInstance(IngestTelephoneWorker.class),
-        injector.getInstance(IngestPeopleWorker.class),
-        injector.getInstance(IndexDatasetWorker.class)
+        injector.getInstance(IngestTelephoneDummyWorker.class),
+        injector.getInstance(IngestPeopleDummyWorker.class),
+        injector.getInstance(IndexDatasetDummyWorker.class)
     };
     for(BaseWorker<?> worker:workers)    {
       OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, worker);

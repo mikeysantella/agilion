@@ -19,4 +19,6 @@ public interface OperationsRegistry_I {
 
   CompletableFuture<Map<String, Operation>> listOperations();
 
+  CompletableFuture<Map<String, Operation>> listAllOperations();
+
 }

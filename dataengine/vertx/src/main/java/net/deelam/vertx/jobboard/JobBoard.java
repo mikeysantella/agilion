@@ -455,7 +455,7 @@ public class JobBoard extends AbstractVerticle {
       log.error("Could not add {} to idleWorkers={}", workerAddr, idleWorkers);
 
     job.mergeIn(jobMsg.body());
-    log.info("Setting job state from {} to {}", job.state, newState);
+    log.info("Setting job {} state from {} to {}", job.getId(), job.state, newState);
     job.state = newState;
     return job;
   }

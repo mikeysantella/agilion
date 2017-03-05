@@ -45,7 +45,7 @@ public class WorkDoerExample {
       // create Doer 
       Doer workDoer = new Doer();
       // connect with ReportingWorker; called by JobConsumer's thread pool
-      ReportingWorker rw = new ReportingWorker(workDoer, () -> workDoer.state)
+      ReportingWorker rw = new ReportingWorker(workDoer, (j)->true, () -> workDoer.state)
           .setProgressMonitorFactory(new VertxProgressMonitor.Factory(vertx));
 
       JobConsumer jConsumer = new JobConsumer(svcType, JOB_TYPE).setWorker(rw);

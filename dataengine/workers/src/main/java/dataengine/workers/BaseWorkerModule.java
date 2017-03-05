@@ -58,7 +58,7 @@ public class BaseWorkerModule extends AbstractModule {
       checkNotNull(jobBoardId);
       checkArgument(jobBoardId.length() > 0);
       
-      ReportingWorker rw = new ReportingWorker(doer, () -> doer.state())
+      ReportingWorker rw = new ReportingWorker(doer, (job) -> doer.canDo(job), () -> doer.state())
           .setProgressMonitorFactory(pmFactory);
       
       JobConsumer jConsumer = new JobConsumer(jobBoardId, doer.jobType()).setWorker(rw);

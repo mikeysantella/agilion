@@ -16,11 +16,15 @@ public abstract class AbstractJobCreator implements JobsCreator {
 
   @Getter
   protected final Operation operation;
-  protected final Map<String, OperationParam> opParamsMap;
-  protected final List<OperationParam> requiredParams;
+  protected Map<String, OperationParam> opParamsMap;
+  protected List<OperationParam> requiredParams;
 
   public AbstractJobCreator() {
-    operation = initOperation();
+    operation=initOperation();
+    operationUpdated();
+  }
+  
+  protected void operationUpdated(){
     opParamsMap = OperationUtils.initMap(operation);
     requiredParams = OperationUtils.getRequiredParams(operation);
   }
@@ -28,7 +32,7 @@ public abstract class AbstractJobCreator implements JobsCreator {
   protected Operation initOperation() {
     log.warn("JobsCreator.operation not initialized: {}", this);
     // subclasses should populate operation
-    return new Operation();
+    return new Operation().level(0);
   }
 
   @Override
@@ -36,9 +40,11 @@ public abstract class AbstractJobCreator implements JobsCreator {
     return opParamsMap.get(key);
   }
 
+//  @SuppressWarnings("unchecked")
   @Override
   public void checkValidity(Request req) {
     OperationUtils.checkForRequiredParams(requiredParams, req.getOperationParams());
+//    OperationUtils.checkUriParams(req.getOperationParams());
   }
 
   String getJobIdPrefix(Request req) {

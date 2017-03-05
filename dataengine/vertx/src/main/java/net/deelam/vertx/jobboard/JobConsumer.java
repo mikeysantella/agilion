@@ -62,23 +62,22 @@ public class JobConsumer extends AbstractVerticle {
   private JobDTO pickedJob = null;
 
   @Setter
-  private Function<JobDTO, Boolean> worker = new Function<JobDTO, Boolean>() {
-    @Override
-    public Boolean apply(JobDTO job) {
-      log.info("TODO: Do work on: {}", job);
-      return true;
-    }
-  };
-
+  private JobWorker worker;
+  
   @Setter
-  private Function<JobListDTO, JobDTO> jobPicker = dto -> {
-    log.debug("jobs={}", dto);
+  private Function<JobListDTO, JobDTO> jobPicker = dtoList -> {
+    log.debug("jobs={}", dtoList);
     JobDTO picked = null;
-    if (dto.jobs.size() > 0) {
-      picked = dto.jobs.get(0);
+    if (dtoList.jobs.size() > 0) {
+      for(JobDTO j:dtoList.jobs){
+        if((worker.canDo(j))){
+          picked = j; //dto.jobs.get(0);
+          break;
+        }
+      }
     }
     StringBuilder jobsSb = new StringBuilder();
-    dto.jobs.forEach(j -> jobsSb.append(" " + j.getId()));
+    dtoList.jobs.forEach(j -> jobsSb.append(" " + j.getId()));
     log.info("pickedJob={} from jobs={}", picked, jobsSb);
     return picked;
   };

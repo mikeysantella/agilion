@@ -2,6 +2,7 @@ package dataengine.tasker;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,9 @@ public interface JobsCreator {
           return val;
         else
           return val.toString();
+      case URI:
+        if (val instanceof String)
+          return URI.create((String) val);
       case INT:
         if (val instanceof Integer)
           return val;

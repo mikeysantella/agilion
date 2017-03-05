@@ -12,18 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
-public class ReportingWorker implements Function<JobDTO, Boolean>, HasProgress {
+public class ReportingWorker implements JobWorker, HasProgress {
 
   private final Consumer<JobDTO> doer;
-  private final Supplier<ProgressState> progressSupplier;
 
+  private final Function<JobDTO,Boolean> canDoF;
+  
   @Override
-  public ProgressState getProgress() {
-    return progressSupplier.get();
+  public boolean canDo(JobDTO job) {
+    return canDoF.apply(job);
   }
   
   @Override
-  public Boolean apply(JobDTO job) {
+  public boolean apply(JobDTO job) {
     try (ProgressMonitor pm = progressMonitorProvider.apply(job)) {
       pm.setProgressMaker(this);
       doer.accept(job);
@@ -37,6 +38,13 @@ public class ReportingWorker implements Function<JobDTO, Boolean>, HasProgress {
     }
   }
 
+  private final Supplier<ProgressState> progressSupplier;
+
+  @Override
+  public ProgressState getProgress() {
+    return progressSupplier.get();
+  }
+  
   public ReportingWorker setProgressMonitorFactory(ProgressMonitor.Factory pmFactory) {
     if(progressMonitorProvider!=DUMMY_PM_PROVIDER)
       log.warn("Overriding previously set progressMonitorProvider={}", progressMonitorProvider);
@@ -58,4 +66,5 @@ public class ReportingWorker implements Function<JobDTO, Boolean>, HasProgress {
       public void addTargetVertxAddr(String vertxAddrPrefix) {}
     };
   };
+
 }

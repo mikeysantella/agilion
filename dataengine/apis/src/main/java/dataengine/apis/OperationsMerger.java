@@ -1,4 +1,4 @@
-package dataengine.tasker;
+package dataengine.apis;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -45,7 +45,7 @@ public class OperationsMerger {
     }
   }
 
-  private String mergeDescription(String newDescription, String description) {
+  public static String mergeDescription(String newDescription, String description) {
     if (newDescription != null && !newDescription.equals(description))
       if (description == null)
         return newDescription;
@@ -54,7 +54,7 @@ public class OperationsMerger {
     return description;
   }
 
-  private void mergeParams(List<OperationParam> newParams, Map<String, OperationParam> paramsMap, Operation op) {
+  public static void mergeParams(List<OperationParam> newParams, Map<String, OperationParam> paramsMap, Operation op) {
     newParams.forEach(newParam -> {
       OperationParam param = paramsMap.get(newParam.getKey());
       if (param == null) {
@@ -86,7 +86,7 @@ public class OperationsMerger {
     });
   }
 
-  private <T> T pickOne(String fieldName, T newObj, T obj, T defaultVal) {
+  public static <T> T pickOne(String fieldName, T newObj, T obj, T defaultVal) {
     if (newObj == null)
       return obj;
     if (obj == null)

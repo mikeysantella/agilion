@@ -74,12 +74,12 @@ public class JobBoardTest {
 //    vertx.close();
   }
 
-  Function<JobDTO, Boolean> createWorkFunction(final JobConsumer cons, String jobId) {
-    return new Function<JobDTO, Boolean>() {
+  JobWorker createWorkFunction(final JobConsumer cons, String jobId) {
+    return new JobWorker() {
       int count = 0;
 
       @Override
-      public Boolean apply(JobDTO job) {
+      public boolean apply(JobDTO job) {
         boolean success = true; //++count % 2 == 0;
         try {
           //job.getParams().put("progress", "10%");

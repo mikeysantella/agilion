@@ -47,6 +47,9 @@ public class Operation  implements Serializable {
   @JsonProperty("description")
   private String description = null;
 
+  @JsonProperty("level")
+  private Integer level = null;
+
   @JsonProperty("info")
   private Map info = null;
 
@@ -87,6 +90,25 @@ public class Operation  implements Serializable {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public Operation level(Integer level) {
+    this.level = level;
+    return this;
+  }
+
+   /**
+   * abstraction level of this operation
+   * minimum: 0.0
+   * @return level
+  **/
+  @ApiModelProperty(example = "1", required = true, value = "abstraction level of this operation")
+  public Integer getLevel() {
+    return level;
+  }
+
+  public void setLevel(Integer level) {
+    this.level = level;
   }
 
   public Operation info(Map info) {
@@ -142,13 +164,14 @@ public class Operation  implements Serializable {
     Operation operation = (Operation) o;
     return Objects.equals(this.id, operation.id) &&
         Objects.equals(this.description, operation.description) &&
+        Objects.equals(this.level, operation.level) &&
         Objects.equals(this.info, operation.info) &&
         Objects.equals(this.params, operation.params);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, description, info, params);
+    return Objects.hash(id, description, level, info, params);
   }
 
 
@@ -159,6 +182,7 @@ public class Operation  implements Serializable {
     
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    info: ").append(toIndentedString(info)).append("\n");
     sb.append("    params: ").append(toIndentedString(params)).append("\n");
     sb.append("}");

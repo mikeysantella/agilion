@@ -2,6 +2,7 @@ package dataengine.sessions;
 
 import static net.deelam.graph.GrafTxn.tryOn;
 
+import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -76,9 +77,13 @@ public final class SessionDB_FrameHelper {
   static void setVertexProperty(Vertex v, String propPrefix, String keySuffix, Object val) {
     if (val instanceof String ||
         val instanceof Number ||
-        val instanceof Boolean)
+        val instanceof Boolean){
       v.setProperty(propPrefix + keySuffix, val);
-    else {
+    } else if(val instanceof URI){
+      v.setProperty(propPrefix + keySuffix, val.toString());
+    }else if(val==null){
+      log.warn("Ignoring null value for property {}", propPrefix + keySuffix);
+    } else {
       log.warn("Storing as string -- don't know how to store value as property {}: {} {}", propPrefix + keySuffix,
           val.getClass(), val);
       v.setProperty(propPrefix + keySuffix, val.toString());
