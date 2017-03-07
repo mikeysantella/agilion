@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 
 import org.objenesis.instantiator.ObjectInstantiator;
@@ -52,7 +53,7 @@ public class VertxRpcUtil {
   public <T> T createClient(Class<T> iface) {
     log.debug("Creating RPC client for {} at {} ", iface.getSimpleName(), address);
     final HashMap<Method, String> methods = new HashMap<>();
-    final KryoSerDe serde = new KryoSerDe(address+"-client");
+    final KryoSerDe serde = new KryoSerDe(address + "-client");
     return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
         (proxy, method, args) -> {
           if ("toString".equals(method.getName())) {
@@ -60,12 +61,12 @@ public class VertxRpcUtil {
           }
           try {
             String methodIdTemp = methods.get(method);
-            if(methodIdTemp==null){
+            if (methodIdTemp == null) {
               method.setAccessible(true);
-              methodIdTemp=genMethodId(method);
+              methodIdTemp = genMethodId(method);
               methods.put(method, methodIdTemp);
             }
-            final String methodId=methodIdTemp;
+            final String methodId = methodIdTemp;
             if (hook != null)
               hook.clientSendsCall(methodId, args);
             DeliveryOptions options = new DeliveryOptions().addHeader(HEADER_METHOD_ID, methodId);
@@ -95,19 +96,24 @@ public class VertxRpcUtil {
                     resultF.complete(null);
                   } else {
                     String exceptionStr = r.result().headers().get(EXCEPTION);
-                    Object result = serde.readObject(msg.body());
-                    if (exceptionStr != null) {
-                      Throwable throwable = (result instanceof Throwable)
-                          ? (Throwable) result
-                          : new RuntimeException((result == null)
-                              ? exceptionStr : result.toString());
-                      if (hook != null)
-                        hook.clientReceivedThrowable(methodId, throwable);
-                      resultF.completeExceptionally(throwable);
-                    } else {
-                      if (hook != null)
-                        hook.clientReceivesResult(methodId, result);
-                      resultF.complete(result);
+                    try {
+                      Object result = serde.readObject(msg.body());
+                      if (exceptionStr != null) {
+                        Throwable throwable = (result instanceof Throwable)
+                            ? (Throwable) result
+                            : new RuntimeException((result == null)
+                                ? exceptionStr : result.toString());
+                        if (hook != null)
+                          hook.clientReceivedThrowable(methodId, throwable);
+                        resultF.completeExceptionally(throwable);
+                      } else {
+                        if (hook != null)
+                          hook.clientReceivesResult(methodId, result);
+                        resultF.complete(result);
+                      }
+                    } catch (Throwable e) {
+                      log.error("RPC client-side error: cannot read msg body for {}:", methodId, e);
+                      resultF.completeExceptionally(new RuntimeException("Cannot read msg body for " + methodId));
                     }
                   }
                 }
@@ -131,15 +137,15 @@ public class VertxRpcUtil {
       method.setAccessible(true);
       methods.put(genMethodId(method), method);
     }
-    CompletableFuture<MessageConsumer<Buffer>> msgConsumerF=new CompletableFuture<>();
+    CompletableFuture<MessageConsumer<Buffer>> msgConsumerF = new CompletableFuture<>();
     //new Thread(()->{
-    final KryoSerDe serde = new KryoSerDe(address+"-service");
+    final KryoSerDe serde = new KryoSerDe(address + "-service");
     MessageConsumer<Buffer> msgConsumer = eventBus.<Buffer>consumer(address, r -> {
       try {
         String methodId = r.headers().get(HEADER_METHOD_ID);
         if (!methods.containsKey(methodId)) {
           log.error("RPC method not found for {} at {}: {}", service.getClass(), address, methodId);
-          r.fail(1, "Method not found for "+service.getClass()+": " + methodId);
+          r.fail(1, "Method not found for " + service.getClass() + ": " + methodId);
         } else {
           Method method = methods.get(methodId);
           Object result = null;
@@ -178,7 +184,7 @@ public class VertxRpcUtil {
             log.error("RPC server-side error: {}", methodId, e);
             DeliveryOptions options = new DeliveryOptions().addHeader(EXCEPTION, e.toString());
             r.reply(serde.writeObject(e), options); //r.reply(serde.writeObject(ex.getTargetException().getMessage()));
-          } catch (IllegalArgumentException|IllegalAccessException e){
+          } catch (IllegalArgumentException | IllegalAccessException e) {
             if (hook != null)
               hook.serverRepliesThrowable("invoking " + methodId, e);
             log.error("RPC server-side method call error: {}", methodId, e);
@@ -187,7 +193,7 @@ public class VertxRpcUtil {
           }
         }
       } catch (Throwable e) {
-        log.error("RPC unexpected: "+e.getMessage(), e);
+        log.error("RPC unexpected: " + e.getMessage(), e);
         r.fail(-1, e.getMessage());
       }
     });
@@ -198,30 +204,43 @@ public class VertxRpcUtil {
 
   // Doesn't work with varargs
   static String genMethodId(Method method) {
-    StringBuilder sb=new StringBuilder(method.getName());
+    StringBuilder sb = new StringBuilder(method.getName());
     sb.append("^");
-    for(Class<?> paramT:method.getParameterTypes()){
+    for (Class<?> paramT : method.getParameterTypes()) {
       sb.append(paramT.getSimpleName());
     }
-    return sb.toString(); 
+    return sb.toString();
   }
 
+  static {
+    com.esotericsoftware.minlog.Log.TRACE();
+  }
   /**
    * Reminder: Do NOT use varargs as parameters to RPC methods.
    * Doing so causes Kyro to fail, due to wrong parameter count, due to wrong method selection.
    */
-  static final class KryoSerDe {
+  public static final class KryoSerDe {
     Kryo kryo;
     final String name;
+    
+    public static Map<Class<?>,Integer> classRegis;
 
     public KryoSerDe(String name) {
-      this.name=name;
-      kryo=newKryo();
+      this.name = name;
+      kryo = newKryo();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Kryo newKryo() {
       Kryo kryo = new Kryo();
+      if(classRegis!=null){
+        kryo.setRegistrationRequired(true);
+        for(Entry<Class<?>, Integer> e:classRegis.entrySet()){
+          log.info("Registering {}={}", e.getKey(), e.getValue());
+          kryo.register(e.getKey(), e.getValue());
+        }
+      }
+      
       kryo.register(Map.class, new MapSerializer() {
         protected Map create(Kryo kryo, Input input, java.lang.Class<Map> type) {
           return new HashMap();
@@ -287,11 +306,14 @@ public class VertxRpcUtil {
     public synchronized Buffer writeObjects(Object[] objs) {
       try {
         //log.debug("Using kryo={} to write for {}", kryo, name);
-        final Output output = new Output(new ByteArrayOutputStream());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final Output output = new Output(baos);
         for (int i = 0; i < objs.length; i++)
           kryo.writeClassAndObject(output, objs[i]);
-        return Buffer.buffer(output.toBytes());
+        output.flush();
+        return Buffer.buffer(baos.toByteArray());
       } catch (Throwable t) {
+        log.error("t",t);
         String arrayStr = Arrays.toString(objs);
         log.error("RPC Couldn't write object of type={}; serializing as string instead: {}", objs.getClass(), arrayStr);
         final Output output = new Output(new ByteArrayOutputStream());
@@ -303,21 +325,23 @@ public class VertxRpcUtil {
     public synchronized Buffer writeObject(Object obj) {
       try {
         //log.debug("Using kryo={} to write for {}", kryo, name);
-        final Output output = new Output(new ByteArrayOutputStream());
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final Output output = new Output(baos);
         //log.debug("writeObject: " + obj);
         kryo.writeClassAndObject(output, obj);
 
-//        Object debugCheck=kryo.readClassAndObject(new Input(output.toBytes()));
-//        log.debug("debugCheck: " + debugCheck);
+        //        Object debugCheck=kryo.readClassAndObject(new Input(output.toBytes()));
+        //        log.debug("debugCheck: " + debugCheck);
 
-        return Buffer.buffer(output.toBytes());
+        output.flush();
+        return Buffer.buffer(baos.toByteArray());
       } catch (Throwable t) {
         try {
-          //log.error("t",t);
+          log.error("t",t);
           return writeObject(Json.encode(obj));
         } catch (Throwable t2) {
           // TODO: 6: determine appropriate kryo serializer
-          //log.error("t2",t2);
+          log.error("t2",t2);
           String objStr = obj.toString();
           log.error("RPC Couldn't write object of {}; serializing as string instead: {}", obj.getClass(), objStr);
           return writeObject(objStr);

@@ -27,6 +27,8 @@ public class OperationParam implements Serializable {
   public enum ValuetypeEnum {
     STRING("string"),
     
+    URI("uri"),
+    
     INT("int"),
     
     LONG("long"),
@@ -37,7 +39,9 @@ public class OperationParam implements Serializable {
     
     BOOLEAN("boolean"),
     
-    ENUM("enum");
+    ENUM("enum"),
+    
+    OPERATIONID("operationId");
 
     private String value;
 

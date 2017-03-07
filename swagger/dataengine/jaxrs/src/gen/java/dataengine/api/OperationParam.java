@@ -64,7 +64,9 @@ public class OperationParam  implements Serializable {
     
     BOOLEAN("boolean"),
     
-    ENUM("enum");
+    ENUM("enum"),
+    
+    OPERATIONID("operationId");
 
     private String value;
 

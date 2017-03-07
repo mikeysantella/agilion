@@ -1,17 +1,13 @@
 package dataengine.apis;
 
-import static java.util.stream.Collectors.toList;
-
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public final class OperationUtils {
 
   public static OperationParam removeOperationParam(Operation operation, String paramKey) {
@@ -24,32 +20,19 @@ public final class OperationUtils {
     }
     return null;
   }
-
-  public static void checkForRequiredParams(List<OperationParam> requiredParams, @SuppressWarnings("rawtypes") Map params) {
-    log.debug("requiredParams={}", requiredParams);
-    if (params == null)
-      if (!requiredParams.isEmpty())
-        throw new IllegalArgumentException("Required parameters missing: " +
-            requiredParams.stream().map(OperationParam::getKey).collect(toList()));
-      else
-        return;
   
-    List<OperationParam> missingParams =
-        requiredParams.stream().filter((opParam) -> !params.containsKey(opParam.getKey())).collect(toList());
-    if (!missingParams.isEmpty())
-      throw new IllegalArgumentException("Missing required parameters: " +
-          missingParams.stream().map(OperationParam::getKey).collect(toList()));
-  }
-
-  public static List<OperationParam> getRequiredParams(Operation operation) {
-    return operation.getParams().stream()
-        .filter(OperationParam::getRequired).collect(toList());
-  }
-
-  public static final Map<String, OperationParam> initMap(Operation operation) {
-    Map<String, OperationParam> map = new HashMap<>();
-    operation.getParams().forEach(p -> map.put(p.getKey(), p));
-    return map;
+  static ObjectMapper mapper = new ObjectMapper();
+  public static Operation copy(Operation op){
+    try {
+      byte[] bytes = mapper.writeValueAsBytes(op);
+      return mapper.readValue(bytes, Operation.class);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+//    return new Operation().id(op.getId())
+//        .description(op.getDescription())
+//        .info(new HashMap(op.getInfo()))
+//        ;
   }
 
 }

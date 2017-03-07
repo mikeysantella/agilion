@@ -77,23 +77,23 @@ public class OperationsMerger {
         possValues.addAll(newParam.getPossibleValues());
         param.possibleValues(new ArrayList<>(possValues));
 
-        param.required(pickOne("isRequired", newParam.getRequired(), param.getRequired(), Boolean.TRUE));
+        param.required(pickOne(param.getKey(), "isRequired", newParam.getRequired(), param.getRequired(), Boolean.TRUE));
 
-        param.isMultivalued(pickOne("isMultivalued", newParam.getIsMultivalued(), param.getIsMultivalued(), Boolean.TRUE));
+        param.isMultivalued(pickOne(param.getKey(), "isMultivalued", newParam.getIsMultivalued(), param.getIsMultivalued(), Boolean.TRUE));
 
-        param.valuetype(pickOne("valueType", newParam.getValuetype(), param.getValuetype(), param.getValuetype()));
+        param.valuetype(pickOne(param.getKey(), "valueType", newParam.getValuetype(), param.getValuetype(), param.getValuetype()));
       }
     });
   }
 
-  public static <T> T pickOne(String fieldName, T newObj, T obj, T defaultVal) {
+  public static <T> T pickOne(String paramKey, String fieldName, T newObj, T obj, T defaultVal) {
     if (newObj == null)
       return obj;
     if (obj == null)
       return newObj;
     if (newObj.equals(obj))
       return obj;
-    log.warn("Conflicting '{}' parameter: {} != {}; choosing {}", 
+    log.warn(paramKey+" parameter: conflicting '{}' field: {} != {}; choosing {}", 
         fieldName, newObj, obj, defaultVal);
     return defaultVal;
   }

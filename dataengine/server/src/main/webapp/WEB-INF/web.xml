@@ -24,31 +24,13 @@
     </servlet>
 
     <servlet>
-        <servlet-name>Jersey2Config</servlet-name>
-        <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
-        <init-param>
-            <param-name>api.version</param-name>
-            <param-value>1.0.0</param-value>
-        </init-param>
-        <init-param>
-            <param-name>swagger.api.title</param-name>
-            <param-value>Swagger Server</param-value>
-        </init-param>
-        <init-param>
-            <param-name>swagger.api.basepath</param-name>
-            <param-value>http://virtserver.swaggerhub.com/deelam/DataEngine/0.0.1</param-value>
-        </init-param>
-
-        <load-on-startup>2</load-on-startup>
-    </servlet>
-    <servlet>
         <servlet-name>Bootstrap</servlet-name>
         <servlet-class>dataengine.api.Bootstrap</servlet-class>
         <load-on-startup>2</load-on-startup>
     </servlet>
     <servlet-mapping>
         <servlet-name>jersey</servlet-name>
-        <url-pattern>/deelam/DataEngine/0.0.1/*</url-pattern>
+        <url-pattern>/DataEngine/0.0.3/*</url-pattern>
     </servlet-mapping>
     <filter>
         <filter-name>ApiOriginFilter</filter-name>

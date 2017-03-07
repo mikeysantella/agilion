@@ -13,20 +13,17 @@ import java.util.concurrent.ExecutionException;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 
-import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
+import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
@@ -116,7 +113,7 @@ public class TaskerServiceTest {
     log.info("ops={}", ops);
     try {
       Request req = new Request().sessionId("newSess").label("req1Name")
-          .operationId("addSourceDataset");
+          .operation(new OperationSelection().id("AddSourceDataset"));
       when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
       taskerSvc.submitRequest(req).get();
       fail("Expected exception");
@@ -128,12 +125,11 @@ public class TaskerServiceTest {
   @Test
   public void testSubmitCompleteRequestButWrongEnum() throws InterruptedException, ExecutionException {
     try {
-      Request req = new Request().sessionId("newSess").label("req1Name")
-          .operationId("addSourceDataset");
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
-      req.operationParams(paramValues);
       paramValues.put("inputUri", "hdfs://some/where/");
       paramValues.put("dataFormat", "SOME_UNKNOWN_FORMAT");
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operation(new OperationSelection().id("AddSourceDataset").params(paramValues));
       when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
       taskerSvc.submitRequest(req).get();
       fail("Expected exception");
@@ -145,12 +141,12 @@ public class TaskerServiceTest {
   @Test
   public void testSubmitCompleteRequestButWrongValueType() throws InterruptedException, ExecutionException {
     try {
-      Request req = new Request().sessionId("newSess").label("req1Name")
-          .operationId("addSourceDataset");
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
-      req.operationParams(paramValues);
       paramValues.put("inputUri", "hdfs://some/where/");
       paramValues.put("dataFormat", 123);
+      
+      Request req = new Request().sessionId("newSess").label("req1Name")
+          .operation(new OperationSelection().id("AddSourceDataset").params(paramValues));
       when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
       taskerSvc.submitRequest(req).get();
       fail("Expected exception");
@@ -161,12 +157,12 @@ public class TaskerServiceTest {
 
   @Test
   public void testSubmitCompleteRequest() throws InterruptedException, ExecutionException {
-    Request req = new Request().sessionId("newSess").label("req1Name")
-        .operationId("addSourceDataset");
     HashMap<String, Object> paramValues = new HashMap<String, Object>();
-    req.operationParams(paramValues);
     paramValues.put("inputUri", "hdfs://some/where/");
     paramValues.put("dataFormat", "TELEPHONE.CSV");
+    
+    Request req = new Request().sessionId("newSess").label("req1Name")
+        .operation(new OperationSelection().id("addSourceDataset").params(paramValues));
     when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
 //    when(sessDB.addJob(Matchers.any(Job.class))).thenAnswer(new Answer<CompletableFuture<Job>>() {
 //      @Override

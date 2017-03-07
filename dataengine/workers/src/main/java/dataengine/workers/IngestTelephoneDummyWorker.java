@@ -34,7 +34,7 @@ public class IngestTelephoneDummyWorker extends BaseWorker<Job> {
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
     info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
-    return new Operation().level(1).id(jobType())
+    return new Operation().level(1).id(this.getClass().getSimpleName())
         .description("ingest source dataset")
         .info(info)
         .addParamsItem(new OperationParam()

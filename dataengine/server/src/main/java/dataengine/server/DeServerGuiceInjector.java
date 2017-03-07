@@ -1,5 +1,7 @@
 package dataengine.server;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import com.google.inject.AbstractModule;
@@ -24,6 +26,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.jobboard.DepJobService_I;
+import net.deelam.vertx.rpc.VertxRpcUtil;
 
 @Accessors(fluent = true)
 @Slf4j
@@ -34,10 +37,45 @@ public final class DeServerGuiceInjector {
   @Getter
   static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
 
+  static Injector singleton;
   public static Injector singleton() {
-    return new DeServerGuiceInjector().injector();
+    if(singleton==null)
+      singleton=new DeServerGuiceInjector().injector();
+    return singleton;
   }
 
+  static {
+    Map<Class<?>, Integer> classToIntMap = new HashMap<>();
+    //VertxRpcUtil.KryoSerDe.classRegis=classToIntMap;
+    
+    Class<?>[] classes={
+      dataengine.api.Dataset.class,
+      dataengine.api.Job.class,
+      dataengine.api.Operation.class,
+      dataengine.api.OperationMap.class,
+      dataengine.api.OperationParam.class,
+      dataengine.api.OperationSelection.class,
+      dataengine.api.OperationSelectionMap.class,
+      dataengine.api.Progress.class,
+      dataengine.api.Request.class,
+      dataengine.api.Session.class,
+      dataengine.api.State.class,
+      java.net.URI.class,
+      java.util.ArrayList.class,
+      java.util.HashMap.class,
+      java.util.LinkedHashMap.class,
+      net.deelam.vertx.jobboard.JobDTO.class,
+      Object[].class,
+      String[].class,
+      java.time.OffsetDateTime.class,
+      dataengine.api.OperationParam.ValuetypeEnum.class,
+    };
+
+    for(int i=0; i<classes.length; ++i)
+      classToIntMap.put(classes[i], 100+i);
+    
+  }
+  
   @Getter
   final Injector injector;
 

@@ -11,6 +11,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import dataengine.api.Job;
+import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.apis.SessionsDB_I;
@@ -40,7 +41,8 @@ public class SessionDB_JobsTest {
     Session session = new Session().id("newSess").label("name 1");
     sess.createSession(session);
     {
-      Request req = new Request().sessionId("newSess").id("req1").label("req1Name");
+      Request req = new Request().sessionId("newSess").id("req1").label("req1Name")
+          .operation(new OperationSelection().id("myOp"));
       Request req2 = sess.addRequest(req).get();
     }
     {
