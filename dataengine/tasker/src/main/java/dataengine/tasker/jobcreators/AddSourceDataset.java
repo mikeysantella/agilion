@@ -81,6 +81,11 @@ public class AddSourceDataset extends AbstractJobCreator {
     checkArgument(opW.getOperation().getId().equals(selection.getId()), "Operation.id does not match!");
     opW.convertParamValues(selection);
 
+    
+    Job job0 = new Job().id(req.getId() + "-" + req.getLabel() + ".job0-preRequest")
+        .type(OperationConsts.TYPE_PREREQUEST)
+        .requestId(req.getId())
+        .label("Post-request " + req.getId() + ":" + req.getLabel());
     Job job1 = new Job().id(getJobIdPrefix(req) + ".job1-ingest")
         .type(OperationConsts.TYPE_INGESTER)
         .requestId(req.getId())
@@ -118,7 +123,8 @@ public class AddSourceDataset extends AbstractJobCreator {
     }
 
     return Lists.newArrayList(
-        new JobEntry(job1, priorJobIds.toArray(new String[priorJobIds.size()])),
+        new JobEntry(job0, priorJobIds.toArray(new String[priorJobIds.size()])),
+        new JobEntry(job1, job0.getId()),
         new JobEntry(job2, job1.getId()),
         new JobEntry(job3, job1.getId()));
   }

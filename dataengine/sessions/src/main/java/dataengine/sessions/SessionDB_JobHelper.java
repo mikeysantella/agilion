@@ -168,16 +168,15 @@ public final class SessionDB_JobHelper {
       // check state transition is valid in case msg received out of order
       switch(state){
         case CREATED:
-          log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+          log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());
           break;
         case RUNNING:
           switch(jf.getState()){
             case CREATED:
               jf.setState(state);
-              jf.getRequest().setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());
               break;
           }
           break;
@@ -186,10 +185,9 @@ public final class SessionDB_JobHelper {
             case CREATED:
             case RUNNING:
               jf.setState(state);
-              jf.getRequest().setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());
               break;
           }
           break;
@@ -198,10 +196,9 @@ public final class SessionDB_JobHelper {
             case CREATED:
             case RUNNING:
               jf.setState(state);
-              jf.getRequest().setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());
               break;
           }
           break;
@@ -210,16 +207,15 @@ public final class SessionDB_JobHelper {
             case CREATED:
             case RUNNING:
               jf.setState(state);
-              // request may not be complete if other jobs are not complete
-              // request.state=COMPLETE is set when post-request job runs
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());
               break;
           }
           break;
+        default:
+          log.error("For {}, state={} doesn't match any cases; IGNORING", jobId, state);
       }
-      jf.setState(state);
     });
   }
 

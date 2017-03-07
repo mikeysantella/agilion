@@ -130,7 +130,10 @@ public class MySessionApiServiceTest {
             throw new RuntimeException("Job failed: "+job.getId());
         }
       }
+      
+      
       Thread.sleep(2000);
+      System.out.println(reqsApi.getRequest(req3.getId()));
       System.out.println(sessApi.listSessionNames());
       System.out.println(sessApi.listSessions());
       System.out.println(reqsApi.listOperations());

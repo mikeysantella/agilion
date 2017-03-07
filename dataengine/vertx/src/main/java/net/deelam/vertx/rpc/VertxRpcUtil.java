@@ -23,7 +23,9 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -75,51 +77,18 @@ public class VertxRpcUtil {
             final Buffer buffer = (method.getParameterTypes().length > 0) ? serde.writeObjects(args) : null;
             final Class<?> returnType = method.getReturnType();
             if (returnType == void.class) {
+              final CompletableFuture<Object> resultF = new CompletableFuture<>();
               context.runOnContext(v -> {
                 if (method.getName().startsWith("publish"))
                   vertx.eventBus().publish(address, buffer, options);
                 else
-                  vertx.eventBus().send(address, buffer, options);
+                  vertx.eventBus().send(address, buffer, options, resultHandler(serde, methodId, resultF));
               });
-              return null;
+              return resultF;
             } else if (returnType.isAssignableFrom(CompletableFuture.class)) {
               final CompletableFuture<Object> resultF = new CompletableFuture<>();
               context.runOnContext(v -> {
-                vertx.eventBus().<Buffer>send(address, buffer, options, r -> {
-                  if (r.failed()) {
-                    if (hook != null)
-                      hook.clientCallFailed(methodId, r.cause());
-                    resultF.completeExceptionally(r.cause());
-                  } else {
-                    Message<Buffer> msg = r.result();
-                    if (msg == null) {
-                      if (hook != null)
-                        hook.clientReceivedVoid(methodId);
-                      resultF.complete(null);
-                    } else {
-                      String exceptionStr = r.result().headers().get(EXCEPTION);
-                      try {
-                        Object result = serde.readObject(msg.body());
-                        if (exceptionStr != null) {
-                          Throwable throwable = (result instanceof Throwable)
-                              ? (Throwable) result
-                              : new RuntimeException((result == null)
-                                  ? exceptionStr : result.toString());
-                          if (hook != null)
-                            hook.clientReceivedThrowable(methodId, throwable);
-                          resultF.completeExceptionally(throwable);
-                        } else {
-                          if (hook != null)
-                            hook.clientReceivesResult(methodId, result);
-                          resultF.complete(result);
-                        }
-                      } catch (Throwable e) {
-                        log.error("RPC client-side error: cannot read msg body for {}:", methodId, e);
-                        resultF.completeExceptionally(new RuntimeException("Cannot read msg body for " + methodId));
-                      }
-                    }
-                  }
-                });
+                vertx.eventBus().<Buffer>send(address, buffer, options, resultHandler(serde, methodId, resultF));
               });
               return resultF;
             } else {
@@ -131,6 +100,45 @@ public class VertxRpcUtil {
             return null;
           }
         });
+  }
+
+  private Handler<AsyncResult<Message<Buffer>>> resultHandler(final KryoSerDe serde, final String methodId,
+      final CompletableFuture<Object> resultF) {
+    return r -> {
+      if (r.failed()) {
+        if (hook != null)
+          hook.clientCallFailed(methodId, r.cause());
+        resultF.completeExceptionally(r.cause());
+      } else {
+        Message<Buffer> msg = r.result();
+        if (msg == null) {
+          if (hook != null)
+            hook.clientReceivedVoid(methodId);
+          resultF.complete(null);
+        } else {
+          String exceptionStr = r.result().headers().get(EXCEPTION);
+          try {
+            Object result = serde.readObject(msg.body());
+            if (exceptionStr != null) {
+              Throwable throwable = (result instanceof Throwable)
+                  ? (Throwable) result
+                  : new RuntimeException((result == null)
+                      ? exceptionStr : result.toString());
+              if (hook != null)
+                hook.clientReceivedThrowable(methodId, throwable);
+              resultF.completeExceptionally(throwable);
+            } else {
+              if (hook != null)
+                hook.clientReceivesResult(methodId, result);
+              resultF.complete(result);
+            }
+          } catch (Throwable e) {
+            log.error("RPC client-side error: cannot read msg body for {}:", methodId, e);
+            resultF.completeExceptionally(new RuntimeException("Cannot read msg body for " + methodId));
+          }
+        }
+      }
+    };
   }
 
   public <T> CompletableFuture<MessageConsumer<Buffer>> registerServer(T service) {
@@ -180,6 +188,14 @@ public class VertxRpcUtil {
                   r.reply(serde.writeObject(e), options);
                 }
               });
+            } else if (result==null){
+              if (method.getName().startsWith("publish")){
+                // don't reply
+              } else {
+                r.reply(serde.writeObject(null));
+              }
+            } else {
+              log.error("?What to do with non-CompletableFuture result: {}", result);
             }
           } catch (InvocationTargetException ex) {
             Throwable e = (ex.getCause() == null) ? ex : ex.getCause();
