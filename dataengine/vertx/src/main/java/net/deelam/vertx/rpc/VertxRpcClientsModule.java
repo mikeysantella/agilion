@@ -33,7 +33,7 @@ public class VertxRpcClientsModule extends AbstractModule {
     }
   }
 
-  protected final boolean debug = false;
+  protected boolean debug = false;
 
 
   // For Guice, cannot block waiting for server side to come up, so returns a Supplier instead.

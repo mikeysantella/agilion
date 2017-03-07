@@ -143,7 +143,7 @@ public final class SessionDB_RequestHelper {
       // check state transition is valid in case msg received out of order
       switch(state){
         case CREATED:
-          log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+          log.warn("For {}, not expecting state={} from current state={}; IGNORING", reqId, state, rf.getState());
           break;
         case RUNNING:
           switch(rf.getState()){
@@ -151,7 +151,7 @@ public final class SessionDB_RequestHelper {
               rf.setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", reqId, state, rf.getState());
               break;
           }
           break;
@@ -162,7 +162,7 @@ public final class SessionDB_RequestHelper {
               rf.setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", reqId, state, rf.getState());
               break;
           }
           break;
@@ -173,7 +173,7 @@ public final class SessionDB_RequestHelper {
               rf.setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", reqId, state, rf.getState());
               break;
           }
           break;
@@ -184,12 +184,13 @@ public final class SessionDB_RequestHelper {
               rf.setState(state);
               break;
             default:
-              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              log.warn("For {}, not expecting state={} from current state={}; IGNORING", reqId, state, rf.getState());
               break;
           }
           break;
+        default:
+          log.error("For {}, state={} doesn't match any cases; IGNORING", reqId, state);
       }
-      rf.setState(state);
     });
   }
   

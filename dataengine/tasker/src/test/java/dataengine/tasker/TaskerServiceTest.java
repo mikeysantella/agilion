@@ -128,6 +128,7 @@ public class TaskerServiceTest {
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
       paramValues.put("inputUri", "hdfs://some/where/");
       paramValues.put("dataFormat", "SOME_UNKNOWN_FORMAT");
+      paramValues.put("ingesterWorker", "IngestTelephoneDummyWorker");
       Request req = new Request().sessionId("newSess").label("req1Name")
           .operation(new OperationSelection().id("AddSourceDataset").params(paramValues));
       when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
@@ -144,6 +145,7 @@ public class TaskerServiceTest {
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
       paramValues.put("inputUri", "hdfs://some/where/");
       paramValues.put("dataFormat", 123);
+      paramValues.put("ingesterWorker", "IngestTelephoneDummyWorker");
       
       Request req = new Request().sessionId("newSess").label("req1Name")
           .operation(new OperationSelection().id("AddSourceDataset").params(paramValues));

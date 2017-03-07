@@ -164,68 +164,68 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Boolean> hasSession(String id) {
-    log.debug("SERV: hasSession: {}", id);
+    log.info("SERV: hasSession: {}", id);
     return CompletableFuture.completedFuture(sessDB.hasSession(id));
   }
 
   @Override
   public CompletableFuture<Boolean> hasRequest(String id) {
-    log.debug("SERV: hasRequest: {}", id);
+    log.info("SERV: hasRequest: {}", id);
     return CompletableFuture.completedFuture(sessDB.hasRequest(id));
   }
 
   @Override
   public CompletableFuture<Session> getSession(String id) {
-    log.debug("SERV: getSession: {}", id);
+    log.info("SERV: getSession: {}", id);
     return CompletableFuture.completedFuture(SessionDB_SessionHelper.toSession(sessDB.getSessionFrame(id)));
   }
 
   @Override
   public CompletableFuture<Request> getRequest(String id) {
-    log.debug("SERV: getRequest: {}", id);
+    log.info("SERV: getRequest: {}", id);
     return CompletableFuture.completedFuture(SessionDB_RequestHelper.toRequest(sessDB.getRequestFrame(id)));
   }
 
   @Override
   public CompletableFuture<Job> getJob(String id) {
-    log.debug("SERV: getJob: {}", id);
+    log.info("SERV: getJob: {}", id);
     return CompletableFuture.completedFuture(SessionDB_JobHelper.toJob(sessDB.getJobFrame(id)));
   }
 
   @Override
   public CompletableFuture<String> getLastJobIdOfRequest(String requestId){
-    log.debug("SERV: getLastJobId: {}", requestId);
+    log.info("SERV: getLastJobId: {}", requestId);
     return CompletableFuture.completedFuture(sessDB.getLastJobIdOf(requestId));
   }
   
   @Override
   public CompletableFuture<Dataset> getDataset(String id) {
-    log.debug("SERV: getDataset: {}", id);
+    log.info("SERV: getDataset: {}", id);
     return CompletableFuture.completedFuture(SessionDB_DatasetHelper.toDataset(sessDB.getDatasetFrame(id)));
   }
   
   @Override
   public CompletableFuture<Void> setJobParam(String jobId, String key, Object value){
-    log.debug("SERV: setJobParam of {}: {}={}", jobId, key, value);
+    log.info("SERV: setJobParam of {}: {}={}", jobId, key, value);
     sessDB.setJobParam(jobId, key, value);;
     return CompletableFuture.completedFuture(null);
   }
 
   @Override
   public void updateRequestState(String reqId, State state) {
-    log.debug("SERV: updateRequestState: {} to {}", reqId, state);
+    log.info("SERV: updateRequestState: {} to {}", reqId, state);
     sessDB.updateRequestState(reqId, state);
   }
 
   @Override
   public void updateJobState(String jobId, State state) {
-    log.debug("SERV: updateJobState: {} to {}", jobId, state);
+    log.info("SERV: updateJobState: {} to {}", jobId, state);
     sessDB.updateJobState(jobId, state);
   }
 
   @Override
   public void updateJobProgress(String jobId, Progress progress) {
-    log.debug("SERV: updateJobProgress: {} to {}", jobId, progress);
+    log.info("SERV: updateJobProgress: {} to {}", jobId, progress);
     sessDB.updateJobProgress(jobId, progress);
   }
 

@@ -33,6 +33,7 @@ public class WorkerMain {
     DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
     BaseWorker<?>[] hiddenWorkers = {
+        injector.getInstance(PreRequestWorker.class),        
         injector.getInstance(PostRequestWorker.class)        
     };
     for(BaseWorker<?> worker:hiddenWorkers)    {

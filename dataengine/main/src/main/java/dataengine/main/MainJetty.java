@@ -48,10 +48,12 @@ public class MainJetty {
     injectVertx(runInSingleJVM);
 
     MainJetty main = new MainJetty();
-    Server jettyServer = main.startServer(8080, 8083,
-        // this contextPath mimics gretty's default behavior
-        "/main" // gretty uses the project name
-            + "/DataEngine/0.0.2", // matches the path in web.xml
+    
+    // this contextPath mimics gretty's default behavior
+    String contextPath="/main" // gretty uses the project name
+        + "/DataEngine/0.0.3"; // matches the path in web.xml
+        
+    Server jettyServer = main.startServer(8080, 8083, contextPath,
         null, null, false); // TODO: 4: enable SSL
 
     try {
