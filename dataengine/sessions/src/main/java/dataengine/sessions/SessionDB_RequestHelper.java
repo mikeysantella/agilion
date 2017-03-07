@@ -3,14 +3,19 @@ package dataengine.sessions;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
+import static net.deelam.graph.GrafTxn.tryCAndCloseTxn;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
 import dataengine.api.Request;
+import dataengine.api.State;
 import dataengine.sessions.frames.DatasetFrame;
+import dataengine.sessions.frames.JobFrame;
 import dataengine.sessions.frames.RequestFrame;
 import dataengine.sessions.frames.SessionFrame;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +40,6 @@ public final class SessionDB_RequestHelper {
 
   static int requestCounter = 0;
 
-  // TODO: 1: add priorRequests
   public void addRequestNode(Request request) {
     log.debug("addRequestNode: {}", request.getId());
     tryAndCloseTxn(graph, graph -> {
@@ -61,6 +65,19 @@ public final class SessionDB_RequestHelper {
 //        for(OperationSelection op:request.getOperations()){
 //          rf.addOperation(opsHelper.addOperationNode(rf.getNodeId()+"."+op.getId(), op));
 //        };
+        
+        if(request.getPriorRequestIds()!=null){
+          Set<String> exitingPriorReq=new HashSet<>();
+          rf.getPriorRequests().forEach(pRF->exitingPriorReq.add(pRF.getNodeId()));
+          for(String priorReqId:request.getPriorRequestIds()){
+            if(exitingPriorReq.add(priorReqId)){
+              RequestFrame priorReq = getRequestFrame(priorReqId);
+              rf.addPriorRequest(priorReq);
+            }else{
+              log.debug("Skipping existing prior request: {}"+ priorReqId);
+            }
+          }
+        }
 
         if (request.getJobs() != null && request.getJobs().size() > 0)
           log.warn("Ignoring jobs -- expecting jobs to be empty: {}", request);
@@ -87,7 +104,15 @@ public final class SessionDB_RequestHelper {
         .createdTime((rf.getCreatedDate()))
         .state(rf.getState())
         .operation(SessionDB_OperationHelper.toOperationSelection(rf.getOperation()))
+        .priorRequestIds(toRequestIds(rf.getPriorRequests()))
         .jobs(SessionDB_JobHelper.toJobs(rf.getJobs()));
+  }
+
+  static List<String> toRequestIds(Iterable<RequestFrame> requests) {
+    return stream(requests.spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator)
+        .map(req -> req.getNodeId())
+        .collect(toList());
   }
 
   static List<Request> toRequests(Iterable<RequestFrame> requests) {
@@ -97,5 +122,75 @@ public final class SessionDB_RequestHelper {
         .collect(toList());
   }
 
+  public String getLastJobIdOf(String requestId) {
+    RequestFrame rf = getRequestFrame(requestId);
+    return getLastJobId(rf.getJobs());
+  }
+  
+  // assumes last job added is the last to be completed for the request to complete
+  static String getLastJobId(Iterable<JobFrame> jobs) {
+    return stream(jobs.spliterator(),false)
+        .sorted(SessionDB_FrameHelper.createdTimeComparator)
+        .map(job -> job.getNodeId())
+        .reduce((a, b) -> b).orElse(null); // return the last element
+  }
 
+  public void updateRequestState(String reqId, State state) {
+    tryCAndCloseTxn(graph, graph -> {
+      RequestFrame rf = getRequestFrame(reqId);
+      if(rf.getState().equals(state))
+        return;
+      // check state transition is valid in case msg received out of order
+      switch(state){
+        case CREATED:
+          log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+          break;
+        case RUNNING:
+          switch(rf.getState()){
+            case CREATED:
+              rf.setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              break;
+          }
+          break;
+        case CANCELLED:
+          switch(rf.getState()){
+            case CREATED:
+            case RUNNING:
+              rf.setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              break;
+          }
+          break;
+        case FAILED:
+          switch(rf.getState()){
+            case CREATED:
+            case RUNNING:
+              rf.setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              break;
+          }
+          break;
+        case COMPLETED:
+          switch(rf.getState()){
+            case CREATED:
+            case RUNNING:
+              rf.setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, rf.getState());
+              break;
+          }
+          break;
+      }
+      rf.setState(state);
+    });
+  }
+  
 }

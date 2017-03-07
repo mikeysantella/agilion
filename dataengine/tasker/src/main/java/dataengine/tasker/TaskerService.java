@@ -1,5 +1,6 @@
 package dataengine.tasker;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,6 @@ public class TaskerService implements Tasker_I {
 
     jc.checkValidity(req); // throw exception
       
-    // TODO: 1: add priorRequests
     CompletableFuture<Request> f = sessDb.rpc().addRequest(req)
         .thenCompose((addedReq) -> submitJobs(addedReq, jc));
     return f;
@@ -55,28 +55,55 @@ public class TaskerService implements Tasker_I {
 
   private CompletableFuture<Request> submitJobs(Request addedReq, JobsCreator jc) {
     log.info("  submitJobs for: {}", addedReq);
-    // add job(s) to request and submit job(s)
-    List<JobEntry> jobs = jc.createFrom(addedReq);
+    
+    // get last jobs of prior requests
+    CompletableFuture<List<String>> priorJobIdsF = getLastJobsOfRequests(addedReq.getPriorRequestIds());
 
-    CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);
-    for (JobEntry jobE : jobs) {
-      log.info("    adding new job " + jobE.job().getId());
-      // add job to sessionsDB and submit to jobDispatcher
-      addJobsChainF = addJobsChainF.thenCompose((isAdded) -> {
+    return priorJobIdsF.thenCompose(priorJobIds->{
+      // add job(s) to request and submit job(s)
+      List<JobEntry> jobs = jc.createFrom(addedReq, priorJobIds);
+      
+      CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);
+      for (JobEntry jobE : jobs) {
+        log.info("    adding new job " + jobE.job().getId());
+        // add job to sessionsDB and submit to jobDispatcher
+        addJobsChainF = addJobsChainF.thenCompose((isAdded) -> {
+          if (isAdded)
+            return addJob(jobE.job, jobE.inputJobIds);
+          else
+            throw new IllegalStateException(
+                "Previous job was not added!  Not continuing to add job: " + jobE.job.getId());
+        });
+      }
+      return addJobsChainF.thenCompose((isAdded) -> {
         if (isAdded)
-          return addJob(jobE.job, jobE.inputJobIds);
+          return sessDb.rpc().getRequest(addedReq.getId());
         else
           throw new IllegalStateException(
-              "Previous job was not added!  Not continuing to add job: " + jobE.job.getId());
+              "Last job was not added!");
       });
-    }
-    return addJobsChainF.thenCompose((isAdded) -> {
-      if (isAdded)
-        return sessDb.rpc().getRequest(addedReq.getId());
-      else
-        throw new IllegalStateException(
-            "Last job was not added!");
     });
+  }
+
+  /*
+    List<CompletableFuture<String>> lastJobIdsF = stream(requestIds.spliterator(), false)
+        .map(priorReqId -> sessDb.rpc().getLastJobIdOfRequest(priorReqId))
+        .collect(toList());
+    
+    lastJobIdsF.forEach(f->{
+      
+    });  
+   */
+  private CompletableFuture<List<String>> getLastJobsOfRequests(List<String> requestIds) {
+    CompletableFuture<List<String>> f= CompletableFuture.completedFuture(new ArrayList<>());
+    for(String priorReqId:requestIds){
+      f = f.thenCombine(sessDb.rpc().getLastJobIdOfRequest(priorReqId), (list, jobId) -> {
+        if(jobId!=null)
+          list.add(jobId);
+        return list;
+      });
+    };
+    return f;
   }
 
   private final List<JobsCreator> jobCreators; 

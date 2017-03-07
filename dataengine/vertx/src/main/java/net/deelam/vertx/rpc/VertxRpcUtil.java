@@ -23,9 +23,10 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
 
+import io.vertx.core.Context;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.Json;
@@ -39,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class VertxRpcUtil {
-  final EventBus eventBus;
+  final Vertx vertx;
   final String address;
 
   @Setter
@@ -54,6 +55,7 @@ public class VertxRpcUtil {
     log.debug("Creating RPC client for {} at {} ", iface.getSimpleName(), address);
     final HashMap<Method, String> methods = new HashMap<>();
     final KryoSerDe serde = new KryoSerDe(address + "-client");
+    final Context context = vertx.getOrCreateContext();
     return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[] {iface},
         (proxy, method, args) -> {
           if ("toString".equals(method.getName())) {
@@ -69,54 +71,55 @@ public class VertxRpcUtil {
             final String methodId = methodIdTemp;
             if (hook != null)
               hook.clientSendsCall(methodId, args);
-            DeliveryOptions options = new DeliveryOptions().addHeader(HEADER_METHOD_ID, methodId);
-            Buffer buffer = null;
-            if (method.getParameterTypes().length > 0)
-              buffer = serde.writeObjects(args);
-
+            final DeliveryOptions options = new DeliveryOptions().addHeader(HEADER_METHOD_ID, methodId);
+            final Buffer buffer = (method.getParameterTypes().length > 0) ? serde.writeObjects(args) : null;
             final Class<?> returnType = method.getReturnType();
             if (returnType == void.class) {
-              if (method.getName().startsWith("publish"))
-                eventBus.publish(address, buffer, options);
-              else
-                eventBus.send(address, buffer, options);
+              context.runOnContext(v -> {
+                if (method.getName().startsWith("publish"))
+                  vertx.eventBus().publish(address, buffer, options);
+                else
+                  vertx.eventBus().send(address, buffer, options);
+              });
               return null;
             } else if (returnType.isAssignableFrom(CompletableFuture.class)) {
               final CompletableFuture<Object> resultF = new CompletableFuture<>();
-              eventBus.<Buffer>send(address, buffer, options, r -> {
-                if (r.failed()) {
-                  if (hook != null)
-                    hook.clientCallFailed(methodId, r.cause());
-                  resultF.completeExceptionally(r.cause());
-                } else {
-                  Message<Buffer> msg = r.result();
-                  if (msg == null) {
+              context.runOnContext(v -> {
+                vertx.eventBus().<Buffer>send(address, buffer, options, r -> {
+                  if (r.failed()) {
                     if (hook != null)
-                      hook.clientReceivedVoid(methodId);
-                    resultF.complete(null);
+                      hook.clientCallFailed(methodId, r.cause());
+                    resultF.completeExceptionally(r.cause());
                   } else {
-                    String exceptionStr = r.result().headers().get(EXCEPTION);
-                    try {
-                      Object result = serde.readObject(msg.body());
-                      if (exceptionStr != null) {
-                        Throwable throwable = (result instanceof Throwable)
-                            ? (Throwable) result
-                            : new RuntimeException((result == null)
-                                ? exceptionStr : result.toString());
-                        if (hook != null)
-                          hook.clientReceivedThrowable(methodId, throwable);
-                        resultF.completeExceptionally(throwable);
-                      } else {
-                        if (hook != null)
-                          hook.clientReceivesResult(methodId, result);
-                        resultF.complete(result);
+                    Message<Buffer> msg = r.result();
+                    if (msg == null) {
+                      if (hook != null)
+                        hook.clientReceivedVoid(methodId);
+                      resultF.complete(null);
+                    } else {
+                      String exceptionStr = r.result().headers().get(EXCEPTION);
+                      try {
+                        Object result = serde.readObject(msg.body());
+                        if (exceptionStr != null) {
+                          Throwable throwable = (result instanceof Throwable)
+                              ? (Throwable) result
+                              : new RuntimeException((result == null)
+                                  ? exceptionStr : result.toString());
+                          if (hook != null)
+                            hook.clientReceivedThrowable(methodId, throwable);
+                          resultF.completeExceptionally(throwable);
+                        } else {
+                          if (hook != null)
+                            hook.clientReceivesResult(methodId, result);
+                          resultF.complete(result);
+                        }
+                      } catch (Throwable e) {
+                        log.error("RPC client-side error: cannot read msg body for {}:", methodId, e);
+                        resultF.completeExceptionally(new RuntimeException("Cannot read msg body for " + methodId));
                       }
-                    } catch (Throwable e) {
-                      log.error("RPC client-side error: cannot read msg body for {}:", methodId, e);
-                      resultF.completeExceptionally(new RuntimeException("Cannot read msg body for " + methodId));
                     }
                   }
-                }
+                });
               });
               return resultF;
             } else {
@@ -130,7 +133,7 @@ public class VertxRpcUtil {
         });
   }
 
-  public <T> MessageConsumer<Buffer> registerServer(T service) {
+  public <T> CompletableFuture<MessageConsumer<Buffer>> registerServer(T service) {
     log.debug("Registering RPC server at {}: {}", address, service.getClass().getName());
     HashMap<String, Method> methods = new HashMap<>();
     for (Method method : service.getClass().getDeclaredMethods()) {
@@ -140,7 +143,9 @@ public class VertxRpcUtil {
     CompletableFuture<MessageConsumer<Buffer>> msgConsumerF = new CompletableFuture<>();
     //new Thread(()->{
     final KryoSerDe serde = new KryoSerDe(address + "-service");
-    MessageConsumer<Buffer> msgConsumer = eventBus.<Buffer>consumer(address, r -> {
+//    final Context context = vertx.getOrCreateContext();
+//    context.runOnContext(v->{
+    MessageConsumer<Buffer> msgConsumer = vertx.eventBus().<Buffer>consumer(address, r -> {
       try {
         String methodId = r.headers().get(HEADER_METHOD_ID);
         if (!methods.containsKey(methodId)) {
@@ -198,8 +203,8 @@ public class VertxRpcUtil {
       }
     });
     msgConsumerF.complete(msgConsumer);
-    //}, "VertxRpcUtil-service-thread:"+address+":"+service.getClass().getName()).start();
-    return msgConsumerF.join();
+//    });
+    return msgConsumerF;
   }
 
   // Doesn't work with varargs
@@ -213,8 +218,9 @@ public class VertxRpcUtil {
   }
 
   static {
-    com.esotericsoftware.minlog.Log.TRACE();
+    //com.esotericsoftware.minlog.Log.TRACE();
   }
+
   /**
    * Reminder: Do NOT use varargs as parameters to RPC methods.
    * Doing so causes Kyro to fail, due to wrong parameter count, due to wrong method selection.
@@ -222,8 +228,8 @@ public class VertxRpcUtil {
   public static final class KryoSerDe {
     Kryo kryo;
     final String name;
-    
-    public static Map<Class<?>,Integer> classRegis;
+
+    public static Map<Class<?>, Integer> classRegis;
 
     public KryoSerDe(String name) {
       this.name = name;
@@ -233,14 +239,14 @@ public class VertxRpcUtil {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private Kryo newKryo() {
       Kryo kryo = new Kryo();
-      if(classRegis!=null){
+      if (classRegis != null) {
         kryo.setRegistrationRequired(true);
-        for(Entry<Class<?>, Integer> e:classRegis.entrySet()){
+        for (Entry<Class<?>, Integer> e : classRegis.entrySet()) {
           log.info("Registering {}={}", e.getKey(), e.getValue());
           kryo.register(e.getKey(), e.getValue());
         }
       }
-      
+
       kryo.register(Map.class, new MapSerializer() {
         protected Map create(Kryo kryo, Input input, java.lang.Class<Map> type) {
           return new HashMap();
@@ -313,7 +319,7 @@ public class VertxRpcUtil {
         output.flush();
         return Buffer.buffer(baos.toByteArray());
       } catch (Throwable t) {
-        log.error("t",t);
+        log.error("t", t);
         String arrayStr = Arrays.toString(objs);
         log.error("RPC Couldn't write object of type={}; serializing as string instead: {}", objs.getClass(), arrayStr);
         final Output output = new Output(new ByteArrayOutputStream());
@@ -337,11 +343,11 @@ public class VertxRpcUtil {
         return Buffer.buffer(baos.toByteArray());
       } catch (Throwable t) {
         try {
-          log.error("t",t);
+          log.error("t", t);
           return writeObject(Json.encode(obj));
         } catch (Throwable t2) {
           // TODO: 6: determine appropriate kryo serializer
-          log.error("t2",t2);
+          log.error("t2", t2);
           String objStr = obj.toString();
           log.error("RPC Couldn't write object of {}; serializing as string instead: {}", obj.getClass(), objStr);
           return writeObject(objStr);

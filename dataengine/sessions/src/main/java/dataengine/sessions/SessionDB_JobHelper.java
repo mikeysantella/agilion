@@ -162,17 +162,78 @@ public final class SessionDB_JobHelper {
 
   public void updateJobState(String jobId, State state) {
     tryCAndCloseTxn(graph, graph -> {
-      // TODO: 1. check state transition is valid in case msg received out of order
-      getJobFrame(jobId).setState(state);
-      // TOOD: 1. if all jobs for the request is complete, set request state to complete
-      });
+      JobFrame jf = getJobFrame(jobId);
+      if(jf.getState().equals(state))
+        return;
+      // check state transition is valid in case msg received out of order
+      switch(state){
+        case CREATED:
+          log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+          break;
+        case RUNNING:
+          switch(jf.getState()){
+            case CREATED:
+              jf.setState(state);
+              jf.getRequest().setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              break;
+          }
+          break;
+        case CANCELLED:
+          switch(jf.getState()){
+            case CREATED:
+            case RUNNING:
+              jf.setState(state);
+              jf.getRequest().setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              break;
+          }
+          break;
+        case FAILED:
+          switch(jf.getState()){
+            case CREATED:
+            case RUNNING:
+              jf.setState(state);
+              jf.getRequest().setState(state);
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              break;
+          }
+          break;
+        case COMPLETED:
+          switch(jf.getState()){
+            case CREATED:
+            case RUNNING:
+              jf.setState(state);
+              // request may not be complete if other jobs are not complete
+              // request.state=COMPLETE is set when post-request job runs
+              break;
+            default:
+              log.warn("Not expecting state={} from current state={}; IGNORING", state, jf.getState());
+              break;
+          }
+          break;
+      }
+      jf.setState(state);
+    });
   }
 
   public void updateJobProgress(String jobId, Progress progress) {
     tryCAndCloseTxn(graph, graph -> {
       JobFrame jf = getJobFrame(jobId);
-      // TODO: 1. check percent is monotonically increasing in case msg received out of order
-      jf.setProgress(progress.getPercent());
+      // check percent is monotonically increasing in case msg received out of order
+      if(jf.getProgress()<progress.getPercent())
+        jf.setProgress(progress.getPercent());
+      else if(jf.getProgress()>progress.getPercent()){
+        log.warn("Ignoring setting a lower progress percent={} than existing={}", 
+            progress.getPercent(), jf.getProgress());
+      }
+        
       if (progress.getStats() != null)
         SessionDB_FrameHelper.saveMapAsProperties(progress.getStats(),
             jf.asVertex(), JOB_STATS_PROPPREFIX);

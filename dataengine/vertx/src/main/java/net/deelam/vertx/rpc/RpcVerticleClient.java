@@ -80,7 +80,7 @@ public class RpcVerticleClient {
    */
   <T> T createRpcClient(CompletableFuture<String> serverAddrF, Class<T> clazz, boolean withDebugHook) {
     String serverAddr = waiter.awaitServiceAddress();
-    VertxRpcUtil rpc=new VertxRpcUtil(vertx.eventBus(), serverAddr);
+    VertxRpcUtil rpc=new VertxRpcUtil(vertx, serverAddr);
     if (withDebugHook)
       rpc.setHook(new DebugRpcHook(clazz.getSimpleName()));
     return rpc.createClient(clazz);

@@ -3,6 +3,7 @@ package dataengine.api;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,13 @@ public class MySessionApiServiceTest {
     System.out.println("Using baseUri="+baseUri);
     MySessionApiServiceTest me = new MySessionApiServiceTest(baseUri);
     me.testSessionsApi();
-    me.testRequestsApi();
+    
+    List<String> priorReqIds=new ArrayList<>();
+    Request req1=me.testRequestsApi(null);   
+    priorReqIds.add(req1.getId());
+    Request req2=me.testRequestsApi(priorReqIds);
+    priorReqIds.add(req2.getId());
+    Request req3=me.testRequestsApi(priorReqIds);
   }
 
   final SessionsApi sessApi;
@@ -70,7 +77,7 @@ public class MySessionApiServiceTest {
   }
 
   @Test
-  public void testRequestsApi() throws ApiException, InterruptedException {
+  public Request testRequestsApi(List<String> priorRequestIds) throws ApiException, InterruptedException {
     List<Operation> ops = reqsApi.listOperations();
     System.out.println(ops);
     
@@ -97,6 +104,7 @@ public class MySessionApiServiceTest {
           .operation(new OperationSelection().id("AddSourceDataset").params(addSrcDatasetParamValues)
               .subOperationSelections(subOperationSelections)
               );
+      req.setPriorRequestIds(priorRequestIds);
 
       Request req2 = reqsApi.submitRequest(req);
       String reqId = req2.getId();
@@ -126,6 +134,8 @@ public class MySessionApiServiceTest {
       System.out.println(sessApi.listSessionNames());
       System.out.println(sessApi.listSessions());
       System.out.println(reqsApi.listOperations());
+      
+      return req3;
     }
   }
 

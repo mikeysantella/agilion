@@ -12,11 +12,11 @@ public class DebugRpcHook implements RpcHook {
   final String iface;
 
   public void clientSendsCall(String methodId, Object[] args) {
-    log.debug("rpcClientSendsCall to {}: {}: {}", iface, methodId, Arrays.toString(args));
+    log.debug("rpcClientSendsCall to {}: {}: {}", iface, methodId, Arrays.deepToString(args));
   }
 
   public void serverReceivesCall(String methodId, Object[] args) {
-    log.debug("{} rpcServerReceivesCall: {}: {}", iface, methodId, Arrays.toString(args));
+    log.debug("{} rpcServerReceivesCall: {}: {}", iface, methodId, Arrays.deepToString(args));
   }
 
   public void serverReplies(String methodId, Object result) {
