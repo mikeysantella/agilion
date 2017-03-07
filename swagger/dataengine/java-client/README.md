@@ -86,7 +86,7 @@ public class DatasetsApiExample {
 
 ## Documentation for API Endpoints
 
-All URIs are relative to *http://virtserver.swaggerhub.com/deelam/DataEngine/0.0.1*
+All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
@@ -109,7 +109,10 @@ Class | Method | HTTP request | Description
  - [Dataset](docs/Dataset.md)
  - [Job](docs/Job.md)
  - [Operation](docs/Operation.md)
+ - [OperationMap](docs/OperationMap.md)
  - [OperationParam](docs/OperationParam.md)
+ - [OperationSelection](docs/OperationSelection.md)
+ - [OperationSelectionMap](docs/OperationSelectionMap.md)
  - [Progress](docs/Progress.md)
  - [Request](docs/Request.md)
  - [Session](docs/Session.md)

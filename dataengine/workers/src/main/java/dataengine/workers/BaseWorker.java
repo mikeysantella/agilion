@@ -2,16 +2,13 @@ package dataengine.workers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import dataengine.api.Job;
 import dataengine.api.Operation;
-import dataengine.api.OperationParam;
 import dataengine.apis.OperationConsts;
-import dataengine.apis.OperationUtils;
+import dataengine.apis.OperationWrapper;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import lombok.AccessLevel;
@@ -35,17 +32,17 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
 
   private final String name;
 
-  protected final Operation operation;
-  protected final Map<String, OperationParam> opParamsMap;
-  protected final List<OperationParam> requiredParams;
+  protected OperationWrapper opParamsMap;
 
+  public Operation operation(){
+    return opParamsMap.getOperation();
+  };
+  
   protected BaseWorker(String jobType, RpcClientProvider<SessionsDB_I> sessDb) {
     this.jobType = jobType;
     this.sessDb=sessDb;
     name = this.getClass().getSimpleName() + "-" + System.currentTimeMillis();
-    operation=initOperation();
-    opParamsMap = OperationUtils.initMap(operation);
-    requiredParams = OperationUtils.getRequiredParams(operation);
+    opParamsMap=new OperationWrapper(initOperation());
   }
 
   abstract protected Operation initOperation();
@@ -69,7 +66,7 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
     @SuppressWarnings("unchecked")
     T job = (T) jobDto.getRequest();
     try {
-      OperationUtils.checkForRequiredParams(requiredParams, job.getParams());
+      opParamsMap.checkForRequiredParams(job.getId(), job.getParams());
       // within doWork(), remember to call Future.get() to wait for work to finish or throw exception
       if (doWork(job)) 
         state.done(jobDto);

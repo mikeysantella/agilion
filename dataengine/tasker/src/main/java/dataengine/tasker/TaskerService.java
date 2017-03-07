@@ -37,7 +37,7 @@ public class TaskerService implements Tasker_I {
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
     log.info("SERV: submitRequest: {}", req);
-    String reqOperationId = req.getOperationId();
+    String reqOperationId = req.getOperation().getId();
     if (!opsRegVert.getOperations().containsKey(reqOperationId))
       throw new IllegalArgumentException("Unknown operationId=" + reqOperationId);
 
@@ -47,6 +47,7 @@ public class TaskerService implements Tasker_I {
 
     jc.checkValidity(req); // throw exception
       
+    // TODO: 1: add priorRequests
     CompletableFuture<Request> f = sessDb.rpc().addRequest(req)
         .thenCompose((addedReq) -> submitJobs(addedReq, jc));
     return f;

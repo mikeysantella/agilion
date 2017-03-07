@@ -3,6 +3,7 @@ package dataengine.api;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import dataengine.api.OperationMap;
 import dataengine.api.OperationParam;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,8 +14,9 @@ import java.io.Serializable;
 import javax.validation.constraints.*;
 
 /**
- * Operation
+ * describes available operations
  */
+@ApiModel(description = "describes available operations")
 
 public class Operation implements Serializable {
   @JsonProperty("id")
@@ -23,11 +25,17 @@ public class Operation implements Serializable {
   @JsonProperty("description")
   private String description = null;
 
+  @JsonProperty("level")
+  private Integer level = null;
+
   @JsonProperty("info")
   private Map info = null;
 
   @JsonProperty("params")
   private List<OperationParam> params = new ArrayList<OperationParam>();
+
+  @JsonProperty("subOperations")
+  private OperationMap subOperations = null;
 
   public Operation id(String id) {
     this.id = id;
@@ -35,11 +43,11 @@ public class Operation implements Serializable {
   }
 
    /**
-   * for use as Request.operationId
+   * for use in Request objects
    * @return id
   **/
   @NotNull
-  @ApiModelProperty(example = "IngestDataset", required = true, value = "for use as Request.operationId")
+  @ApiModelProperty(example = "IngestDataset", required = true, value = "for use in Request objects")
   public String getId() {
     return id;
   }
@@ -65,6 +73,27 @@ public class Operation implements Serializable {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public Operation level(Integer level) {
+    this.level = level;
+    return this;
+  }
+
+   /**
+   * abstraction level of this operation
+   * minimum: 0.0
+   * @return level
+  **/
+  @NotNull
+  //@Min(0.0)
+  @ApiModelProperty(example = "1", required = true, value = "abstraction level of this operation")
+  public Integer getLevel() {
+    return level;
+  }
+
+  public void setLevel(Integer level) {
+    this.level = level;
   }
 
   public Operation info(Map info) {
@@ -96,16 +125,34 @@ public class Operation implements Serializable {
   }
 
    /**
-   * Get params
+   * ordered list of parameters
    * @return params
   **/
-  @ApiModelProperty(example = "null", value = "")
+  @ApiModelProperty(example = "null", value = "ordered list of parameters")
   public List<OperationParam> getParams() {
     return params;
   }
 
   public void setParams(List<OperationParam> params) {
     this.params = params;
+  }
+
+  public Operation subOperations(OperationMap subOperations) {
+    this.subOperations = subOperations;
+    return this;
+  }
+
+   /**
+   * Get subOperations
+   * @return subOperations
+  **/
+  @ApiModelProperty(example = "null", value = "")
+  public OperationMap getSubOperations() {
+    return subOperations;
+  }
+
+  public void setSubOperations(OperationMap subOperations) {
+    this.subOperations = subOperations;
   }
 
 
@@ -120,13 +167,15 @@ public class Operation implements Serializable {
     Operation operation = (Operation) o;
     return Objects.equals(this.id, operation.id) &&
         Objects.equals(this.description, operation.description) &&
+        Objects.equals(this.level, operation.level) &&
         Objects.equals(this.info, operation.info) &&
-        Objects.equals(this.params, operation.params);
+        Objects.equals(this.params, operation.params) &&
+        Objects.equals(this.subOperations, operation.subOperations);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, description, info, params);
+    return Objects.hash(id, description, level, info, params, subOperations);
   }
 
 
@@ -137,8 +186,10 @@ public class Operation implements Serializable {
     
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    info: ").append(toIndentedString(info)).append("\n");
     sb.append("    params: ").append(toIndentedString(params)).append("\n");
+    sb.append("    subOperations: ").append(toIndentedString(subOperations)).append("\n");
     sb.append("}");
     return sb.toString();
   }

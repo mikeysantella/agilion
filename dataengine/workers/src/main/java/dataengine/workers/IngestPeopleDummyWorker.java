@@ -27,14 +27,13 @@ public class IngestPeopleDummyWorker extends BaseWorker<Job> {
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
     info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
-    return new Operation().level(1).id(jobType())
+    return new Operation().level(1).id(this.getClass().getSimpleName())
         .info(info)
         .addParamsItem(new OperationParam()
             .key(OperationConsts.INPUT_URI).required(true))
         .addParamsItem(new OperationParam()
-            .key(OperationConsts.DATA_FORMAT)
+            .key(OperationConsts.DATA_FORMAT).required(true)
             .description("choosing '"+MY_DATA_FORMAT+"' will always fail")
-            .isMultivalued(true)
             .addPossibleValuesItem(MY_DATA_FORMAT));
   }
 

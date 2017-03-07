@@ -30,7 +30,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>jersey</servlet-name>
-        <url-pattern>/DataEngine/0.0.2/*</url-pattern>
+        <url-pattern>/DataEngine/0.0.3/*</url-pattern>
     </servlet-mapping>
     <filter>
         <filter-name>ApiOriginFilter</filter-name>

@@ -19,5 +19,7 @@ public final class OperationConsts {
   public static final String DATA_FORMAT_PARQUET = "parquet";
   public static final String DATA_FORMAT_LUCENE = "lucene";
 
+  public static final String INGESTER_WORKER = "ingesterWorker";
+
 
 }

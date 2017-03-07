@@ -34,6 +34,8 @@ public class SessionDB {
   @Delegate
   private final SessionDB_RequestHelper reqHelper;
 
+  private final SessionDB_OperationHelper opHelper;
+  
   @Delegate
   private final SessionDB_JobHelper jobHelper;
 
@@ -55,7 +57,8 @@ public class SessionDB {
     graph = fgProvider.get(tgraph);
     frameHelper = new SessionDB_FrameHelper(graph);
     sessHelper = new SessionDB_SessionHelper(graph, frameHelper);
-    reqHelper = new SessionDB_RequestHelper(graph, sessHelper, frameHelper);
+    opHelper = new SessionDB_OperationHelper(graph);
+    reqHelper = new SessionDB_RequestHelper(graph, sessHelper, opHelper, frameHelper);
     dsHelper = new SessionDB_DatasetHelper(graph, frameHelper);
     jobHelper = new SessionDB_JobHelper(graph, dsHelper, reqHelper, frameHelper);
     //    depHelper=new DeprecatedHelper(graph, sessHelper, frameHelper);

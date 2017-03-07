@@ -5,6 +5,7 @@ dependencies {
   compile dep.guava
   compile dep.vertx  
   compile 'com.esotericsoftware:kryo-shaded:4.0.0'
+  //compile 'de.javakaffee:kryo-serializers:0.41'
   
   compileOnly dep.vertx_ignite
   testCompile dep.vertx_ignite

@@ -1,6 +1,6 @@
 # DatasetsApi
 
-All URIs are relative to *http://virtserver.swaggerhub.com/deelam/DataEngine/0.0.1*
+All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------

@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
+import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.apis.SessionsDB_I;
@@ -43,12 +44,13 @@ public class SessionDB_RequestsTest {
     Session session = new Session().id("newSess").label("name 1");
     sess.createSession(session);
     {
-      Request req = new Request().sessionId("newSess").id("req1").label("req1Name");
+      Request req = new Request().sessionId("newSess").id("req1").label("req1Name")
+          .operation(new OperationSelection().id("selectedOp"));
       Request req2 = sess.addRequest(req).get();
       req2.setState(null); // ignore
       req2.setCreatedTime(null); // ignore
-      if (req2.getOperationParams().isEmpty())
-        req2.setOperationParams(null); // ignore
+      if(req2.getOperation().getParams().isEmpty())
+        req2.getOperation().setParams(null);
       req2.getJobs().clear();; // ignore
       assertEquals(req, req2);
     }
@@ -58,7 +60,7 @@ public class SessionDB_RequestsTest {
       operationParams.put("inputDS", "ds1");
       operationParams.put("outputDS", "ds2");
       Request req = new Request().sessionId("newSess").id("req1").label("req1Name")
-          .operationParams(operationParams);
+          .operation(new OperationSelection().id("myOp").params(operationParams));
       try{
         sess.addRequest(req).get();
         fail("Expected exception");

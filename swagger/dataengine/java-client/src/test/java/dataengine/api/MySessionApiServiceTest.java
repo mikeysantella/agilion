@@ -26,7 +26,7 @@ public class MySessionApiServiceTest {
       baseUri = "http://"+baseUri+":8080/main/";
     }
     if(!baseUri.contains("DataEngine"))
-      baseUri += "DataEngine/0.0.2";
+      baseUri += "DataEngine/0.0.3";
     System.out.println("Using baseUri="+baseUri);
     MySessionApiServiceTest me = new MySessionApiServiceTest(baseUri);
     me.testSessionsApi();
@@ -62,6 +62,7 @@ public class MySessionApiServiceTest {
     List<String> ids = sessApi.listSessionIds();
     System.out.println(ids);
     
+    System.out.println(sessApi.listSessions());
     Map names = sessApi.listSessionNames();
     System.out.println(names);
     
@@ -80,13 +81,22 @@ public class MySessionApiServiceTest {
       // ok if it already exists;
     }
     {
+      HashMap<String, Object> ingestTelephoneParamValues = new HashMap<>();
+      ingestTelephoneParamValues.put("workTime", "10");
+      
+      OperationSelectionMap subOperationSelections = new OperationSelectionMap();
+      OperationSelection subOp1 = new OperationSelection().id("IngestTelephoneDummyWorker").params(ingestTelephoneParamValues);
+      subOperationSelections.put(subOp1.getId(), subOp1);
+      
+      HashMap<String, Object> addSrcDatasetParamValues = new HashMap<>();
+      addSrcDatasetParamValues.put("inputUri", new File("README.md").toURI().toASCIIString());
+      addSrcDatasetParamValues.put("dataFormat", "TELEPHONE.CSV");
+      addSrcDatasetParamValues.put("ingesterWorker", subOp1.getId());
+      
       Request req = new Request().sessionId("newSess").label("req1Name")
-          .operationId("addSourceDataset");
-      HashMap<String, Object> paramValues = new HashMap<String, Object>();
-      req.operationParams(paramValues);
-      paramValues.put("inputUri", new File("README.md").toURI().toASCIIString());
-      paramValues.put("dataFormat", "TELEPHONE.CSV");
-      paramValues.put("workTime", "10");
+          .operation(new OperationSelection().id("AddSourceDataset").params(addSrcDatasetParamValues)
+              .subOperationSelections(subOperationSelections)
+              );
 
       Request req2 = reqsApi.submitRequest(req);
       String reqId = req2.getId();
@@ -112,8 +122,10 @@ public class MySessionApiServiceTest {
             throw new RuntimeException("Job failed: "+job.getId());
         }
       }
+      Thread.sleep(2000);
       System.out.println(sessApi.listSessionNames());
       System.out.println(sessApi.listSessions());
+      System.out.println(reqsApi.listOperations());
     }
   }
 

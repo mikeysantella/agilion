@@ -16,6 +16,7 @@ import com.google.inject.TypeLiteral;
 
 import dataengine.api.Job;
 import dataengine.api.NotFoundException;
+import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.apis.RpcClientProvider;
@@ -83,12 +84,13 @@ public class VertxRpcSessionsTest {
     log.info("list: " + sessionsDbRpcClient.listSessionIds().get());
 
     {
-      Request req = new Request().sessionId(sessId).id("req1").label("req1Name");
+      Request req = new Request().sessionId(sessId).id("req1").label("req1Name")
+          .operation(new OperationSelection().id("AddSourceDataset"));
       Request req2 = sessionsDbRpcClient.addRequest(req).get();
       req2.setState(null); // ignore
       req2.setCreatedTime(null); // ignore
-      if (req2.getOperationParams().isEmpty())
-        req2.setOperationParams(null); // ignore
+      if(req2.getOperation().getParams().isEmpty())
+        req2.getOperation().params(null);
       req2.getJobs().clear();; // ignore
       assertEquals(req, req2);
     }

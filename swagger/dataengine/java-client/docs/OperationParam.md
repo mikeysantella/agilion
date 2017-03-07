@@ -18,12 +18,14 @@ Name | Type | Description | Notes
 Name | Value
 ---- | -----
 STRING | &quot;string&quot;
+URI | &quot;uri&quot;
 INT | &quot;int&quot;
 LONG | &quot;long&quot;
 FLOAT | &quot;float&quot;
 DOUBLE | &quot;double&quot;
 BOOLEAN | &quot;boolean&quot;
 ENUM | &quot;enum&quot;
+OPERATIONID | &quot;operationId&quot;
 
 
 

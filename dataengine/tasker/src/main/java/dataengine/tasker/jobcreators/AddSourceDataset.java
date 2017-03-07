@@ -16,94 +16,103 @@ import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
+import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
+import dataengine.apis.OperationWrapper;
 import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class AddSourceDataset extends AbstractJobCreator {
 
-  static final String ADD_SOURCE_DATASET = "addSourceDataset";
-
   @Override
   protected Operation initOperation() {
-    Operation operation = new Operation().level(0).id(ADD_SOURCE_DATASET)
+    Operation operation = new Operation().level(0).id(this.getClass().getSimpleName())
         .description("add source dataset");
 
     operation.addParamsItem(new OperationParam().key(OperationConsts.INPUT_URI)
         .required(true)
         .description("location of source dataset")
-        .valuetype(ValuetypeEnum.URI).defaultValue(null).isMultivalued(false));
+        .valuetype(ValuetypeEnum.URI));
 
     operation.addParamsItem(new OperationParam().key(OperationConsts.DATA_FORMAT)
         .required(true)
         .description("type and format of data")
-        .valuetype(ValuetypeEnum.ENUM).defaultValue(null).isMultivalued(false));
+        .valuetype(ValuetypeEnum.ENUM));
+    
+    operation.addParamsItem(new OperationParam().key(OperationConsts.INGESTER_WORKER)
+        .required(true)
+        .description("ingester worker to use")
+        .valuetype(ValuetypeEnum.OPERATIONID));
+
     return operation;
   }
 
-  public void updateOperationParams(Map<String, Operation> currOperations) {    
-    // retrieve possible ingest formats and descriptions from workers
-    List<Operation> ingesterOps = currOperations.values().stream()
-        .filter(op -> OperationConsts.TYPE_INGESTER.equals(op.getInfo().get(OperationConsts.OPERATION_TYPE)))
-        .collect(toList());
-    ingesterOps.stream()
-      .map(Operation::getParams)
-      .flatMap(params -> params.stream()
-          .filter(param -> !opParamsMap.containsKey(param.getKey())))
-      .forEach(newParam->{
-        operation.addParamsItem(newParam);
-      });
+  public void updateOperationParams(Map<String, Operation> currOperations) {
+    // copy ingester-type ops from workers
+    List<Operation> ingesterOps = copyOperationsOfType(currOperations, OperationConsts.TYPE_INGESTER);
 
-    Set<Object> possibleDataFormats=new HashSet<>();
-    Set<String> descriptions=new HashSet<>();
-    OperationParam myOpDataFormatParam = getOperationParam(OperationConsts.DATA_FORMAT);
-    ingesterOps.stream()
-        .map(Operation::getParams)
-        .flatMap(params -> params.stream()
-            .filter(param -> OperationConsts.DATA_FORMAT.equals(param.getKey())))
-        .forEach((dataFormatParam) -> {
-          possibleDataFormats.addAll(dataFormatParam.getPossibleValues());
-          descriptions.add(dataFormatParam.getDescription());
-        });
+    // retrieve possible ingest formats and descriptions from ingester-type operations
+    Set<Object> possibleDataFormats = new HashSet<>();
+    Set<String> descriptions = new HashSet<>();
+    removeParamFromSubOperation(ingesterOps, OperationConsts.DATA_FORMAT,(opParam)->{
+      possibleDataFormats.addAll(opParam.getPossibleValues());
+      descriptions.add(opParam.getDescription());
+    });
+    removeParamFromSubOperation(ingesterOps, OperationConsts.INPUT_URI,null);
+
+    opW = new OperationWrapper(initOperation(), ingesterOps);
+    OperationParam myOpDataFormatParam = opW.getOperationParam(OperationConsts.DATA_FORMAT);
     myOpDataFormatParam.possibleValues(new ArrayList<>(possibleDataFormats));
     myOpDataFormatParam.description(descriptions.toString());
-    
-    operationUpdated();
+
+    opW.getOperationParam(OperationConsts.INGESTER_WORKER).possibleValues(
+        ingesterOps.stream().map(Operation::getId).collect(toList()));
+
+    opW.operationUpdated();
   }
 
+
+  @SuppressWarnings("unchecked")
   @Override
   public List<JobEntry> createFrom(Request req) {
-    checkArgument(operation.getId().equals(req.getOperationId()), "Operation.id does not match!");
-    Map<String, Object> requestParams = convertParamValues(req.getOperationParams());
+    OperationSelection selection = req.getOperation();
+    checkArgument(opW.getOperation().getId().equals(selection.getId()), "Operation.id does not match!");
+    opW.convertParamValues(selection);
 
-    Job job1 = new Job().id(getJobIdPrefix(req) + ".job1")
+    Job job1 = new Job().id(getJobIdPrefix(req) + ".job1-ingest")
         .type(OperationConsts.TYPE_INGESTER)
         .requestId(req.getId())
-        .label("Ingest " + requestParams.get(OperationConsts.INPUT_URI));
-    Job job2 = new Job().id(req.getId() + "-" + req.getLabel() + ".job2")
+        .label("Ingest " + selection.getParams().get(OperationConsts.INPUT_URI));
+    Job job2 = new Job().id(req.getId() + "-" + req.getLabel() + ".job2-postIngest")
         .type(OperationConsts.TYPE_POSTINGEST)
         .requestId(req.getId())
-        .label("Post-ingest " + requestParams.get(OperationConsts.INPUT_URI));
-    Job job3 = new Job().id(req.getId() + "-" + req.getLabel() + ".job3")
+        .label("Post-ingest " + selection.getParams().get(OperationConsts.INPUT_URI));
+    Job job3 = new Job().id(req.getId() + "-" + req.getLabel() + ".job3-postRequest")
         .type(OperationConsts.TYPE_POSTREQUEST)
         .requestId(req.getId())
         .label("Post-request " + req.getId() + ":" + req.getLabel());
 
+    String selectedIngesterOpId = (String) selection.getParams().get(OperationConsts.INGESTER_WORKER);
+    selection.getParams().remove(OperationConsts.INGESTER_WORKER); // don't need this after job1
     {
-      Map<String, Object> job1Params = new HashMap<>(requestParams);
+      Map<String, Object> job1Params = new HashMap<>(selection.getParams());
+      OperationSelection ingesterOpSelection = selection.getSubOperationSelections().get(selectedIngesterOpId);
+      if(ingesterOpSelection==null)
+        throw new IllegalArgumentException("Not found '"+selectedIngesterOpId+"' in "+selection.getSubOperationSelections());
+      job1Params.putAll(ingesterOpSelection.getParams());
       job1.params(job1Params);
     }
-    requestParams.remove(OperationConsts.INPUT_URI); // don't need this after job1
+    selection.getParams().remove(OperationConsts.INPUT_URI); // don't need this after job1
     {
-      Map<String, Object> job2Params = new HashMap<>(requestParams);
+      Map<String, Object> job2Params = new HashMap<>(selection.getParams());
       job2Params.put(OperationConsts.PREV_JOBID, job1.getId());
       job2.params(job2Params);
     }
-    requestParams.remove(OperationConsts.DATA_FORMAT); // don't need this any more
+    selection.getParams().remove(OperationConsts.DATA_FORMAT); // don't need this any more
     {
-      Map<String, Object> job3Params = new HashMap<>(requestParams);
+      Map<String, Object> job3Params = new HashMap<>(selection.getParams());
       job3Params.put(OperationConsts.PREV_JOBID, job1.getId());
       job3.params(job3Params);
     }

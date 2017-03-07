@@ -8,9 +8,9 @@ Name | Type | Description | Notes
 **sessionId** | **String** |  | 
 **createdTime** | [**OffsetDateTime**](OffsetDateTime.md) |  | 
 **state** | [**State**](State.md) |  | 
-**operationId** | **String** | request type; must match with an Operation.id | 
-**operationParams** | [**Map**](Map.md) |  |  [optional]
+**operation** | [**OperationSelection**](OperationSelection.md) |  | 
 **label** | **String** |  |  [optional]
+**priorRequestIds** | **List&lt;String&gt;** | list of requestIds that this request depends on |  [optional]
 **jobs** | [**List&lt;Job&gt;**](Job.md) |  |  [optional]
 
 

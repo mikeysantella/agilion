@@ -4,13 +4,13 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import dataengine.api.Job;
+import dataengine.api.OperationSelection;
 import dataengine.api.State;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.io.Serializable;
 import javax.validation.constraints.*;
 
@@ -31,14 +31,14 @@ public class Request implements Serializable {
   @JsonProperty("state")
   private State state = null;
 
-  @JsonProperty("operationId")
-  private String operationId = null;
-
-  @JsonProperty("operationParams")
-  private Map operationParams = null;
+  @JsonProperty("operation")
+  private OperationSelection operation = null;
 
   @JsonProperty("label")
   private String label = null;
+
+  @JsonProperty("priorRequestIds")
+  private List<String> priorRequestIds = new ArrayList<String>();
 
   @JsonProperty("jobs")
   private List<Job> jobs = new ArrayList<Job>();
@@ -119,41 +119,23 @@ public class Request implements Serializable {
     this.state = state;
   }
 
-  public Request operationId(String operationId) {
-    this.operationId = operationId;
+  public Request operation(OperationSelection operation) {
+    this.operation = operation;
     return this;
   }
 
    /**
-   * request type; must match with an Operation.id
-   * @return operationId
+   * Get operation
+   * @return operation
   **/
   @NotNull
-  @ApiModelProperty(example = "ingest", required = true, value = "request type; must match with an Operation.id")
-  public String getOperationId() {
-    return operationId;
+  @ApiModelProperty(example = "null", required = true, value = "")
+  public OperationSelection getOperation() {
+    return operation;
   }
 
-  public void setOperationId(String operationId) {
-    this.operationId = operationId;
-  }
-
-  public Request operationParams(Map operationParams) {
-    this.operationParams = operationParams;
-    return this;
-  }
-
-   /**
-   * Get operationParams
-   * @return operationParams
-  **/
-  @ApiModelProperty(example = "null", value = "")
-  public Map getOperationParams() {
-    return operationParams;
-  }
-
-  public void setOperationParams(Map operationParams) {
-    this.operationParams = operationParams;
+  public void setOperation(OperationSelection operation) {
+    this.operation = operation;
   }
 
   public Request label(String label) {
@@ -172,6 +154,29 @@ public class Request implements Serializable {
 
   public void setLabel(String label) {
     this.label = label;
+  }
+
+  public Request priorRequestIds(List<String> priorRequestIds) {
+    this.priorRequestIds = priorRequestIds;
+    return this;
+  }
+
+  public Request addPriorRequestIdsItem(String priorRequestIdsItem) {
+    this.priorRequestIds.add(priorRequestIdsItem);
+    return this;
+  }
+
+   /**
+   * list of requestIds that this request depends on
+   * @return priorRequestIds
+  **/
+  @ApiModelProperty(example = "null", value = "list of requestIds that this request depends on")
+  public List<String> getPriorRequestIds() {
+    return priorRequestIds;
+  }
+
+  public void setPriorRequestIds(List<String> priorRequestIds) {
+    this.priorRequestIds = priorRequestIds;
   }
 
   public Request jobs(List<Job> jobs) {
@@ -211,15 +216,15 @@ public class Request implements Serializable {
         Objects.equals(this.sessionId, request.sessionId) &&
         Objects.equals(this.createdTime, request.createdTime) &&
         Objects.equals(this.state, request.state) &&
-        Objects.equals(this.operationId, request.operationId) &&
-        Objects.equals(this.operationParams, request.operationParams) &&
+        Objects.equals(this.operation, request.operation) &&
         Objects.equals(this.label, request.label) &&
+        Objects.equals(this.priorRequestIds, request.priorRequestIds) &&
         Objects.equals(this.jobs, request.jobs);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, sessionId, createdTime, state, operationId, operationParams, label, jobs);
+    return Objects.hash(id, sessionId, createdTime, state, operation, label, priorRequestIds, jobs);
   }
 
 
@@ -232,9 +237,9 @@ public class Request implements Serializable {
     sb.append("    sessionId: ").append(toIndentedString(sessionId)).append("\n");
     sb.append("    createdTime: ").append(toIndentedString(createdTime)).append("\n");
     sb.append("    state: ").append(toIndentedString(state)).append("\n");
-    sb.append("    operationId: ").append(toIndentedString(operationId)).append("\n");
-    sb.append("    operationParams: ").append(toIndentedString(operationParams)).append("\n");
+    sb.append("    operation: ").append(toIndentedString(operation)).append("\n");
     sb.append("    label: ").append(toIndentedString(label)).append("\n");
+    sb.append("    priorRequestIds: ").append(toIndentedString(priorRequestIds)).append("\n");
     sb.append("    jobs: ").append(toIndentedString(jobs)).append("\n");
     sb.append("}");
     return sb.toString();

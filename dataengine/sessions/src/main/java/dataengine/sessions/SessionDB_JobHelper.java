@@ -161,12 +161,17 @@ public final class SessionDB_JobHelper {
   ///
 
   public void updateJobState(String jobId, State state) {
-    tryCAndCloseTxn(graph, graph -> getJobFrame(jobId).setState(state));
+    tryCAndCloseTxn(graph, graph -> {
+      // TODO: 1. check state transition is valid in case msg received out of order
+      getJobFrame(jobId).setState(state);
+      // TOOD: 1. if all jobs for the request is complete, set request state to complete
+      });
   }
 
   public void updateJobProgress(String jobId, Progress progress) {
     tryCAndCloseTxn(graph, graph -> {
       JobFrame jf = getJobFrame(jobId);
+      // TODO: 1. check percent is monotonically increasing in case msg received out of order
       jf.setProgress(progress.getPercent());
       if (progress.getStats() != null)
         SessionDB_FrameHelper.saveMapAsProperties(progress.getStats(),
