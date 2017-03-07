@@ -193,6 +193,12 @@ public class SessionsDBService implements SessionsDB_I {
   }
 
   @Override
+  public CompletableFuture<String> getLastJobIdOfRequest(String requestId){
+    log.debug("SERV: getLastJobId: {}", requestId);
+    return CompletableFuture.completedFuture(sessDB.getLastJobIdOf(requestId));
+  }
+  
+  @Override
   public CompletableFuture<Dataset> getDataset(String id) {
     log.debug("SERV: getDataset: {}", id);
     return CompletableFuture.completedFuture(SessionDB_DatasetHelper.toDataset(sessDB.getDatasetFrame(id)));
@@ -203,6 +209,12 @@ public class SessionsDBService implements SessionsDB_I {
     log.debug("SERV: setJobParam of {}: {}={}", jobId, key, value);
     sessDB.setJobParam(jobId, key, value);;
     return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public void updateRequestState(String reqId, State state) {
+    log.debug("SERV: updateRequestState: {} to {}", reqId, state);
+    sessDB.updateRequestState(reqId, state);
   }
 
   @Override

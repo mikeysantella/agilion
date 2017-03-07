@@ -17,7 +17,7 @@ public interface JobsCreator {
 
   void checkValidity(Request req);
 
-  List<JobEntry> createFrom(Request addedReq);
+  List<JobEntry> createFrom(Request addedReq, List<String> priorJobIds);
 
   @Accessors(fluent = true)
   @Data

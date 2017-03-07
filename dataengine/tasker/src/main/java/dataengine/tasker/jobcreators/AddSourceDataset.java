@@ -76,7 +76,7 @@ public class AddSourceDataset extends AbstractJobCreator {
 
   @SuppressWarnings("unchecked")
   @Override
-  public List<JobEntry> createFrom(Request req) {
+  public List<JobEntry> createFrom(Request req, List<String> priorJobIds) {
     OperationSelection selection = req.getOperation();
     checkArgument(opW.getOperation().getId().equals(selection.getId()), "Operation.id does not match!");
     opW.convertParamValues(selection);
@@ -118,7 +118,7 @@ public class AddSourceDataset extends AbstractJobCreator {
     }
 
     return Lists.newArrayList(
-        new JobEntry(job1),
+        new JobEntry(job1, priorJobIds.toArray(new String[priorJobIds.size()])),
         new JobEntry(job2, job1.getId()),
         new JobEntry(job3, job1.getId()));
   }

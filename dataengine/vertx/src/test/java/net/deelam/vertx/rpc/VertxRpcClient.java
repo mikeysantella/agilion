@@ -35,7 +35,7 @@ public class VertxRpcClient {
 
     vertx = vertxF.get();
 
-    SvcInterface rpcClient = new VertxRpcUtil(vertx.eventBus(), VertxRpcServer.SVC_INBOX)
+    SvcInterface rpcClient = new VertxRpcUtil(vertx, VertxRpcServer.SVC_INBOX)
         .createClient(SvcInterface.class);
 
     try {

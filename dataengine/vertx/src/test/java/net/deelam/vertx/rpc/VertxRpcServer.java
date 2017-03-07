@@ -16,7 +16,7 @@ public class VertxRpcServer {
       
       RemoteSvc remoteSvc = new RemoteSvc();
       //VertxRpcHelper.registerService(vertx, "Address", hdfsSvc);
-      new VertxRpcUtil(vertx.eventBus(), SVC_INBOX).registerServer(remoteSvc);
+      new VertxRpcUtil(vertx, SVC_INBOX).registerServer(remoteSvc);
     });
 
   }

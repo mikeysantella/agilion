@@ -30,6 +30,14 @@ public interface RequestFrame extends BaseFrame {
   @Adjacency(label = JobFrame.OUTPUT_DATA, direction = Direction.OUT)
   Iterable<DatasetFrame> getOutputDatasets();
   
+  public final static String NEXT_REQUEST="nextReq";
+  
+  @Adjacency(label = NEXT_REQUEST, direction = Direction.IN)
+  void addPriorRequest(RequestFrame ds);
+
+  @Adjacency(label = NEXT_REQUEST, direction = Direction.IN)
+  Iterable<RequestFrame> getPriorRequests();
+  
   // must be called "Impl"
   abstract class Impl extends BaseFrame.Impl implements RequestFrame {
     @Initializer
