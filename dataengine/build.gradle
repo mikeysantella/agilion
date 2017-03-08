@@ -39,6 +39,10 @@ configure(subprojects) {
       xinject: 'javax.inject:javax.inject:1',
       guice: 'com.google.inject:guice:4.1.0',
       guava: 'com.google.guava:guava:21.0',
+      
+      scala_library: 'org.scala-lang:scala-library:2.11.8',
+      scala_test: 'org.scalatest:scalatest_2.11:3.0.0',
+      hadoop_common: 'org.apache.hadoop:hadoop-common:2.5.1',
 
       blueprints: 'com.tinkerpop.blueprints:blueprints-core:'+ver.tinkerpop,
       blueprints_neo: 'com.tinkerpop.blueprints:blueprints-neo4j-graph:'+ver.tinkerpop,

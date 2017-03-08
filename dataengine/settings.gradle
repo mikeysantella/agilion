@@ -6,6 +6,7 @@ include 'utils'
 
 include 'graph'
 include 'vertx'
+include 'spark'
 
 include 'sessions'
 include 'tasker'

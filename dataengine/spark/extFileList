@@ -1,0 +1,20 @@
+#hadoop-2.6.0.tar.gz http://www.apache.org/dyn/closer.cgi/hadoop/common/hadoop-2.6.0/hadoop-2.6.0.tar.gz
+#hbase-1.0.2-bin.tar.gz https://www.apache.org/dist/hbase/hbase-1.0.2/hbase-1.0.2-bin.tar.gz
+#
+spark-2.0.0-bin-hadoop2.6.tgz http://d3kbcqa49mib13.cloudfront.net/spark-2.0.0-bin-hadoop2.6.tgz
+
+neo4j-community-3.0.4-unix.tar.gz  https://neo4j.com/artifact.php?name=neo4j-community-3.0.4-unix.tar.gz
+
+gephi-0.9.0-linux.tar.gz https://github.com/gephi/gephi/releases/download/v0.9.0/gephi-0.9.0-linux.tar.gz
+
+# dbpedia-spotlight-quickstart-0.6.5.zip https://github.com/dbpedia-spotlight/dbpedia-spotlight
+# edu.mit.jwi_2.3.3_all.zip https://github.com/dodgejesse/WordVectorsWithSemantics/raw/master/lib/java_wordnet_interface/edu.mit.jwi_2.3.3_all.zip
+# wn3.1.dict.tar.gz http://wordnetcode.princeton.edu/wn3.1.dict.tar.gz
+# gate.zip http://superb-dca2.dl.sourceforge.net/project/gate/gate/8.1/gate-8.1-build5169-BIN.zip
+# 
+# google-refine-2.5-r2407.tar.gz https://github.com/OpenRefine/OpenRefine/releases/download/2.6-beta.1/openrefine-linux-2.6-beta.1.tar.gz
+# 
+# h2console.zip http://www.h2database.com/h2-2014-04-05.zip
+# reCsvEditor.zip
+# secondstring-master.zip
+
