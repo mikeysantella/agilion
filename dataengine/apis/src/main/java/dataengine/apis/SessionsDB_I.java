@@ -70,6 +70,6 @@ public interface SessionsDB_I {
 
   CompletableFuture<Dataset> getDataset(String id);
 
-  CompletableFuture<Void> connectAsOutputDatasetNode(String requestId, String datasetId);
+  CompletableFuture<Void> connectRequestToOutputDataset(String requestId, String datasetId);
 
 }

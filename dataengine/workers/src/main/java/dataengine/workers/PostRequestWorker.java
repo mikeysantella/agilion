@@ -41,7 +41,7 @@ public class PostRequestWorker extends BaseWorker<Job> {
   @Override
   protected boolean doWork(Job job) throws Exception {
     CompletableFuture<Void> connectF = getPrevJobDatasetId(job)
-        .thenCompose(datasetId -> sessDb.rpc().connectAsOutputDatasetNode(job.getRequestId(), datasetId))
+        .thenCompose(datasetId -> sessDb.rpc().connectRequestToOutputDataset(job.getRequestId(), datasetId))
         .thenAccept(v -> sessDb.rpc().updateRequestState(job.getRequestId(), State.COMPLETED));
     connectF.get(); // call get so that exception can be thrown
     return true;
