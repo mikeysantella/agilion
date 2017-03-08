@@ -19,6 +19,7 @@ import net.deelam.vertx.rpc.ServiceWaiter;
 @Slf4j
 @ToString
 public class JobProducer extends AbstractVerticle {
+  @Getter
   private final String serviceType;
 
   private Context eventLoopContext;

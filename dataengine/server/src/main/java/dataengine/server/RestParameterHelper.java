@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -29,13 +30,14 @@ public final class RestParameterHelper {
 
   static Response makeResponseIfIdInvalid(String idType, String id) {
     if (!isValidIdString(id))
-      return makeBadRequestResponse("ID for " + idType + " is not valid: " + id);
+      return makeBadRequestResponse("ID for " + idType + " is not valid: " + id + " allowedChars="+allowedChars);
     return null;
   }
 
+  private static String allowedChars="a-zA-Z0-9.-";
+  private static Pattern illegalCharsRegex = Pattern.compile("[^"+allowedChars+"]");
   private static boolean isValidIdString(String id) {
-    log.info("TODO: isValidIdString: " + id);
-    return true;
+    return !illegalCharsRegex.matcher(id).find();
   }
 
 

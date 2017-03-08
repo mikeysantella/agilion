@@ -24,10 +24,10 @@ public class VertxRpcClientsModule extends AbstractModule {
     try {
       boolean haveToWait = !vertxF.isDone();
       if (haveToWait)
-        log.info("Waiting for Vertx ...");
+        log.info("VERTX: Waiting for Vertx ...");
       vertx = vertxF.get(10, TimeUnit.SECONDS);
       if (haveToWait)
-        log.info("Got Vertx");
+        log.info("VERTX: Got Vertx");
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
@@ -39,7 +39,7 @@ public class VertxRpcClientsModule extends AbstractModule {
   // For Guice, cannot block waiting for server side to come up, so returns a Supplier instead.
   // Also, the thread calling Supplier.get() needs to run in a separate thread such that incoming message is not blocked.
   public <T> Supplier<T> getClientSupplierFor(Class<T> clazz, String serviceType) {
-    log.info("Creating supplier of RPC client for {}", clazz.getSimpleName());
+    log.info("VERTX: Creating supplier of RPC client for {}", clazz.getSimpleName());
     Supplier<T> rpcClientS = new RpcVerticleClient(vertx, serviceType).start()
         .createRpcClientSupplier(clazz, debug);
     return rpcClientS;

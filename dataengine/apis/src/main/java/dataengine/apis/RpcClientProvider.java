@@ -19,7 +19,7 @@ public class RpcClientProvider<T> {
   private T lazyCreateRpcClient() {
     log.debug("Getting RPC client for {}", supplier);
     T t = supplier.get();
-    log.info("Created RPC client for {}", t);
+    log.info("VERTX: Created RPC client for {}", t);
     return t;
   }
 

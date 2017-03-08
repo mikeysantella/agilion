@@ -23,18 +23,18 @@ public class OperationsRegistryRpcService implements OperationsRegistry_I {
   
   @Override
   public CompletableFuture<Void> refresh() {
-    log.info("SERV: refresh()");
+    log.info("SERV: refresh operations");
     return opsRegVert.refresh();
   }
   
   @Override
   public CompletableFuture<Map<String, Operation>> listOperations() {
-    log.info("SERV: listOperations()");
+    log.debug("SERV: listOperations()");
     return listOperations(0); 
   }
 
   public CompletableFuture<Map<String, Operation>> listOperations(int level) {
-    log.info("SERV: listOperations: {}", level);
+    log.debug("SERV: listOperations: {}", level);
     Map<String, Operation> majorOperations = opsRegVert.getOperations().entrySet().stream()
         .filter(entry->entry.getValue().getLevel()==level).collect(toMap(e->e.getKey(), e->e.getValue()));
     return CompletableFuture.completedFuture(
@@ -46,7 +46,7 @@ public class OperationsRegistryRpcService implements OperationsRegistry_I {
   
   @Override
   public CompletableFuture<Map<String, Operation>> listAllOperations() {
-    log.info("SERV: listAllOperations()");
+    log.debug("SERV: listAllOperations()");
     return CompletableFuture.completedFuture(
         // Can't find Kryo deserializer for Map.values(), so convert to basic List
         //new ArrayList<>(opsRegVert.getOperations().values())

@@ -43,30 +43,34 @@ public class DepJobService implements DepJobService_I {
   @Getter(lazy=true)
   private final JobProducer jobProducer=getJobProducerWithMsgHandlers();
  
+  boolean removeOnCompletion = true;
+  boolean removeOnFailure = false;
+  
   private JobProducer getJobProducerWithMsgHandlers(){
     log.info("Registering JobProducer's job completion handlers");
     final JobProducer jobProducer=jobProdS.get();
     jobProducer.addJobCompletionHandler((Message<JobDTO> msg) -> {
-      log.info("==========> Job complete: {}", msg.body());
+      log.info("DISPATCHER: Job complete: {}", msg.body());
       String jobId = msg.body().getId();
-      if (false)
+      if (removeOnCompletion)
         jobProducer.removeJob(jobId, null);
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
-      log.debug("all jobs: {}", this);
+      //log.debug("all jobs: {}", this);
       jobDone(jobV);
-      log.info("Done jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
+      if(log.isDebugEnabled())
+        log.debug("Done jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
     });
     jobProducer.addJobFailureHandler((Message<JobDTO> msg) -> {
-      log.info("==========> Job failed: {}", msg.body());
+      log.warn("DISPATCHER: Job failed: {}", msg.body());
       String jobId = msg.body().getId();
-      if (false)
+      if (removeOnFailure)
         jobProducer.removeJob(jobId, null);
-      log.info("  --------> cancelJobsDependentOn failedJob: {}", jobId);
       cancelJobsDependentOn(jobId, null);
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
-      log.debug("all jobs: {}", this);
+      //log.debug("all jobs: {}", this);
       jobFailed(jobV);
-      log.info("Failed jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
+      if(log.isDebugEnabled())
+        log.debug("Failed jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
     });
     return jobProducer;
   }
@@ -156,6 +160,7 @@ public class DepJobService implements DepJobService_I {
 
   public synchronized CompletableFuture<Boolean> addJob(boolean addToQueue, JobDTO job, String... inJobIds) {
     String jobId = job.getId();
+    log.info("DISPATCHER: addJob: {}", jobId);
     // add to graph
     GrafTxn.tryOn(graph, () -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
@@ -181,10 +186,10 @@ public class DepJobService implements DepJobService_I {
   private void addToQueue(JobDTO job, DepJobFrame jobV) {
     synchronized (graph) {
       if (isJobReady(jobV)) {
-        log.debug("Submitting jobId={}", jobV.getNodeId());
+        log.info("DISPATCHER: Submitting jobId={}", jobV.getNodeId());
         submitJob(jobV, job);
       } else {
-        log.info("Input to job={} is not ready; setting state=WAITING.", job.getId());
+        log.info("DISPATCHER: Input to job={} is not ready; setting state=WAITING.", job.getId());
         putJobInWaitingArea(jobV, job);
       }
     }
@@ -212,6 +217,7 @@ public class DepJobService implements DepJobService_I {
    * @param jobId
    */
   public synchronized void reAddJob(String jobId) {
+    log.info("DISPATCHER: reAddJob: {}", jobId);
     GrafTxn.tryOn(graph, () -> {
       // add to graph
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
@@ -246,6 +252,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public synchronized void addDependentJobs(String jobId, String... inJobIds) {
+    log.info("DISPATCHER: addDependentJobs jobId={}", jobId);
     synchronized (graph) {
       GrafTxn.tryOn(graph, () -> {
         DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
@@ -294,6 +301,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public synchronized boolean cancelJob(String jobId) {
+    log.info("DISPATCHER: cancelJob: {}", jobId);
     return GrafTxn.tryOn(graph, (graph) -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       if (jobV == null)
@@ -338,6 +346,7 @@ public class DepJobService implements DepJobService_I {
   }
 
   public void cancelJobsDependentOn(String jobId, List<String> canceledJobs) {
+    log.info("DISPATCHER: cancelJobsDependentOn failedJob: {}", jobId);
     GrafTxn.tryOn(graph, (graph) -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
       for (DepJobFrame outJ : jobV.getOutputJobs()) {

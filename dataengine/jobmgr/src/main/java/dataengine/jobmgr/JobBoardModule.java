@@ -37,12 +37,14 @@ public class JobBoardModule extends AbstractModule {
   static void deployJobBoardVerticles(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
     JobProducer jobProducer = injector.getInstance(JobProducer.class);
-    JobBoard jm = injector.getInstance(JobBoard.class);
+    JobBoard jobBoard = injector.getInstance(JobBoard.class);
     if(DEBUG){
-      jm.periodicLogs(10_000, 20);
+      jobBoard.periodicLogs(10_000, 20);
     }
     
-    vertx.deployVerticle(jm);
+    log.info("VERTX: TASKER: Deploying JobBoard: {} ", jobBoard); 
+    vertx.deployVerticle(jobBoard);
+    log.info("VERTX: TASKER: Deploying JobProducer for jobBoardId={}", jobProducer.getServiceType()); 
     vertx.deployVerticle(jobProducer);
   }
 
@@ -62,6 +64,7 @@ public class JobBoardModule extends AbstractModule {
 
     // requires that jobProducerProxy be deployed
     DepJobService depJobMgr = new DepJobService(depJobMgrGraf, ()->jobProducer);
+    log.info("VERTX: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
     new RpcVerticleServer(vertx, depJobMgrId)
       .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);
     

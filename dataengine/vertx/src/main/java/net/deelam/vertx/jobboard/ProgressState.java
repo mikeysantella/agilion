@@ -53,7 +53,7 @@ public class ProgressState {
     if (msg == null)
       msg="Starting " + jobId + " at "+ now;
     setMessage(msg);
-    log.info("WORKER: Starting: {}", msg);
+    log.info("JOB: Starting: {}", msg);
     return this;
   }
 
@@ -64,7 +64,7 @@ public class ProgressState {
       setMessage(jobId+" done in "+((System.currentTimeMillis() - startTime)/1000)+" seconds.");
     else
       setMessage(msg);
-    log.info("WORKER: Done: {}", msg);
+    log.info("JOB: Done: {}", msg);
     return this;
   }
 
@@ -78,7 +78,7 @@ public class ProgressState {
     else if (getPercent() > 0)
       setPercent(-getPercent());
     setMessage(msg);
-    log.warn("WORKER: Job '{}' failed: {}: {}", jobId, msg, metrics);
+    log.warn("JOB: Failed {}: {}: {}", jobId, msg, metrics);
     setElapsedTime();
     return this;
   }

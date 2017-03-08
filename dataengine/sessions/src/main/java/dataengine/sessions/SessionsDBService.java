@@ -36,8 +36,8 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Session> createSession(Session session) {
-    log.info("SERV: createSession: {}", session.getId());
     session.id(useOrGenerateId(session.getId()));
+    log.info("SERV: createSession: {}", session.getId());
     String baseDir = genSessionDir(session);
     sessDB.addSessionNode(session, baseDir);
     return getSession(session.getId());
@@ -45,8 +45,8 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Request> addRequest(Request req) {
-    log.info("SERV: addRequest: {}", req.getId());
     req.id(useOrGenerateId(req.getId()));
+    log.info("SERV: addRequest: {}", req.getId());
     sessDB.addRequestNode(req);
     return getRequest(req.getId());
   }
@@ -58,8 +58,8 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Job> addJob(Job job, String[] inputJobIds) {
-    log.info("SERV: addJob: {} {}", job.getId(), Arrays.toString(inputJobIds));
     job.id(useOrGenerateId(job.getId()));
+    log.info("SERV: addJob: {} {}", job.getId(), Arrays.toString(inputJobIds));
     sessDB.addJobNode(job, inputJobIds);
     return getJob(job.getId());
   }
@@ -73,14 +73,14 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<List<Job>> getInputJobs(String jobId) {
-    log.info("SERV: getInputJobs: {}", jobId);
+    log.debug("SERV: getInputJobs: {}", jobId);
     List<JobFrame> jobs = sessDB.getInputJobs(jobId);
     return CompletableFuture.completedFuture(jobs.stream().map(SessionDB_JobHelper::toJob).collect(toList()));
   }
 
   @Override
   public CompletableFuture<List<Job>> getOutputJobs(String jobId) {
-    log.info("SERV: getOutputJobs: {}", jobId);
+    log.debug("SERV: getOutputJobs: {}", jobId);
     List<JobFrame> jobs = sessDB.getOutputJobs(jobId);
     return CompletableFuture.completedFuture(jobs.stream().map(SessionDB_JobHelper::toJob).collect(toList()));
   }
@@ -96,8 +96,8 @@ public class SessionsDBService implements SessionsDB_I {
   }
 
   private CompletableFuture<Dataset> addDatasetToJob(Dataset ds, String jobId, IO io) {
-    log.info("SERV: addDatasetToJob: {}", ds.getId());
     ds.id(useOrGenerateId(ds.getId()));
+    log.info("SERV: addDatasetToJob: {}", ds.getId());
     sessDB.addDatasetNode(ds, jobId, io);
     return getDataset(ds.getId());
   }
@@ -134,13 +134,13 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<List<Session>> listSessions() {
-    log.info("SERV: listSessions");
+    log.debug("SERV: listSessions");
     return CompletableFuture.completedFuture(SessionDB_SessionHelper.toSessions(sessDB.listSessionFrames()));
   }
 
   @Override
   public CompletableFuture<List<String>> listSessionIds() {
-    log.info("SERV: listSessionIds");
+    log.debug("SERV: listSessionIds");
     List<Session> list = listSessions().join();
     List<String> sessList = list.stream().map(s -> s.getId()).collect(Collectors.toList());
     return CompletableFuture.completedFuture(sessList);
@@ -150,7 +150,7 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Map<String, String>> listSessionNames() {
-    log.info("SERV: listSessionNames");
+    log.debug("SERV: listSessionNames");
     if (SAFE) { // less efficient
       List<Session> list = listSessions().join();
       Map<String, String> sessList = list.stream()
@@ -164,49 +164,49 @@ public class SessionsDBService implements SessionsDB_I {
 
   @Override
   public CompletableFuture<Boolean> hasSession(String id) {
-    log.info("SERV: hasSession: {}", id);
+    log.debug("SERV: hasSession: {}", id);
     return CompletableFuture.completedFuture(sessDB.hasSession(id));
   }
 
   @Override
   public CompletableFuture<Boolean> hasRequest(String id) {
-    log.info("SERV: hasRequest: {}", id);
+    log.debug("SERV: hasRequest: {}", id);
     return CompletableFuture.completedFuture(sessDB.hasRequest(id));
   }
 
   @Override
   public CompletableFuture<Session> getSession(String id) {
-    log.info("SERV: getSession: {}", id);
+    log.debug("SERV: getSession: {}", id);
     return CompletableFuture.completedFuture(SessionDB_SessionHelper.toSession(sessDB.getSessionFrame(id)));
   }
 
   @Override
   public CompletableFuture<Request> getRequest(String id) {
-    log.info("SERV: getRequest: {}", id);
+    log.debug("SERV: getRequest: {}", id);
     return CompletableFuture.completedFuture(SessionDB_RequestHelper.toRequest(sessDB.getRequestFrame(id)));
   }
 
   @Override
   public CompletableFuture<Job> getJob(String id) {
-    log.info("SERV: getJob: {}", id);
+    log.debug("SERV: getJob: {}", id);
     return CompletableFuture.completedFuture(SessionDB_JobHelper.toJob(sessDB.getJobFrame(id)));
   }
 
   @Override
   public CompletableFuture<String> getLastJobIdOfRequest(String requestId){
-    log.info("SERV: getLastJobId: {}", requestId);
+    log.debug("SERV: getLastJobId: {}", requestId);
     return CompletableFuture.completedFuture(sessDB.getLastJobIdOf(requestId));
   }
   
   @Override
   public CompletableFuture<Dataset> getDataset(String id) {
-    log.info("SERV: getDataset: {}", id);
+    log.debug("SERV: getDataset: {}", id);
     return CompletableFuture.completedFuture(SessionDB_DatasetHelper.toDataset(sessDB.getDatasetFrame(id)));
   }
   
   @Override
   public CompletableFuture<Void> setJobParam(String jobId, String key, Object value){
-    log.info("SERV: setJobParam of {}: {}={}", jobId, key, value);
+    log.debug("SERV: setJobParam of {}: {}={}", jobId, key, value);
     sessDB.setJobParam(jobId, key, value);;
     return CompletableFuture.completedFuture(null);
   }

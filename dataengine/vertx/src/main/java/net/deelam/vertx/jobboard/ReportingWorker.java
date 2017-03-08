@@ -30,10 +30,10 @@ public class ReportingWorker implements JobWorker, HasProgress {
       doer.accept(job);
       return true;
     } catch (Throwable e) {
-      log.error("Error during job processing by "+doer, e);
+      log.error("WORKER: Error during job processing by "+doer, e);
       ProgressState state = getProgress();
       if(state.getPercent()>0)
-        log.warn("Should set percent to negative! {}", state);
+        log.warn("WORKER: Should set percent to negative! {}", state);
       return false;
     }
   }
@@ -47,7 +47,7 @@ public class ReportingWorker implements JobWorker, HasProgress {
   
   public ReportingWorker setProgressMonitorFactory(ProgressMonitor.Factory pmFactory) {
     if(progressMonitorProvider!=DUMMY_PM_PROVIDER)
-      log.warn("Overriding previously set progressMonitorProvider={}", progressMonitorProvider);
+      log.warn("WORKER: Overriding previously set progressMonitorProvider={}", progressMonitorProvider);
     progressMonitorProvider = job -> {
       return pmFactory.create(job.getId(), job.getProgressPollIntervalSeconds(), job.getProgressVertxAddr());
     };
