@@ -24,7 +24,7 @@ final class OperationsSubscriberModule extends AbstractModule {
         new OperationsSubscriberVerticle(VerticleConsts.opsRegBroadcastAddr,
             "ops" + (++subscriberCounter) + "-" + worker.name() + System.currentTimeMillis(),
             worker);
+    log.info("VERTX: WORKER: Deploying OperationsSubscriberVerticle: {} for {}", opsRegVert, worker); 
     vertx.deployVerticle(opsRegVert);
-    log.info("Created OperationsSubscriberVerticle: {} for {}", opsRegVert, worker);
   }
 }

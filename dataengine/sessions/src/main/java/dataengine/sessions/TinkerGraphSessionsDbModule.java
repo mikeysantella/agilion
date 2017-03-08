@@ -41,6 +41,7 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
   static void deploySessionDb(Injector injector) {
     SessionsDB_I sessVert = injector.getInstance(SessionsDB_I.class);
     Vertx vertx = injector.getInstance(Vertx.class);
+    log.info("VERTX: SERV: Deploying RPC service for SessionsDB_I: {} ", sessVert); 
     new RpcVerticleServer(vertx, VerticleConsts.sessionDbBroadcastAddr)
         .start("SessionsDBServiceBusAddr", sessVert);
   }

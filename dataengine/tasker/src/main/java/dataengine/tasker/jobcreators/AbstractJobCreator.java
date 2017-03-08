@@ -30,7 +30,7 @@ public abstract class AbstractJobCreator implements JobsCreator {
   };
   
   protected Operation initOperation() {
-    log.warn("JobsCreator.operation not initialized: {}", this);
+    log.warn("TASKER: JobsCreator.operation not initialized: {}", this);
     // subclasses should populate operation
     return new Operation().level(0).id(this.getClass().getSimpleName());
   }

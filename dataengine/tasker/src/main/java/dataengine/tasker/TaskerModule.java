@@ -22,9 +22,11 @@ import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
+@Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 final class TaskerModule extends AbstractModule {
   final Properties properties;
@@ -69,6 +71,7 @@ final class TaskerModule extends AbstractModule {
   static void deployTasker(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
+    log.info("VERTX: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
     new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
         .start("TaskerServiceBusAddr" + System.currentTimeMillis(), taskerSvc, true);
   }

@@ -63,7 +63,6 @@ public class IngestTelephoneDummyWorker extends BaseWorker<Job> {
 
   @Override
   protected boolean doWork(Job job) throws Exception {
-    log.info("WORKER: doWork(): {} {}", this, job);
     Dataset inDS = new Dataset()
         .uri((String) job.getParams().get(OperationConsts.INPUT_URI))
         .dataFormat((String) job.getParams().get(OperationConsts.DATA_FORMAT))

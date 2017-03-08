@@ -29,14 +29,14 @@ public class TaskerJobListener extends AbstractVerticle implements JobListener_I
   final String eventBusAddress="JobListener-"+System.currentTimeMillis();
 
   public void updateJobState(String jobId, State state) {
-    log.info("SERV: updateJobState: {} {}", jobId, state);
+    log.info("updateJobState: {} {}", jobId, state);
     // placeholder to do any checking
     if(state!=null)
       sessDb.rpc().updateJobState(jobId, state);
   }
 
   public void updateJobProgress(String jobId, Progress progress) {
-    log.info("SERV: updateJobProgress: {} {}", jobId, progress);
+    log.info("updateJobProgress: {} {}", jobId, progress);
     // placeholder to do any checking
     sessDb.rpc().updateJobProgress(jobId, progress);
   }

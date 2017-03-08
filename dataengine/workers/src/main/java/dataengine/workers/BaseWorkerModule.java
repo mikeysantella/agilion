@@ -62,7 +62,7 @@ public class BaseWorkerModule extends AbstractModule {
           .setProgressMonitorFactory(pmFactory);
       
       JobConsumer jConsumer = new JobConsumer(jobBoardId, doer.jobType()).setWorker(rw);
-      log.info("Deploying JobConsumer jobBoardId={} with ReportingWorker for: {} type={}", 
+      log.info("VERTX: WORKER: Deploying JobConsumer jobBoardId={} with ReportingWorker for: {} type={}", 
           jobBoardId, doer.name(), doer.jobType());
       vertx.deployVerticle(jConsumer);
       return jConsumer;

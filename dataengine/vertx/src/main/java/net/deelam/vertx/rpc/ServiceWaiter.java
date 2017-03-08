@@ -45,12 +45,12 @@ public class ServiceWaiter {
     while (true)
       try {
         if(!serverAddrF.isDone())
-          log.info("Waiting for server response from '{}' ...", base.serversBroadcastAddr);
+          log.info("VERTX: Waiting for server response from '{}' ...", base.serversBroadcastAddr);
         String serverAddr = serverAddrF.get(10, TimeUnit.SECONDS); // wait for serverAddr
         //log.debug("Got server address: {}", serverAddr);
         return serverAddr;
       } catch (InterruptedException | ExecutionException | TimeoutException e) {
-        log.warn(" Retrying to get serverAddr from "+base.serversBroadcastAddr, e);
+        log.warn("VERTX: Retrying to get serverAddr from "+base.serversBroadcastAddr, e);
       }
   }
 

@@ -8,8 +8,10 @@ import com.google.inject.Injector;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
+import lombok.extern.slf4j.Slf4j;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
+@Slf4j
 final class OperationsRegistryModule extends AbstractModule {
   @Override
   protected void configure() {
@@ -31,9 +33,11 @@ final class OperationsRegistryModule extends AbstractModule {
     Vertx vertx = injector.getInstance(Vertx.class);
   
     OperationsRegistryVerticle opsRegVert = injector.getInstance(OperationsRegistryVerticle.class);
+    log.info("VERTX: TASKER: Deploying OperationsRegistryVerticle: {} ", opsRegVert); 
     vertx.deployVerticle(opsRegVert);
   
     OperationsRegistry_I opsRegSvc = injector.getInstance(OperationsRegistry_I.class);
+    log.info("VERTX: TASKER: Deploying RPC service for OperationsRegistry_I: {} ", opsRegVert); 
     new RpcVerticleServer(vertx, VerticleConsts.opsRegBroadcastAddr)
         .start("OperationsRegServiceBusAddr", opsRegSvc);
   }

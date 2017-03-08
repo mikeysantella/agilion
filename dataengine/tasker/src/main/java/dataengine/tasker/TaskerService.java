@@ -37,7 +37,7 @@ public class TaskerService implements Tasker_I {
 
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
-    log.info("SERV: submitRequest: {}", req);
+    log.info("TASKER: submitRequest: {}", req);
     String reqOperationId = req.getOperation().getId();
     if (!opsRegVert.getOperations().containsKey(reqOperationId))
       throw new IllegalArgumentException("Unknown operationId=" + reqOperationId);
@@ -54,7 +54,7 @@ public class TaskerService implements Tasker_I {
   }
 
   private CompletableFuture<Request> submitJobs(Request addedReq, JobsCreator jc) {
-    log.info("  submitJobs for: {}", addedReq);
+    log.info("submitJobs for: {}", addedReq);
     
     // get last jobs of prior requests
     CompletableFuture<List<String>> priorJobIdsF = getLastJobsOfRequests(addedReq.getPriorRequestIds());
@@ -65,7 +65,7 @@ public class TaskerService implements Tasker_I {
       
       CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);
       for (JobEntry jobE : jobs) {
-        log.info("    adding new job " + jobE.job().getId());
+        log.debug("created new job " + jobE.job().getId());
         // add job to sessionsDB and submit to jobDispatcher
         addJobsChainF = addJobsChainF.thenCompose((isAdded) -> {
           if (isAdded)
@@ -110,7 +110,7 @@ public class TaskerService implements Tasker_I {
 
   @Override
   public CompletableFuture<Void> refreshJobsCreators() {
-    log.info("SERV: refreshJobsCreators()");
+    log.info("TASKER: refreshJobsCreators()");
     return CompletableFuture.runAsync(() -> {
       Map<String, Operation> currOps = opsRegVert.getOperations(); // TODO: 4: replace with RPC call and .thenApply
       
@@ -134,7 +134,7 @@ public class TaskerService implements Tasker_I {
   
   @Override
   public CompletableFuture<Boolean> addJob(Job job, String[] inputJobIds) {
-    log.info("SERV: addJob {} with inputs={}", job.getId(), Arrays.toString(inputJobIds));
+    log.info("TASKER: addJob {} with inputs={}", job.getId(), Arrays.toString(inputJobIds));
     // add job to sessionsDB
     CompletableFuture<Job> addJobToSessDB = sessDb.rpc().addJob(job);
     return addJobToSessDB.thenCompose((sessDbJob) -> {

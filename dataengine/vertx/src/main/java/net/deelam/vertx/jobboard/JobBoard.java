@@ -21,6 +21,7 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ import net.deelam.vertx.jobboard.JobBoard.JobItem.JobState;
 @ToString
 @RequiredArgsConstructor
 public class JobBoard extends AbstractVerticle {
+  @Getter
   private final String serviceType;
 
   private final String addressBase;
@@ -98,14 +100,14 @@ public class JobBoard extends AbstractVerticle {
     KryoMessageCodec.register(eb, JobListDTO.class);
     
     vertx.eventBus().consumer(serviceType, (Message<String> clientAddr) -> {
-      log.info("Got client broadcast from {}", clientAddr.body());
+      log.debug("Got client broadcast from {}", clientAddr.body());
       vertx.eventBus().send(clientAddr.body(), addressBase);
     });
 
     eb.consumer(addressBase/* + BUS_ADDR.REGISTER*/, message -> {
       String workerAddr = getWorkerAddress(message);
       String workerType = getWorkerJobType(message);
-      log.debug("Received initial message from {}", workerAddr);
+      log.info("Received initial message from worker: {}", workerAddr);
       if(workerType==null){
         log.error("Cannot register worker with null type: {}", workerAddr);
         return;
@@ -170,7 +172,7 @@ public class JobBoard extends AbstractVerticle {
     });
     eb.consumer(addressBase + BUS_ADDR.REMOVE_JOB, message -> {
       String jobId = readJobId(message);
-      log.debug("Received REMOVE_JOB message: jobId={}", jobId);
+      log.info("Received REMOVE_JOB message: jobId={}", jobId);
       JobItem ji = jobItems.get(jobId);
       if (ji == null) {
         message.fail(-12, "Cannot find job with id=" + jobId);
@@ -330,7 +332,7 @@ public class JobBoard extends AbstractVerticle {
       log.info("Currently negotiating; skipping negotiation with {}", idleWorker);
     } else {
       final JobListDTO jobList = getAvailableJobsFor(idleWorker);
-      log.info("Negotiating jobs with {}, jobList={}", idleWorker, jobList);
+      log.debug("Negotiating jobs with {}, jobList={}", idleWorker, jobList);
       isNegotiating = true; // make sure all code paths reset this to false
       asyncSendJobsTo(idleWorker, jobList);
     }
@@ -427,7 +429,7 @@ public class JobBoard extends AbstractVerticle {
     }).collect(Collectors.toList());
 
     if(jobListL.size()==0)
-      log.info("No '{}' jobs for: {}", jobType, workerAddr);
+      log.debug("No '{}' jobs for: {}", jobType, workerAddr);
     
     JobListDTO jobList = new JobListDTO(jobListL);
     return jobList;

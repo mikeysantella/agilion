@@ -30,7 +30,7 @@ public class ClusteredVertxInjectionModule extends AbstractModule {
         Properties props = new Properties();
         props.load(is);
       } catch (FileNotFoundException e) {
-        log.info("No vertx.props found.  Creating non-clustered Vertx instance.");
+        log.info("VERTX: No vertx.props found.  Creating non-clustered Vertx instance.");
         vertxF.complete(Vertx.vertx());
       } catch (IOException e) {
         log.error("Error reading vertx.props", e);
@@ -41,7 +41,7 @@ public class ClusteredVertxInjectionModule extends AbstractModule {
         StartVertx.createClustered(vertxConfig, vertx -> {
           //System.out.println("=========  Vert.x service registered");
           vertxF.complete(vertx);
-          log.info("VertX created");
+          log.info("VERTX: VertX created");
         }) //
         , "clusteredVertxCreator").start();
       }
@@ -50,10 +50,10 @@ public class ClusteredVertxInjectionModule extends AbstractModule {
     try {
       boolean haveToWait = !vertxF.isDone();
       if (haveToWait)
-        log.info("Waiting for Vertx ... {}", vertxF);
+        log.info("VERTX: Waiting for Vertx ... {}", vertxF);
       bind(Vertx.class).toInstance(vertxF.get(10, TimeUnit.SECONDS));
       if (haveToWait)
-        log.info("Got Vertx");
+        log.info("VERTX: Got Vertx");
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       throw new RuntimeException(e);
     }
