@@ -88,8 +88,8 @@ public final class SessionDB_RequestHelper {
     });
   }
   
-  public void connectAsOutputDatasetNode(String requestId, String datasetId){
-    log.debug("connectAsOutputDatasetNode: reqId={} dsId={}", requestId, datasetId);
+  public void connectRequestToOutputDataset(String requestId, String datasetId){
+    log.debug("connectRequestToOutputDataset: reqId={} dsId={}", requestId, datasetId);
     tryAndCloseTxn(graph, graph -> {
       RequestFrame rf = frameHelper.getVertexFrame(requestId, RequestFrame.class);
       DatasetFrame df = frameHelper.getVertexFrame(datasetId, DatasetFrame.class);

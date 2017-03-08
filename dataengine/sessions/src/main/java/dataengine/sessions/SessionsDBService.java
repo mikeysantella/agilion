@@ -103,8 +103,8 @@ public class SessionsDBService implements SessionsDB_I {
   }
 
   @Override
-  public CompletableFuture<Void> connectAsOutputDatasetNode(String requestId, String datasetId) {
-    sessDB.connectAsOutputDatasetNode(requestId, datasetId);
+  public CompletableFuture<Void> connectRequestToOutputDataset(String requestId, String datasetId) {
+    sessDB.connectRequestToOutputDataset(requestId, datasetId);
     return CompletableFuture.completedFuture(null);
   }
 

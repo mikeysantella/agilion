@@ -126,6 +126,6 @@ public class AddSourceDataset extends AbstractJobCreator {
         new JobEntry(job0, priorJobIds.toArray(new String[priorJobIds.size()])),
         new JobEntry(job1, job0.getId()),
         new JobEntry(job2, job1.getId()),
-        new JobEntry(job3, job1.getId()));
+        new JobEntry(job3, job2.getId()));
   }
 }
