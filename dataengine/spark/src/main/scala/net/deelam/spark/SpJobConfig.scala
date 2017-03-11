@@ -67,7 +67,7 @@ object SpJobConfig {
     import JavaFunctionUtil.toConsumer
     config.getKeys("spark").forEachRemaining((keyAny: Any) => {
       val key = keyAny.asInstanceOf[String]
-      sj.staticProps.addProperty(key, config.getString(key));
+      sj.staticProps.put(key, config.getString(key));
       log.info(s"Adding spark conf property: ${key}=${config.getString(key)}");
     });
 
@@ -91,7 +91,7 @@ class SpJobConfig(private val appNamePrefix: String,
     val appArgs: Seq[String] = Seq(),
     val classpath: collection.mutable.Map[String, URI] = collection.mutable.Map(),
     // properties with prefix 'spark.' from sparkjob-*.props
-    val staticProps: Configuration = new BaseConfiguration(),
+    val staticProps: collection.mutable.Map[String, String] = collection.mutable.Map(),
     // spark job input params
     val inputParams: collection.mutable.Map[String, String] = collection.mutable.Map(),
     private val config: Configuration = new BaseConfiguration(),
@@ -115,13 +115,22 @@ class SpJobConfig(private val appNamePrefix: String,
         log.warn("Log4j file not found: {}", log4jFile);
       else {
         addToFileArtifacts(log4jFile);
-        staticProps.addProperty("spark.driver.extraJavaOptions", "-Ddnl.isDriver=true -Dlog4j.configuration=file:./" + log4jFile); // so log4j will load file
-        staticProps.addProperty("spark.executor.extraJavaOptions", "-Ddnl.isExecutor=true -Dlog4j.configuration=file:./" + log4jFile); // so log4j will load file
+        addStaticProp("spark.driver.extraJavaOptions", "-Ddnl.isDriver=true -Dlog4j.configuration=file:./" + log4jFile); // so log4j will load file
+        addStaticProp("spark.executor.extraJavaOptions", "-Ddnl.isExecutor=true -Dlog4j.configuration=file:./" + log4jFile); // so log4j will load file
       }
   }
 
   def addToFileArtifacts(requiredFile: String) =
-    staticProps.addProperty(SpJobSubmitter.INPUT_FILES_TO_COPY, requiredFile);
+    addStaticProp(SpJobSubmitter.INPUT_FILES_TO_COPY, requiredFile);
+  
+  private def addStaticProp(key:String, appendValue:String, delim:String=" "){
+    staticProps.get(key) match {
+      case Some(value)=>
+         staticProps.put(key, value+delim+appendValue)
+      case None => 
+         staticProps.put(key, appendValue)
+    }
+  }
 
   def setInputParams(key: String, value: String) =
     inputParams.put(key, value);

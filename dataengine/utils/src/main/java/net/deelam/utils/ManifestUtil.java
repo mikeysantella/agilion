@@ -11,11 +11,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ManifestUtil {
-  static Logger log=Logger.getLogger(ManifestUtil.class.getName());
+  //static Logger log=Logger.getLogger(ManifestUtil.class.getName());
   
   public static void main(String[] args) throws Exception {
     //JavaLoggingUtil.configureJUL("%1$tH:%1$tM:%1$tS [%4$s] %5$s%6$s%n");
@@ -58,7 +60,7 @@ public class ManifestUtil {
           throw new RuntimeException(e);
         }
       }else{
-        log.warning("Skipping non-existing file: "+file);
+        log.warn("Skipping non-existing file: "+file);
       }
     });
   }
@@ -75,7 +77,7 @@ public class ManifestUtil {
       if(file.exists()){
         list.add(filename);
       }else{
-        log.warning("Skipping non-existing file: "+file);
+        log.warn("Skipping non-existing file: "+file);
       }
     });
     return list;

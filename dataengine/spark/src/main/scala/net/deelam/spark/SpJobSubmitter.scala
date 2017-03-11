@@ -20,42 +20,39 @@ object SpJobSubmitter {
   println(s"log=$log")
 
   def main(args: Array[String]): Unit = {
-     // set for launcher
-    net.deelam.utils.JavaLoggingUtil.configureJUL()
-  
     import java.net.URI
     log.info("Starting")
     org.apache.commons.io.FileUtils.deleteDirectory(new java.io.File("build/result"));
     //import collection.mutable.Map
-    val config = if(!false)
-      SpJobConfig(sparkMaster = "local[*]", 
-      deployMode = "client",
-      filename="sparkjob-ingestcsv.props")
+    val config = if (!false)
+      SpJobConfig(sparkMaster = "local[*]",
+        deployMode = "client",
+        filename = "sparkjob-ingestcsv.props")
     else
       new SpJobConfig(
-      appNamePrefix = "testSpJobSubmitter", 
-      sparkMaster = "local[*]", 
-      deployMode = "client",
-      appJar = "../sparkjobs/build/libs/sparkjobs-0.0.3-SNAPSHOT.jar",
-      mainClass = "dataengine.sparkjobs.SparkDummyApp")
+        appNamePrefix = "testSpJobSubmitter",
+        sparkMaster = "local[*]",
+        deployMode = "client",
+        appJar = "../sparkjobs/build/libs/sparkjobs-0.0.3-SNAPSHOT.jar",
+        mainClass = "dataengine.sparkjobs.SparkDummyApp")
 
     config.setInputParams("inputFile", "sparkjob-log4j.xml")
     config.setInputParams("domainClass", "myDomainClass")
-    
+
     implicit val htConfigs: HadoopConfigs = null
-    val destDirUri=URI.create("hdfs://tmp/somepath")
-    config.copyOrResolveFiles(destDirUri, overwrite=true)
-    
-    if(config.isReady()){
+    val destDirUri = URI.create("hdfs://tmp/somepath")
+    config.copyOrResolveFiles(destDirUri, overwrite = true)
+
+    if (config.isReady()) {
       val launcher = new SpJobSubmitter(config)
       val appHandleP = launcher.startJob(l => {
         //l.setConf(SparkLauncher.DRIVER_MEMORY, "2g")
       })
-  
+
       val appHandle = Await.result(appHandleP.future, 30 seconds)
       log.info("Done {}", appHandle.getAppId)
     } else {
-      log.error("Spark job not ready!")    
+      log.error("Spark job not ready!")
     }
   }
 
@@ -86,7 +83,7 @@ object SpJobSubmitter {
 }
 
 class SpJobSubmitter(config: SpJobConfig) {
-   // set for launcher
+  // set for launcher
   net.deelam.utils.JavaLoggingUtil.configureJUL("[%4$s] %5$s%6$s%n")
   val log = org.slf4j.LoggerFactory.getLogger(this.getClass)
 
@@ -121,10 +118,12 @@ class SpJobSubmitter(config: SpJobConfig) {
     .setMainClass(config.mainClass)
     .addAppArgs(config.appArgs: _*);
 
-  config.staticProps.getList(SpJobSubmitter.INPUT_FILES_TO_COPY).toSeq
+  config.staticProps.getOrElse(SpJobSubmitter.INPUT_FILES_TO_COPY, "").split(" ")
     .foreach {
-      case file: String => {
-        Preconditions.checkState(new java.io.File(file).exists())
+      case "" =>
+      case file => {
+        if (!new java.io.File(file).exists())
+          log.error(s"File does not exist: '$file'")
         launcher.addFile(file); // this will cause the file to be copied to each executor
         // Not for hdfs input files, which must be copied by SpJobConfig 
         // and user must set as a config.inputParam.
@@ -205,35 +204,26 @@ class SpJobSubmitter(config: SpJobConfig) {
    * Properties set directly on the SparkConf take highest precedence, then flags passed to spark-submit or spark-shell,
    * then options in the spark-defaults.conf file
    */
-  
+
   import JavaFunctionUtil.toConsumer
-  config.staticProps.getKeys.forEachRemaining((keyAny: Any) => {
-    val key = keyAny.asInstanceOf[String]
-    val valueList = config.staticProps.getList(key);
-    if (valueList.size() > 1) {
+  config.staticProps.foreach {
+    case (key, value) if (value != null) => {
       key match {
-        case "spark.driver.extraJavaOptions" | "spark.executor.extraJavaOptions" =>
-          launcher.setConf(key, valueList.mkString(" "));
-        case "spark.driver.userClassPathFirst" | "spark.executor.userClassPathFirst" =>
-          launcher.setConf(key, config.staticProps.getString(key));
         //TODO: 7: handle other multivalued spark options https://spark.apache.org/docs/1.3.0/configuration.html
-        case _ =>
-          log.warn(s"What to do with this key ${key} with valueList=${valueList}");
-          launcher.setConf(key, valueList.mkString(" "));
-      }
-    } else {
-      val value = config.staticProps.getString(key);
-      if (key.startsWith("spark.")) {
-        log.info(s"Setting conf $key=$value");
-        launcher.setConf(key, value);
-      } else if (key.startsWith("env.")) {
-        log.error("NEEDED?   Setting System property from " + key + " in spark-specific property file.");
-        System.setProperty(key.substring("env.".length()), value);
-      } else {
-        log.warn(s"Ignoring property $key=$value  Launcher will only pass keys starting with 'spark.' to be set in SparkConf() of scala app.");
+//        case "spark.driver.extraJavaOptions" | "spark.executor.extraJavaOptions" =>
+//          launcher.setConf(key, value);
+//          log.info(s"Setting conf $key=$value");
+        case key if (key.startsWith("spark.")) =>
+          log.info(s"Setting conf $key=$value");
+          launcher.setConf(key, value);
+        case key if (key.startsWith("env.")) =>
+          log.error("NEEDED?   Setting System property from " + key + " in spark-specific property file.");
+          System.setProperty(key.substring("env.".length()), value);
+        case key =>
+          log.warn(s"Ignoring property $key=$value  Launcher will only pass keys starting with 'spark.' to be set in SparkConf() of scala app.");
       }
     }
-  })
+  }
 
   def startJob(configure: (SparkLauncher) => Unit = (sl) => Unit) = {
     launcher.setConf("spark.ui.enabled", "false")
@@ -245,19 +235,13 @@ class SpJobSubmitter(config: SpJobConfig) {
       }
       def stateChanged(handle: SparkAppHandle) = {
         log.info("stateChanged: " + handle.getState);
-        if (handle.getState == SparkAppHandle.State.FINISHED)
+        if (handle.getState == SparkAppHandle.State.FINISHED){
+          net.deelam.utils.JavaLoggingUtil.disableJUL();
           p.success(handle)
+        }
       }
     })
     p
   }
 
-  def waitFor(sparkProc: Process) = {
-    val retCode = sparkProc.waitFor();
-    net.deelam.utils.JavaLoggingUtil.disableJUL();
-    if (retCode > 0) {
-      throw new IllegalStateException("Sparkjob failed with return code=" + retCode);
-    }
-    retCode
-  }
 }
