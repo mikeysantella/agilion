@@ -209,10 +209,6 @@ class SpJobSubmitter(config: SpJobConfig) {
   config.staticProps.foreach {
     case (key, value) if (value != null) => {
       key match {
-        //TODO: 7: handle other multivalued spark options https://spark.apache.org/docs/1.3.0/configuration.html
-//        case "spark.driver.extraJavaOptions" | "spark.executor.extraJavaOptions" =>
-//          launcher.setConf(key, value);
-//          log.info(s"Setting conf $key=$value");
         case key if (key.startsWith("spark.")) =>
           log.info(s"Setting conf $key=$value");
           launcher.setConf(key, value);
