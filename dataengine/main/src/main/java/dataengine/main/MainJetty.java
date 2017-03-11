@@ -38,7 +38,7 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
  * To deploy as a war file, use the 'dataengine.server' project instead.
  * In which case, other projects need to be started in other JVMs.
  */
-@Slf4j // TODO: 2: update Log4jUtils
+@Slf4j
 public class MainJetty {
   public static void main(String[] args) throws Exception {
     String onlyRunServerProject = System.getProperty("ONLY_RUN_SERVER");

@@ -18,6 +18,7 @@ import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+// TODO: 4: replace with Neo4j3
 @Slf4j
 public class IdGrafFactoryNeo4j implements IdGrafFactory {
 

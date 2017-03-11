@@ -32,7 +32,7 @@ public class OperationsMerger {
     } else {
       op.description(mergeDescription(newOp.getDescription(), op.getDescription()));
 
-      // TODO: merge info maps
+      // TODO: 3: merge info maps
       if (newOp.getInfo() == null)
         op.info(newOp.getInfo());
       else
