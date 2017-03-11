@@ -1,5 +1,8 @@
 apply plugin: 'scala'
 
+apply plugin: 'application'
+mainClassName = "net.deelam.spark.Launcher"
+
 dependencies {
   compile project(':utils')
   compile dep.scala_library
@@ -8,3 +11,4 @@ dependencies {
   compileOnly 'org.apache.hbase:hbase-client:1.0.0'
   testCompile dep.scala_test
 }
+

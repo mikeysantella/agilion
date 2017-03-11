@@ -5,21 +5,27 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 
+/**
+ * See http://logging.apache.org/log4j/1.2/manual.html#Default_Initialization_Procedure
+ */
 public class Log4jUtil {
-  
-  private static final String LOG4J_CONFIGURATION_FILE = "log4j.configurationFile";
-  
-  public static void loadXml(){
+
+  private static final String LOG4J_CONFIGURATION_KEY = "log4j.configuration";
+
+  public static void loadXml() {
     File file = new File("log4j.xml");
-    if (System.getProperty(LOG4J_CONFIGURATION_FILE) == null && file.exists()) {
+    if (System.getProperty(LOG4J_CONFIGURATION_KEY) == null && file.exists()) {
       // set a default if file exist
-      System.out.println("Found log4j.xml file in current directory.  Setting log4j.configurationFile=log4j.xml");
-      System.setProperty(LOG4J_CONFIGURATION_FILE, "log4j.xml");
+      System.setProperty(LOG4J_CONFIGURATION_KEY, file.toURI().toString());
+      System.out.println("Found log4j.xml file in current directory.  Set " + LOG4J_CONFIGURATION_KEY + "="
+          + System.getProperty(LOG4J_CONFIGURATION_KEY));
+    } else {
+      checkForLog4jFile();
     }
-    checkForLog4jFile();
   }
+
   private static void checkForLog4jFile() {
-    String logConfigFile = System.getProperty(LOG4J_CONFIGURATION_FILE);
+    String logConfigFile = System.getProperty(LOG4J_CONFIGURATION_KEY);
     if (logConfigFile != null) { // if property set, then check that file can be found
       //System.out.println("  Checking that System property: log4j.configurationFile=" + logConfigFile+" is in classpath");
       {
