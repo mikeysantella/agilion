@@ -92,7 +92,8 @@ configure(subprojects) {
 configure([
   project(':sessions'),
   project(':tasker'),
-  project(':workers')
+  project(':workers'),
+  project(':sparkjobs')
 ]) {
   afterEvaluate {
     dependencies {
@@ -102,8 +103,13 @@ configure([
       manifest {
         attributes 'Main-Class': mainClassName
         // must be run after dependencies declared
-        attributes "Class-Path": configurations.compile.collect { it.getName() }.join(' ')
+        attributes "Class-Path": configurations.compile.collect { 'libs/'+it.getName() }.join(' ')
       }
+    }
+
+    task copyRuntimeLibs(type: Copy) {
+      into "libs"
+      from configurations.runtime
     }
   }
 }

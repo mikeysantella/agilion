@@ -65,6 +65,8 @@ public class ManifestUtil {
   
   public static List<String> getClasspathJars(String jarFile) throws IOException {
     String cp = getManifestProperty(jarFile, "Class-Path");
+    if(cp==null)
+      throw new RuntimeException("Class-Path missing from MANIFEST.MF of jar: "+jarFile);
     List<String> list=new ArrayList<>();
     Arrays.stream(cp.split(" ")).forEach(filename->{
       if(filename.equals("."))

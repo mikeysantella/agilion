@@ -1,0 +1,15 @@
+apply plugin: 'scala'
+
+apply plugin: 'application'
+mainClassName = "dataengine.sparkjobs.SparkDummyApp"
+
+dependencies {
+  compileOnly project(':constants') // constants seemed to be compiled in so only needed for compile
+  compile project(':utils')
+  compileOnly dep.scala_library
+  compileOnly group: 'org.apache.spark', name: 'spark-core_2.11', version: '2.0.2'
+//  compile dep.hadoop_common
+//  compileOnly 'org.apache.hbase:hbase-client:1.0.0'
+  testCompile dep.scala_test
+}
+
