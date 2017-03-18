@@ -6,8 +6,7 @@ body
 
 .page-content
 {
-    min-height: 100%;
-    padding-bottom: 30px;
+    height: 100%;
 }
 
 .navbar-fixed-top + .page-content
@@ -26,11 +25,10 @@ body
 
 .page-header
 {
-    font-size: 30px;
+    font-size: 40px;
     margin-top: 0px;
     padding: 0px;
-    margin-bottom: 15px;
-
+    margin-bottom: 20px;
 }
 
 .thin-form-group
@@ -58,26 +56,14 @@ body
     padding-bottom:7px;
 }
 
-.form-container
-{
-    background-color: #f6f6f6;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 0px;
-}
-
 .form-section
 {
+
 }
 
 .form-section-body
 {
 
-}
-
-.table
-{
-    margin-bottom: 5px;
 }
 
 .form-section > .form-section-header
@@ -89,15 +75,5 @@ body
     line-height: 1.1;
     color: inherit;
     margin-bottom: 10px;
-}
 
-/* The last form-group in the section doesn't need spacing at the bottom */
-.form-section-body > .form-group:last-child
-{
-    margin-bottom: 0px;
-}
-
-.formButtonContainer
-{
-    text-align: right;
 }

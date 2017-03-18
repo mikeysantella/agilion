@@ -1,0 +1,252 @@
+<html>
+<head>
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/font-awesome.min.css}">
+    <script th:src="@{/webjars/jquery/jquery.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
+    <script th:src="@{/webjars/datatables/js/jquery.dataTables.min.js}"></script>
+    <script th:src="@{/webjars/datatables/js/dataTables.bootstrap.min.js}"></script>
+    <link media="all" rel="stylesheet" th:href="@{/webjars/datatables/css/dataTables.bootstrap.min.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
+    <link media="all" rel="stylesheet" th:href="@{/css/buttons.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/panels.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
+    <script th:src="@{/js/sessionHistory.js}"></script>
+
+</head>
+<body>
+    <div th:replace="common/navbar::navbarContainer  ('dataEngine')"></div>
+
+    <div class="container-fluid page-content">
+        <div class="page-header">
+            Network Building Sessions
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <p style="font-size: 20px; padding: 0px;">Select a Session to view details and actions</p>
+                <table th:replace="session/_sessionTable::sessionTable"></table>
+                <hr class="very-small-divider"/>
+                <div id="sessionPanelContainer" class="hidden">
+                    <div style="font-size: 18px;">Showing details for Session <b>SocialMediaSession</b></div>
+                    <div class="panel panel with-nav-tabs panel-primary">
+                        <div class="panel-heading">
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#sessionDetails" data-toggle="tab">Session Info</a></li>
+                                <li><a href="#sessionConfig" data-toggle="tab">Session Configuration Parameters</a></li>
+                                <li><a href="#dataJobs" data-toggle="tab">Data Jobs</a></li>
+                                <li><a href="#transformJobs" data-toggle="tab">Transform Jobs</a></li>
+                                <li><a href="#tab3default" data-toggle="tab">Export Jobs</a></li>
+                            </ul>
+                        </div>
+                        <div class="panel-body">
+                            <div class="tab-content">
+                                <div class="tab-pane in active" id="sessionDetails">
+                                    <div class="col-md-6">
+                                        <div class="form-horizontal">
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label">Session Name</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">SocialMediaSession</p>
+                                                </div>
+                                            </div>
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label">Date Submitted</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">2017-02-3 01:03:12</p>
+                                                </div>
+                                            </div>
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label">Date Completed</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">---</p>
+                                                </div>
+                                            </div>
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label">Status</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">Working (step 2 of 3)</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-horizontal">
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label"># Data Jobs</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">4</p>
+                                                </div>
+                                            </div>
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label"># Transform Jobs</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">2</p>
+                                                </div>
+                                            </div>
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label"># Export Jobs</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static">1</p>
+                                                </div>
+                                            </div>
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label">Data Uploaded</label>
+                                                <div class="col-sm-8">
+                                                    <p class="form-control-static"><a href="#">Download Selector Text File</a></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="sessionConfig">
+                                    <div class="col-md-12">
+                                        <div class="form-horizontal">
+                                            <div class="form-group thin-form-group">
+                                                <label class="col-sm-4 control-label">JSON Configuration</label>
+                                                <div class="col-sm-8">
+                                                <textarea style="width: 100%" id="json" class="form-control-static">
+
+                                                </textarea>
+                                                </div>
+                                                <script>
+                                                var obj = {
+                                                    "removePendants": "true",
+                                                    "ignoreTypes": [
+                                                        "company",
+                                                        "celebrity"
+                                                     ],
+                                                     "maxNumConnections": "50"
+                                                };
+                                                $("#json").html(JSON.stringify(obj));
+                                            </script>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="dataJobs">
+                                    <button class="btn btn-primary" data-toggle="modal" data-target="#modal">
+                                        <i class="fa fa-plus"></i> Add New Data Job
+                                    </button>
+                                    <table  id="dataJobTable" class=" table table-condensed">
+                                        <thead>
+                                        <th>Job Name</th>
+                                        <th>Date Submitted</th>
+                                        <th>Date Completed</th>
+                                        <th>Status</th>
+                                        <th>Order</th>
+                                        <th>Configuration Details</th>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>LegalData.com</td>
+                                            <td>2017-02-23</td>
+                                            <td>2-17-02-24</td>
+                                            <td>Completed</td>
+                                            <td>1</td>
+                                            <td><a href="#">Click to View</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Data4cheap.oprg</td>
+                                            <td>2017-02-23</td>
+                                            <td>2-17-02-24</td>
+                                            <td>Completed</td>
+                                            <td>1</td>
+                                            <td><a href="#">Click to View</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>LegalData.com</td>
+                                            <td>2017-02-24</td>
+                                            <td>2-17-02-25</td>
+                                            <td>Working</td>
+                                            <td>2</td>
+                                            <td><a href="#">Click to View</a></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tab-pane" id="transformJobs">
+                                    <table id="transformJobTable" class=" table table-condensed">
+                                        <thead>
+                                        <th>Job Name</th>
+                                        <th>Date Submitted</th>
+                                        <th>Date Completed</th>
+                                        <th>Status</th>
+                                        <th>Results</th>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>K-Core</td>
+                                            <td>2017-02-23</td>
+                                            <td>2-17-02-24</td>
+                                            <td>Completed</td>
+                                            <td><a href="#">Download</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Consolidated Comm Net</td>
+                                            <td>2017-02-23</td>
+                                            <td>2-17-02-24</td>
+                                            <td>Completed</td>
+                                            <td><a href="#">Download</a></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job submitted popup -->
+    <div class="alert alert-success sticky-top-alert alert-dismissable">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <strong>Success!</strong> Job Submitted Successfully
+    </div>
+
+    <!-- Modal for adding new Data Job -->
+    <div class="modal fade" id="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Add New Data Job</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label for="inputEmail3" class="col-sm-4 control-label">Job Name</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" id="inputEmail3">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputEmail3" class="col-sm-4 control-label">Order</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" id="inputEmail3">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputEmail3" class="col-sm-4 control-label">Param 1</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" id="inputEmail3">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputEmail3" class="col-sm-4 control-label">Param 2</label>
+                            <div class="col-sm-8">
+                                <input type="email" class="form-control" id="inputEmail3">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default"  data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submit()" data-dismiss="modal">Submit Job</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+</body>
+</html>

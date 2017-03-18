@@ -2,31 +2,32 @@ package com.agilion.services;
 
 import dataengine.api.DatasetsApi;
 import dataengine.api.JobsApi;
+import dataengine.api.RequestsApi;
 import dataengine.api.SessionsApi;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * Created by Alex_Lappy_486 on 2/26/17.
  */
+@Service
 public class DataEngineClient
 {
+    @Autowired
     private SessionsApi sessionApi;
 
+    @Autowired
     private DatasetsApi datasetsApi;
 
+    @Autowired
     private JobsApi jobsApi;
 
-    public DataEngineClient(String basePath)
+    @Autowired
+    private RequestsApi requestsApi;
+
+    public DataEngineClient()
     {
-        this.sessionApi = new SessionsApi();
-        this.datasetsApi = new DatasetsApi();
-        this.jobsApi = new JobsApi();
-
-        this.sessionApi.getApiClient().setBasePath(basePath);
-        this.datasetsApi.getApiClient().setBasePath(basePath);
-        this.jobsApi.getApiClient().setBasePath(basePath);
     }
-
 
     public SessionsApi getSessionApi() {
         return sessionApi;
@@ -50,5 +51,13 @@ public class DataEngineClient
 
     public void setJobsApi(JobsApi jobsApi) {
         this.jobsApi = jobsApi;
+    }
+
+    public RequestsApi getRequestsApi() {
+        return requestsApi;
+    }
+
+    public void setRequestsApi(RequestsApi requestsApi) {
+        this.requestsApi = requestsApi;
     }
 }

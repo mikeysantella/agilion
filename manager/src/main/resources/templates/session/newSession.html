@@ -9,133 +9,236 @@
     <link media="all" rel="stylesheet" th:href="@{/css/panels.css}" />
     <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
     <link media="all" rel="stylesheet" th:href="@{/css/collapse.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/newSession.css}" />
     <script th:src="@{/js/collapse.js}"></script>
-</head>
+    <script th:src="@{/js/newSession.js}"></script>
+    <script th:inline="javascript"> var contextRoot = /*[[@{/}]]*/ ''; </script>
 
+</head>
 <body>
-<div th:replace="common/navbar::navbarContainer   ('dataEngine')"></div>
-<div class="container-fluid page-content">
-    <div class="page-header">
-        Start New Network Building Session
+    <!--  Data Job Modal -->
+    <div class="modal fade" id="dataJobModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close"
+                            data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        <span id="#dataJobAction"></span> Add New Data Source
+                    </h4>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <form id="dataJobForm"></form>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default"
+                            data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" onclick="addNewDataJob()" data-dismiss="modal" class="btn btn-primary">
+                        Add New Job
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="col-sm-8 col-sm-offset-2">
-                <form>
-                    <div class="form-section">
-                        <div class="form-section-header">
-                            Basic Information
-                        </div>
-                        <div class="form-section-body">
-                            <div class="form-group">
-                                <label for="exampleInputEmail1">Session Name</label>
-                                <input type="email" class="form-control" id="exampleInputEmail1">
-                            </div>
-                            <div class="form-group">
-                                <label for="identifierBox">Identifiers to Upload</label>
-                                <textarea id="identifierBox" class="form-control" rows="5"></textarea>
-                                <div class="input-group">
-                                    <label class="btn btn-default" for="my-file-selector">
-                                        <input id="my-file-selector" type="file" style="display:none;" onchange="$('#upload-file-info').html($(this).val());">
-                                        Or Upload Identifier File
-                                    </label>
-                                    <span id="upload-file-info"></span>
+
+    <!--  Data Engine Additional Job Modal -->
+    <div class="modal fade" id="additionalJobModal" tabindex="-1" role="dialog"
+         aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <button type="button" class="close"
+                            data-dismiss="modal">
+                        <span aria-hidden="true">&times;</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabel">
+                        <span id="#dataJobAction"></span> Add Additional Data Engine Job
+                    </h4>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <form id="additionalDataJobForm"></form>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default"
+                            data-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" onclick="addNewAdditionalDataJob()" data-dismiss="modal" class="btn btn-primary">
+                        Add New Job
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="common/navbar::navbarContainer  ('dataEngine')"></div>
+    <div class="container-fluid page-content">
+        <div class="page-header">
+            Start New Network Building Session
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="col-sm-8 col-sm-offset-2">
+                    <form th:object="${newSessionForm}" th:action="@{/session/submit}" method="POST" enctype="multipart/form-data">
+                        <div class="form-container">
+                            <div class="form-section">
+                                <div class="form-section-body">
+                                    <div class="form-group">
+                                        <label for="sessionName">Session Name</label>
+                                        <input id="sessionName" type="text" class="form-control" th:field="*{sessionName}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="identifierBox">Identifiers to Upload</label>
+                                        <textarea id="identifierBox" class="form-control" rows="3" th:field="*{uploadedIdentifiers}"></textarea>
+                                        <div class="input-group">
+                                            <label class="btn btn-default" for="identifierFile">
+                                                <input id="identifierFile" type="file" style="display:none;" onchange="$('#upload-file-info').html($(this).val());"
+                                                th:field="*{uploadedFile}">
+                                                Or Upload Identifier File
+                                            </label>
+                                            <span id="upload-file-info"></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="form-group">
+                                            <label for="steps">Steps</label>
+                                            <select id="steps" th:field="*{stepsToExecute}" class="form-control">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3" selected="selected">3</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <a data-toggle="collapse" href="#advancedOptions" onclick="toggleShowHideDisplay(this)">
-                        <span id="advancedOptionsIcon" class="showhide-icon show-icon"></span>
-                        <span class="showhide-text show-text">Advanced Options</span>
-                    </a>
-                    <div id="advancedOptions" class="collapse">
-                        <div class="form-section">
-                            <div class="form-section-header">
-                                Session Configuration
-                            </div>
-                            <div class="form-section-body">
-                                <div class="form-group">
-                                    <div class="form-group">
-                                        <label for="exampleInputPassword1">Steps</label>
-                                        <select class="form-control">
-                                            <option> </option>
-                                            <option>1</option>
-                                            <option>2</option>
-                                            <option>3</option>
-                                        </select>
+                            <div id="advancedOptions" class="collapse">
+                                <div class="form-section">
+                                    <div class="form-section-header">
+                                        Data Sources
+                                    </div>
+                                    <div class="form-section-body">
+                                        <div class="form-group">
+                                            <table  id="dataJobTable" class=" table table-condensed">
+                                                <thead>
+                                                    <th>Data Source Name</th>
+                                                    <th>Parameters</th>
+                                                    <th>Operation</th>
+                                                    <th>Execute For Steps</th>
+                                                </thead>
+                                                <tbody>
+                                                    <th:block th:each="job, jobStat : *{dataIngestJobs}">
+                                                        <tr>
+                                                            <td th:text="*{dataIngestJobs[__${jobStat.index}__].dataSourceName}">Facebook</td>
+                                                            <td>
+                                                                <th:block th:each="key, paramStat : *{dataIngestJobs[__${jobStat.index}__].params}">
+                                                                    <span th:text="${key.key}+': '"></span>
+                                                                    <span th:text="*{dataIngestJobs[__${jobStat.index}__].params['__${key.key}__']}"></span>
+                                                                    <br/>
+                                                                </th:block>
+                                                            </td>
+                                                            <td th:text="*{dataIngestJobs[__${jobStat.index}__].ingestJobType.displayName}">Facebook</td>
+                                                            <td th:text="*{dataIngestJobs[__${jobStat.index}__].executeForSteps}">1, 2, 3</td>
+                                                            <td class="hidden">
+                                                                <input th:field="*{dataIngestJobs[__${jobStat.index}__].dataSourceName}"/>
+                                                                <input th:field="*{dataIngestJobs[__${jobStat.index}__].executeForSteps}" />
+                                                                <th:block th:each="key : *{dataIngestJobs[__${jobStat.index}__].params}">
+                                                                    <input type="text" th:field="*{dataIngestJobs[__${jobStat.index}__].params['__${key.key}__']}" />
+                                                                </th:block>
+                                                                <input th:field="*{dataIngestJobs[__${jobStat.index}__].ingestJobType}"/>
+                                                                <input th:field="*{dataIngestJobs[__${jobStat.index}__].uploadedFile}"/>
+                                                            </td>
+                                                        </tr>
+                                                    </th:block>
+                                                </tbody>
+                                            </table>
+                                            <div id="addDataJobContainer" class="addJobContainer">
+                                                <button class="btn btn-default" type="button" onclick="openDataJobForm()">
+                                                    <i class="fa fa-plus"></i> Add Data Source
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-section">
+                                    <div class="form-section-header">
+                                        Additional Data Engine Jobs
+                                    </div>
+                                    <div class="form-section-body">
+                                        <div class="form-group">
+                                            <table  id="additionalJobTable" class=" table table-condensed">
+                                                <thead>
+                                                <th>Job Name</th>
+                                                <th>Job Type</th>
+                                                <th>Parameters</th>
+                                                <th>Order</th>
+                                                </thead>
+                                                <tbody>
+                                                <th:block th:each="job, jobStat : *{dataEngineJobs}">
+                                                    <tr>
+                                                        <td th:text="*{dataEngineJobs[__${jobStat.index}__].jobName}"></td>
+                                                        <td th:text="*{dataEngineJobs[__${jobStat.index}__].jobType}"></td>
+                                                        <td>
+                                                            <th:block th:each="key, paramStat : *{dataEngineJobs[__${jobStat.index}__].params}">
+                                                                <span th:text="${key.key}+': '"></span>
+                                                                <span th:text="*{dataEngineJobs[__${jobStat.index}__].params['__${key.key}__']}"></span>
+                                                                <br/>
+                                                            </th:block>
+                                                        </td>
+                                                        <td>
+                                                            <span th:text="*{dataEngineJobs[__${jobStat.index}__].executionConfig.order}+' Step'"></span>
+                                                            <span th:text="*{dataEngineJobs[__${jobStat.index}__].executionConfig.step}"></span>
+                                                        </td>
+                                                        <td class="hidden">
+                                                            <input th:field="*{dataEngineJobs[__${jobStat.index}__].jobName}"/>
+                                                            <input th:field="*{dataEngineJobs[__${jobStat.index}__].jobType}" />
+                                                            <input th:field="*{dataEngineJobs[__${jobStat.index}__].executionConfig.order}" />
+                                                            <input th:field="*{dataEngineJobs[__${jobStat.index}__].executionConfig.step}" />
+                                                            <th:block th:each="key : *{dataEngineJobs[__${jobStat.index}__].params}">
+                                                                <input type="text" th:field="*{dataEngineJobs[__${jobStat.index}__].params['__${key.key}__']}" />
+                                                            </th:block>
+                                                        </td>
+                                                    </tr>
+                                                </th:block>
+                                            </table>
+                                            <div id="addDataEngineJobContainer" class="addJobContainer">
+                                                <button type="button" class="btn btn-default" onclick="openAdditionalJobForm()">
+                                                    <i class="fa fa-plus"></i> Add Additional Job
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-section">
-                            <div class="form-section-header">
-                                Data Sources
-                            </div>
-                            <div class="form-section-body">
-                                <div class="form-group">
-                                    <table  id="dataJobTable" class=" table table-condensed">
-                                        <thead>
-                                        <th>Data Source Name</th>
-                                        <th>Parameters</th>
-                                        <th>Execute For Steps</th>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td>Facebook</td>
-                                            <td><a href="#">View Parameters</a></td>
-                                            <td>1, 2, 3</td>
-                                        </tr>
-                                        <tr>
-                                            <td>LinkedIn</td>
-                                            <td><a href="#">View Parameters</a></td>
-                                            <td>1, 2, 3</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <button class="btn btn-default"><i class="fa fa-plus"></i> Add Data Source</button>
-                                </div>
-                            </div>
+                        <button class=" btn-link" data-toggle="collapse" href="#advancedOptions" onclick="toggleShowHideDisplay(this)">
+                            <span id="advancedOptionsIcon" class="showhide-icon show-icon"></span>
+                            <span class="showhide-text show-text">Advanced Options</span>
+                        </button>
+                        <hr/>
+                        <div class="formButtonContainer">
+                            <button type="submit" class="btn btn-primary col-xs-12"><i class="fa fa-check"></i> Submit</button>
                         </div>
-                        <div class="form-section">
-                            <div class="form-section-header">
-                                Additional Jobs to Execute
-                            </div>
-                            <div class="form-section-body">
-                                <div class="form-group">
-                                    <table  id="w" class=" table table-condensed">
-                                        <thead>
-                                        <th>Job Name</th>
-                                        <th>Job Type</th>
-                                        <th>Parameters</th>
-                                        <th>Order</th>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td>Remove Pendants</td>
-                                            <td>TRANSFORM</td>
-                                            <td><a href="#">View Parameters</a></td>
-                                            <td>1</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Export to Graphml</td>
-                                            <td>EXPORT</td>
-                                            <td><a href="#">View Parameters</a></td>
-                                            <td>2</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                    <button class="btn btn-default"><i class="fa fa-plus"></i> Add Additional Job</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="pull-right">
-                        <button type="submit" class="btn btn-success"><i class="fa fa-check"></i> Submit</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 </body>
 </html>

@@ -1,0 +1,44 @@
+<form role="form" id="additionalDataJobForm" th:fragment="additionalDataJobForm" th:object="${stagedJob}">
+    <div class="form-group">
+        <label for="jobName">Job Name</label>
+        <input class="form-control" id="jobName" th:field="*{jobName}"/>
+    </div>
+    <div class="form-group">
+        <label>Job Type:</label>
+        <select class="form-control" id="jobType" th:field="*{jobType}">
+            <option value=""></option>
+            <option th:text="${T(com.agilion.domain.dataengine.enums.DataEngineJobType).EXPORT}"
+                    th:value="${T(com.agilion.domain.dataengine.enums.DataEngineJobType).EXPORT}"></option>
+            <option th:text="${T(com.agilion.domain.dataengine.enums.DataEngineJobType).TRANSFORM}"
+                    th:value="${T(com.agilion.domain.dataengine.enums.DataEngineJobType).TRANSFORM}"></option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Execution Order</label>
+        <select class="form-control" id="executionOrder" th:field="*{executionConfig.order}">
+            <option value=""></option>
+            <option th:text="${T(com.agilion.domain.dataengine.ExecutionOrder).BEFORE}"
+                    th:value="${T(com.agilion.domain.dataengine.ExecutionOrder).BEFORE}"></option>
+            <option th:text="${T(com.agilion.domain.dataengine.ExecutionOrder).AFTER}"
+                    th:value="${T(com.agilion.domain.dataengine.ExecutionOrder).AFTER}"></option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Execution Step</label>
+        <select class="form-control" id="executionStep" th:field="*{executionConfig.step}">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+        </select>
+    </div>
+
+    <div id="jobParamContainer">
+        <th:block th:each="key, keyStat : *{params}">
+            <div class="form-group">
+                <label th:name="${key.key}" th:text="${key.key}"></label>
+                <input class="form-control" type="text" th:field="*{params[__${key.key}__]}" />
+            </div>
+        </th:block>
+    </div>
+</form>

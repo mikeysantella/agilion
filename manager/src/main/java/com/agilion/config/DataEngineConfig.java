@@ -51,4 +51,11 @@ public class DataEngineConfig
         DatasetsApi sessionApi = new DatasetsApi(apiClient());
         return sessionApi;
     }
+
+    @Bean
+    public RequestsApi requestsApi()
+    {
+        RequestsApi requestsApi = new RequestsApi(apiClient());
+        return requestsApi;
+    }
 }
