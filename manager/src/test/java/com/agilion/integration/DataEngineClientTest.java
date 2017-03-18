@@ -32,12 +32,14 @@ public class DataEngineClientTest
     @Autowired
     private RequestsApi requestApi;
 
+    @Ignore
     @Test
     public void testSessionApi() throws ApiException
     {
         System.out.println("Request API Operation List: \n"+requestApi.listOperations());
     }
 
+    @Ignore
     @Test
     public void testRequestApi() throws ApiException
     {
