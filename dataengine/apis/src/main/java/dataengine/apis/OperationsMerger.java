@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OperationsMerger {
   
+  // key=operationId, value=(key=paramId, opParam)
   private Map<String, Map<String, OperationParam>> operationParameters = new ConcurrentHashMap<>();
 
   public synchronized void clear() {

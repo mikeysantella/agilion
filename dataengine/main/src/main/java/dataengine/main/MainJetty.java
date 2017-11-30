@@ -25,6 +25,7 @@ import com.google.inject.Injector;
 import dataengine.server.DeServerGuiceInjector;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.coordworkers.AmqServiceComp;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 /**
@@ -40,11 +41,15 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
  */
 @Slf4j
 public class MainJetty {
+  private static final String brokerUrl = "tcp://localhost:45678"; //",stomp://localhost:45679";
+
   public static void main(String[] args) throws Exception {
     String onlyRunServerProject = System.getProperty("ONLY_RUN_SERVER");
     boolean runInSingleJVM = (onlyRunServerProject == null) 
         ? true : Boolean.getBoolean(onlyRunServerProject);
 
+    // TODO: 0: load brokerUrl from file; use url starting with "tcp:"
+    DeServerGuiceInjector.brokerUrl(brokerUrl);
     injectVertx(runInSingleJVM);
 
     MainJetty main = new MainJetty();
@@ -78,22 +83,31 @@ public class MainJetty {
       log.info("======== Running all required DataEngine services in same JVM {}", vertxF);
       try {
         startAllInSameJvm(vertxF);
-      } catch (IOException e) {
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
   }
 
-  private static void startAllInSameJvm(CompletableFuture<Vertx> vertxF) throws IOException {
+  private static void startAllInSameJvm(CompletableFuture<Vertx> vertxF) throws Exception {
+    AmqServiceComp amq=new AmqServiceComp();
+    Properties props = getManualAmqServiceProperties();
+    amq.start(props);
     // Only create 1 Vertx instance per JVM! 
     // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
     dataengine.sessions.SessionsMain.main(vertxF);
-    dataengine.tasker.TaskerMain.main(vertxF);
+    dataengine.tasker.TaskerMain.main(vertxF, brokerUrl);
     dataengine.jobmgr.JobManagerMain.main(vertxF);
-    dataengine.workers.WorkerMain.main(vertxF);
+    dataengine.workers.WorkerMain.main(vertxF, brokerUrl);
   }
 
-  protected Properties props = new Properties();
+  private static Properties getManualAmqServiceProperties() {
+    Properties props = new Properties();
+    // TODO: 0: load Properties from file
+    props.setProperty("_componentId", "amq-agil");
+    props.setProperty("brokerUrl", brokerUrl);
+    return props;
+  }
 
   private Server startServer(int port, int sslPort, String contextPath,
       String keyStoreFile, String keyStorePwd, boolean validateCerts) throws FileNotFoundException {

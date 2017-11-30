@@ -1,7 +1,7 @@
 package dataengine.server;
 
 import java.util.concurrent.CompletableFuture;
-
+import javax.jms.Connection;
 import com.google.inject.Provides;
 
 import dataengine.apis.OperationsRegistry_I;
@@ -19,8 +19,8 @@ import net.deelam.vertx.rpc.VertxRpcClientsModule;
 @Slf4j
 class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
   
-  public VertxRpcClients4ServerModule(CompletableFuture<Vertx> vertxF) {
-    super(vertxF);
+  public VertxRpcClients4ServerModule(CompletableFuture<Vertx> vertxF, Connection connection) {
+    super(vertxF, connection);
     //debug=true;
     log.debug("VertxRpcClients4ServerModule configured");
   }
@@ -37,7 +37,7 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
 
   @Provides
   RpcClientProvider<OperationsRegistry_I> opsReg_RpcClient(){
-    return new RpcClientProvider<>(getClientSupplierFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(OperationsRegistry_I.class, VerticleConsts.opsRegBroadcastAddr));
   }
 
   @Provides

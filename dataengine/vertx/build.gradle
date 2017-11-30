@@ -3,6 +3,8 @@ dependencies {
   compile dep.xinject
   compile dep.guice
   compile dep.guava
+  compile dep.activemq_rpc
+  compile dep.coord_workers
   compile dep.vertx  
   compile 'com.esotericsoftware:kryo-shaded:4.0.0'
   //compile 'de.javakaffee:kryo-serializers:0.41'

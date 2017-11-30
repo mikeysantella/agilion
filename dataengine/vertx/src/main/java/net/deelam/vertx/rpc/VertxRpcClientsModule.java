@@ -5,18 +5,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-
+import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.rpc.ActiveMqRpcClient;
 
 /// provides verticle clients used by REST services
 @RequiredArgsConstructor
 @Slf4j
 public class VertxRpcClientsModule extends AbstractModule {
   final CompletableFuture<Vertx> vertxF;
+  final Connection connection;
   Vertx vertx;
 
   @Override
@@ -38,10 +40,17 @@ public class VertxRpcClientsModule extends AbstractModule {
 
   // For Guice, cannot block waiting for server side to come up, so returns a Supplier instead.
   // Also, the thread calling Supplier.get() needs to run in a separate thread such that incoming message is not blocked.
+  @Deprecated
   public <T> Supplier<T> getClientSupplierFor(Class<T> clazz, String serviceType) {
     log.info("VERTX: Creating supplier of RPC client for {}", clazz.getSimpleName());
     Supplier<T> rpcClientS = new RpcVerticleClient(vertx, serviceType).start()
         .createRpcClientSupplier(clazz, debug);
     return rpcClientS;
+  }
+  
+  public <T> Supplier<T> getAmqClientSupplierFor(Class<T> clazz, String serverAddr) {
+    log.info("AMQ: Creating supplier of RPC client for {}", clazz.getSimpleName());
+    ActiveMqRpcClient client = new ActiveMqRpcClient(null, connection);
+    return ()->client.createRpcClient(serverAddr, clazz, debug); // blocks?
   }
 }

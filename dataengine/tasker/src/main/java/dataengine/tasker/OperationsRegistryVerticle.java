@@ -21,6 +21,7 @@ import net.deelam.vertx.BroadcastingRegistryVerticle;
  * 
  * OperationsRegistryRpcService offers this verticle as an Vertx RPC service
  */
+@Deprecated
 @Slf4j
 public class OperationsRegistryVerticle extends BroadcastingRegistryVerticle {
 

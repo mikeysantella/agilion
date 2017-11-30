@@ -1,7 +1,7 @@
 package dataengine.workers;
 
 import java.util.concurrent.CompletableFuture;
-
+import javax.jms.Connection;
 import com.google.inject.Provides;
 
 import dataengine.apis.RpcClientProvider;
@@ -16,8 +16,8 @@ import net.deelam.vertx.rpc.VertxRpcClientsModule;
 @Slf4j
 class VertxRpcClients4WorkerModule extends VertxRpcClientsModule {
 
-  public VertxRpcClients4WorkerModule(CompletableFuture<Vertx> vertxF) {
-    super(vertxF);
+  public VertxRpcClients4WorkerModule(CompletableFuture<Vertx> vertxF, Connection connection) {
+    super(vertxF, connection);
 //    debug = true;
     log.debug("VertxRpcClients4WorkerModule configured");
   }
