@@ -1,7 +1,7 @@
 package dataengine.tasker;
 
 import java.util.concurrent.CompletableFuture;
-
+import javax.jms.Connection;
 import com.google.inject.Provides;
 
 import dataengine.apis.RpcClientProvider;
@@ -16,8 +16,8 @@ import net.deelam.vertx.rpc.VertxRpcClientsModule;
 @Slf4j
 class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
 
-  public VertxRpcClients4TaskerModule(CompletableFuture<Vertx> vertxF) {
-    super(vertxF);
+  public VertxRpcClients4TaskerModule(CompletableFuture<Vertx> vertxF, Connection connection) {
+    super(vertxF, connection);
     //debug = true;
     log.debug("VertxRpcClients4TaskerModule configured");
   }

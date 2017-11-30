@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
+import javax.jms.Connection;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,6 +25,7 @@ import dataengine.apis.VerticleConsts;
 import dataengine.sessions.TinkerGraphSessionsDbModule;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
@@ -32,16 +33,17 @@ import net.deelam.vertx.rpc.RpcVerticleServer;
 public class VertxRpcSessionsTest {
 
   private SessionsDB_I sessionsDbRpcClient;
+  private String brokerUrl=null; //"tcp://localhost:45678,stomp://localhost:45679";
 
   @Before
-  public void before() throws InterruptedException, ExecutionException, TimeoutException {
+  public void before() throws Exception {
     CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
     vertxF.complete(Vertx.vertx());
 
     Thread clientThread = new Thread(() -> {
       // simulate REST server that uses SessionsDB RPC client 
       Injector injector = Guice.createInjector(
-          new VertxRpcClients4ServerModule(vertxF));
+          new VertxRpcClients4ServerModule(vertxF, null));
       RpcClientProvider<SessionsDB_I> sessionsDbRpcClientS = injector.getInstance(
           Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
       sessionsDbRpcClient = sessionsDbRpcClientS.rpc();

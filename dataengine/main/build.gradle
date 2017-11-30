@@ -11,6 +11,8 @@ apply from: 'gretty.plugin'
 
 dependencies {
   compile dep.guava
+  compile dep.activemq_rpc
+  compile dep.coord_workers
   compile project(':server')
   runtime dep.vertx_ignite
 

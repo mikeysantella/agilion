@@ -10,6 +10,7 @@ dependencies {
   compile dep.guava
   compile dep.dataengine_api
   compile dep.guice
+  compile dep.activemq_rpc
   compile project(':vertx')
   runtime dep.vertx_ignite
 

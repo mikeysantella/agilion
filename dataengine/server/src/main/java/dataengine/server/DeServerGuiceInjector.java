@@ -3,7 +3,8 @@ package dataengine.server;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
+import javax.jms.Connection;
+import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -22,11 +23,12 @@ import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import io.vertx.core.Vertx;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.jobboard.DepJobService_I;
-import net.deelam.vertx.rpc.VertxRpcUtil;
 
 @Accessors(fluent = true)
 @Slf4j
@@ -36,6 +38,9 @@ public final class DeServerGuiceInjector {
   // otherwise, this will create its own vertx instance
   @Getter
   static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
+
+  @Setter
+  private static String brokerUrl;
 
   static Injector singleton;
   public static Injector singleton() {
@@ -80,11 +85,17 @@ public final class DeServerGuiceInjector {
   final Injector injector;
 
   private DeServerGuiceInjector() {
-    injector = Guice.createInjector(
-        new ClusteredVertxInjectionModule(vertxF),
-        new VertxRpcClients4ServerModule(vertxF),
-        new RestServiceModule());
-    log.info("Created DeServerGuiceInjector");
+    try {
+      Connection connection = MQClient.connect(brokerUrl);
+      injector = Guice.createInjector(
+          new ClusteredVertxInjectionModule(vertxF),
+          new VertxRpcClients4ServerModule(vertxF, connection),
+          new RestServiceModule());
+      connection.start();
+      log.info("Created DeServerGuiceInjector");
+    } catch (JMSException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   static class RestServiceModule extends AbstractModule {

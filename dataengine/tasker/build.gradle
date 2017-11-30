@@ -7,6 +7,7 @@ dependencies {
   compile project(':apis')
   compile dep.xinject
   compile dep.guice
+  compile dep.activemq_rpc
   compile dep.guava
   compile project(':vertx')
   runtime dep.vertx_ignite

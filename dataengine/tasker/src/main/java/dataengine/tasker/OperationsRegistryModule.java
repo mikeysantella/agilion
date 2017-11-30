@@ -1,18 +1,24 @@
 package dataengine.tasker;
 
 import javax.inject.Singleton;
-
+import javax.jms.Connection;
+import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
+import net.deelam.activemq.rpc.ActiveMqRpcServer;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
+@RequiredArgsConstructor
 @Slf4j
 final class OperationsRegistryModule extends AbstractModule {
+  
   @Override
   protected void configure() {
     requireBinding(Vertx.class);
@@ -25,20 +31,31 @@ final class OperationsRegistryModule extends AbstractModule {
     bind(OperationsRegistryRpcService.class).in(Singleton.class);
 
     // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
-    OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
-    bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
+    if(false) {
+      OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
+      bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
+    } 
   }
 
   static void deployOperationsRegistry(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
+    Connection connection=injector.getInstance(Connection.class);
   
-    OperationsRegistryVerticle opsRegVert = injector.getInstance(OperationsRegistryVerticle.class);
-    log.info("VERTX: TASKER: Deploying OperationsRegistryVerticle: {} ", opsRegVert); 
-    vertx.deployVerticle(opsRegVert);
+    if(false) {
+      OperationsRegistryVerticle opsRegVert = injector.getInstance(OperationsRegistryVerticle.class);
+      log.info("VERTX: TASKER: Deploying OperationsRegistryVerticle: {} ", opsRegVert); 
+      vertx.deployVerticle(opsRegVert);
+    } else 
+      try {
+        OperationsRegistry opsReg = new OperationsRegistry(connection, VerticleConsts.opsRegBroadcastAddr);
+      } catch (JMSException e) {
+        throw new RuntimeException(e);
+      }
   
     OperationsRegistry_I opsRegSvc = injector.getInstance(OperationsRegistry_I.class);
-    log.info("VERTX: TASKER: Deploying RPC service for OperationsRegistry_I: {} ", opsRegVert); 
-    new RpcVerticleServer(vertx, VerticleConsts.opsRegBroadcastAddr)
-        .start("OperationsRegServiceBusAddr", opsRegSvc);
+    log.info("AMQ: TASKER: Deploying RPC service for OperationsRegistry_I: {} ", opsRegSvc); 
+//    new RpcVerticleServer(vertx, VerticleConsts.opsRegBroadcastAddr)
+//        .start("OperationsRegServiceBusAddr", opsRegSvc);
+    new ActiveMqRpcServer(connection).start(VerticleConsts.opsRegBroadcastAddr, opsRegSvc);
   }
 }
