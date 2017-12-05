@@ -8,6 +8,7 @@ import dataengine.api.Operation;
 import dataengine.apis.OperationsRegistry_I;
 import net.deelam.vertx.HandlingSubscriberVerticle;
 
+@Deprecated
 public class OperationsSubscriberVerticle extends HandlingSubscriberVerticle {
 
   public OperationsSubscriberVerticle(String serviceType, String serviceAddr, Worker_I... workers) {

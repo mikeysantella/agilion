@@ -49,7 +49,7 @@ public class TaskerMain {
         },
         new ClusteredVertxInjectionModule(vertxF),
         new VertxRpcClients4TaskerModule(vertxF, connection),
-        new OperationsRegistryModule(),
+        new OperationsRegistryModule(connection),
         new TaskerModule(properties)
         );
   }

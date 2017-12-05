@@ -48,7 +48,7 @@ public class WorkerMain {
         injector.getInstance(IndexDatasetDummyWorker.class)
     };
     for(BaseWorker<?> worker:workers)    {
-      OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, worker);
+      OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, connection, worker);
       jcFactory.create(worker);
     }
     connection.start();

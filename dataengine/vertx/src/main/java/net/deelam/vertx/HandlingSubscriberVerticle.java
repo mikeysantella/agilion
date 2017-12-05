@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
  * Use this class to communicate with the BroadcastingRegistryVerticle.
  *
  */
+@Deprecated
 @Slf4j
 public abstract class HandlingSubscriberVerticle extends SubscriberVerticle {
 

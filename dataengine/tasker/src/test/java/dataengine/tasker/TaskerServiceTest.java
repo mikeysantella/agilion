@@ -10,7 +10,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import org.apache.activemq.broker.BrokerService;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,10 +35,23 @@ import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
+import net.deelam.activemq.MQService;
 import net.deelam.vertx.jobboard.DepJobService_I;
 
 @Slf4j
 public class TaskerServiceTest {
+  
+  BrokerService broker;
+  
+  @After
+  public void shutdown() {
+    try {
+      broker.stop();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -48,8 +64,23 @@ public class TaskerServiceTest {
             bind(Vertx.class).toInstance(vertxF.join());
 
             // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
-            OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
-            bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
+            if(false) {
+              OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
+              bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
+            } else {
+              try {
+                String brokerURL="tcp://localhost:55555";
+                broker = MQService.createBrokerService("test", brokerURL);
+                // OperationsRegistry to which operations are registered by providers (ie, Workers)
+                Connection connection=MQClient.connect(brokerURL);
+                connection.start();
+                OperationsRegistry opsReg =
+                    new OperationsRegistry(connection, VerticleConsts.opsRegBroadcastAddr);
+                bind(OperationsRegistry.class).toInstance(opsReg);
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            }
           }
 
           @Provides
@@ -63,7 +94,7 @@ public class TaskerServiceTest {
           }
 
         });
-    opsReg = injector.getInstance(OperationsRegistryVerticle.class);
+    opsReg = injector.getInstance(OperationsRegistry.class);
     {
       Map<String, String> info = new HashMap<>();
       info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
@@ -90,7 +121,7 @@ public class TaskerServiceTest {
   }
 
   SessionsDB_I sessDB = mock(SessionsDB_I.class);
-  OperationsRegistryVerticle opsReg;
+  OperationsRegistry opsReg;
   Tasker_I taskerSvc;
 
   //@Test

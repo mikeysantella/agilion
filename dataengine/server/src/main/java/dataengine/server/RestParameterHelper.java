@@ -54,7 +54,7 @@ public final class RestParameterHelper {
         return Response.ok().entity(responseObj.get()).build();
     } catch (InterruptedException | ExecutionException e) {
       String errMsg = "Exception caught during " + msg + ": " + e.getCause();
-      log.warn(errMsg);
+      log.warn(errMsg, e);
       return Response.status(Status.INTERNAL_SERVER_ERROR)
           .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
           .build();
