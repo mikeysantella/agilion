@@ -2,10 +2,8 @@ package dataengine.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -18,10 +16,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
 import dataengine.server.DeServerGuiceInjector;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
@@ -41,15 +37,14 @@ import net.deelam.vertx.ClusteredVertxInjectionModule;
  */
 @Slf4j
 public class MainJetty {
-  private static final String brokerUrl = "tcp://localhost:45678"; //",stomp://localhost:45679";
+  private static final String BROKER_URL = DeServerGuiceInjector.brokerUrl4Java();
 
   public static void main(String[] args) throws Exception {
     String onlyRunServerProject = System.getProperty("ONLY_RUN_SERVER");
     boolean runInSingleJVM = (onlyRunServerProject == null) 
         ? true : Boolean.getBoolean(onlyRunServerProject);
 
-    // TODO: 0: load brokerUrl from file; use url starting with "tcp:"
-    DeServerGuiceInjector.brokerUrl(brokerUrl);
+    System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     injectVertx(runInSingleJVM);
 
     MainJetty main = new MainJetty();
@@ -90,23 +85,16 @@ public class MainJetty {
   }
 
   private static void startAllInSameJvm(CompletableFuture<Vertx> vertxF) throws Exception {
+    // TODO: replace with Zk-based component initialization
     AmqServiceComp amq=new AmqServiceComp();
-    Properties props = getManualAmqServiceProperties();
-    amq.start(props);
+    amq.start(DeServerGuiceInjector.properties());
+    
     // Only create 1 Vertx instance per JVM! 
     // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
     dataengine.sessions.SessionsMain.main(vertxF);
-    dataengine.tasker.TaskerMain.main(vertxF, brokerUrl);
+    dataengine.tasker.TaskerMain.main(vertxF, BROKER_URL);
     dataengine.jobmgr.JobManagerMain.main(vertxF);
-    dataengine.workers.WorkerMain.main(vertxF, brokerUrl);
-  }
-
-  private static Properties getManualAmqServiceProperties() {
-    Properties props = new Properties();
-    // TODO: 0: load Properties from file
-    props.setProperty("_componentId", "amq-agil");
-    props.setProperty("brokerUrl", brokerUrl);
-    return props;
+    dataengine.workers.WorkerMain.main(vertxF, BROKER_URL);
   }
 
   private Server startServer(int port, int sslPort, String contextPath,

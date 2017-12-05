@@ -1,0 +1,3 @@
+_componentId=amq-agil
+brokerUrl=tcp://localhost:33330,stomp://localhost:33331
+

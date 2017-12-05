@@ -4,6 +4,7 @@ import static dataengine.apis.OperationsRegistry_I.OPERATIONS_REG_API.QUERY_OPS;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -17,6 +18,7 @@ import javax.jms.TextMessage;
 import javax.jms.Topic;
 import dataengine.api.Operation;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.rpc.KryoSerDe;
 
 @Slf4j
 public class OperationsSubscriber implements MessageListener, Closeable {
@@ -25,6 +27,7 @@ public class OperationsSubscriber implements MessageListener, Closeable {
   private MessageConsumer consumer;
   private MessageProducer producer;
   private final Worker_I[] workers;
+  private KryoSerDe serde;
 
   public OperationsSubscriber(Connection connection, String serviceType, Worker_I... workers) {
     this.connection = connection;
@@ -32,9 +35,10 @@ public class OperationsSubscriber implements MessageListener, Closeable {
     listen(serviceType + QUERY_OPS.name());
   }
 
-  public void listen(String topicName) {
+  private void listen(String topicName) {
     try {
       session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+      serde = new KryoSerDe(session);
       Topic topic = session.createTopic(topicName);
       consumer = session.createConsumer(topic);
       consumer.setMessageListener(this);
@@ -56,7 +60,7 @@ public class OperationsSubscriber implements MessageListener, Closeable {
           ArrayList<Operation> list = new ArrayList<>();
           for (Worker_I worker : workers)
             list.add(worker.operation());
-          ObjectMessage response = session.createObjectMessage(list);
+          BytesMessage response = serde.writeObject(list);
           response.setJMSCorrelationID(message.getJMSCorrelationID());
           log.info("Sending response: {}", response);
           producer.send(message.getJMSReplyTo(), response);
