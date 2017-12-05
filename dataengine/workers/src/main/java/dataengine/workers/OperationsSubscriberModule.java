@@ -1,8 +1,8 @@
 package dataengine.workers;
 
+import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +18,20 @@ final class OperationsSubscriberModule extends AbstractModule {
 
   static int subscriberCounter = 0;
 
-  public static void deployOperationsSubscriberVerticle(Injector injector, Worker_I worker) {
-    Vertx vertx = injector.getInstance(Vertx.class);
-    OperationsSubscriberVerticle opsRegVert =
-        new OperationsSubscriberVerticle(VerticleConsts.opsRegBroadcastAddr,
-            "ops" + (++subscriberCounter) + "-" + worker.name() + System.currentTimeMillis(),
-            worker);
-    log.info("VERTX: WORKER: Deploying OperationsSubscriberVerticle: {} for {}", opsRegVert, worker); 
-    vertx.deployVerticle(opsRegVert);
+  public static void deployOperationsSubscriberVerticle(Injector injector, Connection connection,
+      Worker_I worker) {
+    if (false) {
+      Vertx vertx = injector.getInstance(Vertx.class);
+      OperationsSubscriberVerticle opsRegVert = new OperationsSubscriberVerticle(
+          VerticleConsts.opsRegBroadcastAddr,
+          "ops" + (++subscriberCounter) + "-" + worker.name() + System.currentTimeMillis(), worker);
+      log.info("VERTX: WORKER: Deploying OperationsSubscriberVerticle: {} for {}", opsRegVert,
+          worker);
+      vertx.deployVerticle(opsRegVert);
+    } else {
+      OperationsSubscriber opSubscriber =
+          new OperationsSubscriber(connection, VerticleConsts.opsRegBroadcastAddr, worker);
+      //TODO: call opSubscriber.close()
+    }
   }
 }

@@ -28,6 +28,8 @@ import net.deelam.activemq.TopicUtils;
 @Slf4j
 public class OperationsRegistry {
 
+  private static final String CONSUMER_ID = QUERY_OPS.name();
+
   @Getter
   private Map<String, Operation> operations = new ConcurrentHashMap<>();
 
@@ -37,7 +39,7 @@ public class OperationsRegistry {
   public OperationsRegistry(Connection connection, String serviceType) throws JMSException {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     topicUtils = new TopicUtils(session, session.createTopic(serviceType+QUERY_OPS.name()));
-    topicUtils.listenToTopicConsumerResponses(QUERY_OPS.name(), null);
+    topicUtils.listenToTopicConsumerResponses(CONSUMER_ID, null);
   }
   
   CompletableFuture<Map<String, Operation>> queryOperations() {
@@ -45,7 +47,7 @@ public class OperationsRegistry {
     try {
       Message message = session.createTextMessage(QUERY_OPS.name());
       CombinedResponse<Collection<Operation>> cResp =
-          topicUtils.queryAsync(QUERY_OPS.name(), message);
+          topicUtils.queryAsync(CONSUMER_ID, message);
       return cResp.getFuture().thenApply(replies -> {
         replies.forEach(list -> list.forEach(this::mergeOperation));
         return operations;

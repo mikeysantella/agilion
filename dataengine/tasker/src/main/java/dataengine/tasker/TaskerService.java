@@ -25,7 +25,7 @@ import net.deelam.vertx.jobboard.JobDTO;
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class TaskerService implements Tasker_I {
 
-  final OperationsRegistryVerticle opsRegVert;
+  final OperationsRegistry opsRegistry;
 
   final RpcClientProvider<SessionsDB_I> sessDb;
   final RpcClientProvider<DepJobService_I> jobDispatcher;
@@ -39,7 +39,7 @@ public class TaskerService implements Tasker_I {
   public CompletableFuture<Request> submitRequest(Request req) {
     log.info("TASKER: submitRequest: {}", req);
     String reqOperationId = req.getOperation().getId();
-    if (!opsRegVert.getOperations().containsKey(reqOperationId))
+    if (!opsRegistry.getOperations().containsKey(reqOperationId))
       throw new IllegalArgumentException("Unknown operationId=" + reqOperationId);
 
     JobsCreator jc = jobsCreatorMap.get(reqOperationId);
@@ -112,14 +112,14 @@ public class TaskerService implements Tasker_I {
   public CompletableFuture<Void> refreshJobsCreators() {
     log.info("TASKER: refreshJobsCreators()");
     return CompletableFuture.runAsync(() -> {
-      Map<String, Operation> currOps = opsRegVert.getOperations(); // TODO: 4: replace with RPC call and .thenApply
+      Map<String, Operation> currOps = opsRegistry.getOperations(); // TODO: 4: replace with RPC call and .thenApply
       
       jobCreators.forEach(jc -> {
         jc.updateOperationParams(currOps);
         JobsCreator oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
         if(oldJc!=null && oldJc!=jc)
           log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);
-        opsRegVert.mergeOperation(jc.getOperation());
+        opsRegistry.mergeOperation(jc.getOperation());
       });
     });
   }
