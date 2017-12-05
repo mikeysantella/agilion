@@ -19,7 +19,7 @@ public class SessionsMain {
     main(new CompletableFuture<>());
   }
   public static void main(CompletableFuture<Vertx> vertxF) throws IOException {
-    System.out.println("Starting ... ");
+    System.out.println("Starting "+SessionsMain.class.getSimpleName());
     log.info("Starting {}", SessionsMain.class);
     Properties properties=new Properties();
     PropertiesUtil.loadProperties("sessions.props", properties);

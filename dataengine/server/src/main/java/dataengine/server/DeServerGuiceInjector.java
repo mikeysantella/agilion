@@ -1,7 +1,10 @@
 package dataengine.server;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -10,7 +13,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-
 import dataengine.api.DatasetApiService;
 import dataengine.api.JobApiService;
 import dataengine.api.OperationsApiService;
@@ -23,10 +25,10 @@ import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import io.vertx.core.Vertx;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
+import net.deelam.utils.PropertiesUtil;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
 import net.deelam.vertx.jobboard.DepJobService_I;
 
@@ -39,14 +41,35 @@ public final class DeServerGuiceInjector {
   @Getter
   static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
 
-  @Setter
-  private static String brokerUrl;
-
   static Injector singleton;
   public static Injector singleton() {
-    if(singleton==null)
-      singleton=new DeServerGuiceInjector().injector();
+    if(singleton==null) {
+      log.info("Starting {}", DeServerGuiceInjector.class);
+      String brokerUrl = brokerUrl4Java();
+      singleton=new DeServerGuiceInjector(brokerUrl).injector();
+    }
     return singleton;
+  }
+
+  // load brokerUrl from file; return first url starting with "tcp:"
+  public static String brokerUrl4Java() {
+    String brokerUrl=properties().getProperty("brokerUrl"); // "tcp://localhost:33333,stomp://localhost:45679";
+    checkNotNull(brokerUrl);
+    for(String url:brokerUrl.split(","))
+      if(url.toLowerCase().startsWith("tcp://"))
+          return url;
+    throw new IllegalArgumentException("Could not identify URL starting with 'tcp://'");
+  }
+
+  public static Properties properties() {
+    Properties properties=new Properties();
+    try {
+      PropertiesUtil.loadProperties("bootstrap.props", properties);
+    } catch (IOException e) {
+      throw new IllegalStateException("When reading bootstrap.props", e);
+    }
+    properties.forEach((k,v)->log.debug("  "+k+"="+v));
+    return properties;
   }
 
   static {
@@ -84,7 +107,7 @@ public final class DeServerGuiceInjector {
   @Getter
   final Injector injector;
 
-  private DeServerGuiceInjector() {
+  private DeServerGuiceInjector(String brokerUrl) {
     try {
       Connection connection = MQClient.connect(brokerUrl);
       injector = Guice.createInjector(
