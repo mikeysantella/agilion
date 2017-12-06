@@ -9,6 +9,7 @@ import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.rpc.ActiveMqRpcServer;
 import net.deelam.graph.GrafUri;
 import net.deelam.graph.IdGrafFactoryNeo4j;
 import net.deelam.graph.IdGrafFactoryTinker;
@@ -64,9 +65,10 @@ public class JobBoardModule extends AbstractModule {
 
     // requires that jobProducerProxy be deployed
     DepJobService depJobMgr = new DepJobService(depJobMgrGraf, ()->jobProducer);
-    log.info("VERTX: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
-    new RpcVerticleServer(vertx, depJobMgrId)
-      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);
+    log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
+//    new RpcVerticleServer(vertx, depJobMgrId)
+//      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(depJobMgrId, depJobMgr, true);
     
     if(DEBUG){
       vertx.setPeriodic(10_000, t -> {

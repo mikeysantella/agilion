@@ -23,6 +23,7 @@ import lombok.experimental.Accessors;
  *  
  *  Use vertx-rpc to make calls, catching exceptions to retry (with another server).
  */
+@Deprecated
 @Accessors(fluent = true)
 @RequiredArgsConstructor
 //@Slf4j

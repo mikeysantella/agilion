@@ -91,9 +91,9 @@ public class MainJetty {
     
     // Only create 1 Vertx instance per JVM! 
     // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
-    dataengine.sessions.SessionsMain.main(vertxF);
+    dataengine.sessions.SessionsMain.main(vertxF, BROKER_URL);
     dataengine.tasker.TaskerMain.main(vertxF, BROKER_URL);
-    dataengine.jobmgr.JobManagerMain.main(vertxF);
+    dataengine.jobmgr.JobManagerMain.main(vertxF, BROKER_URL);
     dataengine.workers.WorkerMain.main(vertxF, BROKER_URL);
   }
 

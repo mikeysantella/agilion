@@ -48,7 +48,6 @@ final class OperationsRegistryModule extends AbstractModule {
 
   static void deployOperationsRegistry(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
-    Connection connection = injector.getInstance(Connection.class);
 
     if (false) {
       OperationsRegistryVerticle opsRegVert =
@@ -61,6 +60,6 @@ final class OperationsRegistryModule extends AbstractModule {
     log.info("AMQ: TASKER: Deploying RPC service for OperationsRegistry_I: {} ", opsRegSvc);
     // new RpcVerticleServer(vertx, VerticleConsts.opsRegBroadcastAddr)
     // .start("OperationsRegServiceBusAddr", opsRegSvc);
-    new ActiveMqRpcServer(connection).start(VerticleConsts.opsRegBroadcastAddr, opsRegSvc);
+    injector.getInstance(ActiveMqRpcServer.class).start(VerticleConsts.opsRegBroadcastAddr, opsRegSvc);
   }
 }

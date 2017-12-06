@@ -38,15 +38,15 @@ public class VertxRpcClientsModule extends AbstractModule {
   protected boolean debug = false;
 
 
-  // For Guice, cannot block waiting for server side to come up, so returns a Supplier instead.
-  // Also, the thread calling Supplier.get() needs to run in a separate thread such that incoming message is not blocked.
-  @Deprecated
-  public <T> Supplier<T> getClientSupplierFor(Class<T> clazz, String serviceType) {
-    log.info("VERTX: Creating supplier of RPC client for {}", clazz.getSimpleName());
-    Supplier<T> rpcClientS = new RpcVerticleClient(vertx, serviceType).start()
-        .createRpcClientSupplier(clazz, debug);
-    return rpcClientS;
-  }
+//  // For Guice, cannot block waiting for server side to come up, so returns a Supplier instead.
+//  // Also, the thread calling Supplier.get() needs to run in a separate thread such that incoming message is not blocked.
+//  @Deprecated
+//  public <T> Supplier<T> getClientSupplierFor(Class<T> clazz, String serviceType) {
+//    log.info("VERTX: Creating supplier of RPC client for {}", clazz.getSimpleName());
+//    Supplier<T> rpcClientS = new RpcVerticleClient(vertx, serviceType).start()
+//        .createRpcClientSupplier(clazz, debug);
+//    return rpcClientS;
+//  }
   
   public <T> Supplier<T> getAmqClientSupplierFor(Class<T> clazz, String serverAddr) {
     log.info("AMQ: Creating supplier of RPC client for {}", clazz.getSimpleName());

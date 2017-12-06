@@ -8,7 +8,7 @@ import java.util.Properties;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
+import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -23,6 +23,7 @@ import dataengine.tasker.jobcreators.AddSourceDataset;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.rpc.ActiveMqRpcServer;
 import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
@@ -71,9 +72,10 @@ final class TaskerModule extends AbstractModule {
   static void deployTasker(Injector injector) {
     Vertx vertx = injector.getInstance(Vertx.class);
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
-    log.info("VERTX: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
-    new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
-        .start("TaskerServiceBusAddr" + System.currentTimeMillis(), taskerSvc, true);
+    log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
+//    new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
+//        .start("TaskerServiceBusAddr" + System.currentTimeMillis(), taskerSvc, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(VerticleConsts.taskerBroadcastAddr, taskerSvc, true);
   }
   
   static void deployJobListener(Injector injector) {
