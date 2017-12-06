@@ -25,7 +25,7 @@ public class JobListDTOTest {
     JobDTO jobDto = new JobDTO("id", "type", null);
     //jobDto.setRequest(new PojoObj());
     jobs.add(jobDto);
-    obj=new JobListDTO(jobs);
+    obj=new JobListDTO(System.currentTimeMillis(), jobs);
   }
 
   @After

@@ -73,6 +73,7 @@ public class TaskerServiceTest {
                 broker = MQService.createBrokerService("test", brokerURL);
                 // OperationsRegistry to which operations are registered by providers (ie, Workers)
                 Connection connection=MQClient.connect(brokerURL);
+                bind(Connection.class).toInstance(connection);
                 connection.start();
                 OperationsRegistry opsReg =
                     new OperationsRegistry(connection, VerticleConsts.opsRegBroadcastAddr);

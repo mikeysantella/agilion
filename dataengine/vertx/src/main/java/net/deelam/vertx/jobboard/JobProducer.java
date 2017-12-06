@@ -20,8 +20,10 @@ import net.deelam.vertx.rpc.ServiceWaiter;
 @RequiredArgsConstructor
 @Slf4j
 @ToString
+@Deprecated
 public class JobProducer extends AbstractVerticle {
   @Getter
+  @Deprecated
   private final String serviceType;
 
   private Context eventLoopContext;
@@ -90,6 +92,7 @@ public class JobProducer extends AbstractVerticle {
     });
   }
 
+  @Deprecated
   public void getProgress(String jobId, Handler<AsyncResult<Message<JobDTO>>> handler) {
     eventLoopContext.runOnContext((v) -> {
       vertx.eventBus().send(getJobBoardPrefix() + BUS_ADDR.GET_PROGRESS, jobId,

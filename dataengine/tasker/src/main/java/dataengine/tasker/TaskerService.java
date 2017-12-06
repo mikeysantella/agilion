@@ -146,6 +146,8 @@ public class TaskerService implements Tasker_I {
   }
 
   // TODO: determine which jobDispatcher and jobListener based on session, i.e., all jobs for a session can go to the same jobDispatcher
+  // TODO: When a new JobManager JVM is created, it must register itself with this class such that a new TaskerJobListener is created  
+  // JobManager JVM consists of: DepJobService <-> JobProducer -> JobBoard
   // 1-to-1 mapping: a TaskerJobListener for each DepJobService
   private JobListener_I chooseJobHandler() {
     return jobListener;
