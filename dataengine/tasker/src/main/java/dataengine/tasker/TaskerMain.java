@@ -43,7 +43,7 @@ public class TaskerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new VertxRpcClients4TaskerModule(connection),
+        new RpcClients4TaskerModule(connection),
         new OperationsRegistryModule(connection),
         new TaskerModule(properties)
         );

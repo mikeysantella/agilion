@@ -35,6 +35,14 @@ public class Bootstrap extends HttpServlet {
 
     new SwaggerContextService().withServletConfig(config).updateSwagger(swagger);
 
-    MainJetty.injectVertx(true);
+    if (true) {
+      System.out.println("======== Running all required DataEngine services in same JVM");
+      try {
+        MainJetty.startAllInSameJvm();
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException(e);
+      }
+    }
   }
 }

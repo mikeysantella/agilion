@@ -7,7 +7,7 @@ import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 
@@ -27,11 +27,11 @@ public class JobManagerMain {
     }
     Connection connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, properties);
-    JobBoardModule.deployJobBoardVerticles(injector, VerticleConsts.jobBoardBroadcastAddr);
+    JobBoardModule.deployJobBoardVerticles(injector, CommunicationConsts.jobBoardBroadcastAddr);
     {
       Properties compProps = new Properties(properties);
       compProps.setProperty("_componentId", "getFromZookeeper-DepJob"); //FIXME
-      JobBoardModule.deployDepJobService(injector, VerticleConsts.depJobMgrBroadcastAddr, compProps);
+      JobBoardModule.deployDepJobService(injector, CommunicationConsts.depJobMgrBroadcastAddr, compProps);
     }
     connection.start();
   }
@@ -44,8 +44,8 @@ public class JobManagerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new VertxRpcClients4JobMgrModule(connection),
-        new JobBoardModule(VerticleConsts.jobBoardBroadcastAddr, connection)
+        new RpcClients4JobMgrModule(connection),
+        new JobBoardModule(CommunicationConsts.jobBoardBroadcastAddr, connection)
         );
   }
 }

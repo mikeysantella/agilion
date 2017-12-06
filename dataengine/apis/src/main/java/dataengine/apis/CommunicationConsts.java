@@ -1,6 +1,6 @@
 package dataengine.apis;
 
-public final class VerticleConsts {
+public final class CommunicationConsts {
 
   public final static String sessionDbBroadcastAddr = "sessionDbBroadcastAMQ";
   public final static String opsRegBroadcastAddr = "opsRegBroadcastAMQ";

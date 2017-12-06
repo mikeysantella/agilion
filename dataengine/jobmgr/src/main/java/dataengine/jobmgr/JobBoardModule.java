@@ -17,7 +17,7 @@ import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import dataengine.apis.JobBoardInput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
@@ -39,8 +39,8 @@ public class JobBoardModule extends AbstractModule {
 //    JobProducer jobProducerProxy = new JobProducer(jobBoardId);
 //    bind(JobProducer.class).toInstance(jobProducerProxy);
 
-    Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, VerticleConsts.newJobAvailableTopic);
-    JobBoard jm = new JobBoard(jobBoardId, jobBoardId+System.currentTimeMillis(), newJobPublisher);
+    Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, CommunicationConsts.newJobAvailableTopic);
+    JobBoard jm = new JobBoard(jobBoardId, newJobPublisher);
     bind(JobBoard.class).toInstance(jm);
   }
 

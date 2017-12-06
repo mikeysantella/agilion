@@ -4,22 +4,22 @@ import javax.jms.Connection;
 import com.google.inject.Provides;
 import dataengine.apis.JobBoardInput_I;
 import dataengine.apis.RpcClientProvider;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.rpc.VertxRpcClientsModule;
+import net.deelam.activemq.rpc.RpcClientsModule;
 
 /// provides verticle clients used by JobMgr service
 @Slf4j
-class VertxRpcClients4JobMgrModule extends VertxRpcClientsModule {
+class RpcClients4JobMgrModule extends RpcClientsModule {
 
-  public VertxRpcClients4JobMgrModule(Connection connection) {
+  public RpcClients4JobMgrModule(Connection connection) {
     super(connection);
     log.debug("VertxRpcClients4JobMgrModule configured");
   }
 
   @Provides
   RpcClientProvider<JobBoardInput_I> jobProducer_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardInput_I.class, VerticleConsts.jobBoardBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardInput_I.class, CommunicationConsts.jobBoardBroadcastAddr));
   }
 
 }

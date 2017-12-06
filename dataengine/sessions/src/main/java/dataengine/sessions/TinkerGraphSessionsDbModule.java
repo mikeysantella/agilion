@@ -6,7 +6,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import dataengine.apis.SessionsDB_I;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
 import net.deelam.graph.GrafUri;
@@ -39,6 +39,6 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
   static void deploySessionDb(Injector injector) {
     SessionsDB_I sessDbSvc = injector.getInstance(SessionsDB_I.class);
     log.info("AMQ: SERV: Deploying RPC service for SessionsDB_I: {} ", sessDbSvc); 
-    injector.getInstance(ActiveMqRpcServer.class).start(VerticleConsts.sessionDbBroadcastAddr, sessDbSvc/*, true*/);
+    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.sessionDbBroadcastAddr, sessDbSvc/*, true*/);
   }
 }

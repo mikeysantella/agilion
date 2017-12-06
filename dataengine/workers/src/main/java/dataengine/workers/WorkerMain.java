@@ -8,7 +8,7 @@ import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import dataengine.workers.BaseWorkerModule.DeployedJobConsumerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,9 +58,9 @@ public class WorkerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new VertxRpcClients4WorkerModule(connection),
+        new RpcClients4WorkerModule(connection),
         new OperationsSubscriberModule(),
-        new BaseWorkerModule(VerticleConsts.jobBoardBroadcastAddr)
+        new BaseWorkerModule(CommunicationConsts.jobBoardBroadcastAddr)
         );
   }
 }

@@ -2,10 +2,7 @@ package dataengine.jobmgr;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -58,29 +55,10 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
   @Getter
   private final String serviceType;
 
-  @Deprecated
-  private final String addressBase;
-  
   private final Consumer<JobDTO> newJobNotifier;
-
-  public enum BUS_ADDR {
- // for producers
-    ADD_JOB, REMOVE_JOB, @Deprecated GET_PROGRESS,
-    
- // for consumers
-    @Deprecated UNREGISTER, @Deprecated SET_PROGRESS, 
-    DONE, PARTLY_DONE, FAIL 
-  };
-
-  private static final Object OK_REPLY = "ACK";
 
   // jobId -> JobItem
   private Map<String, JobItem> jobItems = new LinkedHashMap<>();
-
-  private HashMap<String,Worker> knownWorkers = new HashMap<>();
-  @Deprecated
-  private LinkedHashSet<String> idleWorkers = new LinkedHashSet<>();
-  private LinkedHashSet<String> pickyWorkers = new LinkedHashSet<>();
 
   private int removeCounter=0;
 
@@ -115,12 +93,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
       timeOfLastJobAdded = System.currentTimeMillis(); // in case in the middle of negotiating
 
-      log.debug("Moving all pickyWorkers {} to idleWorkers: {}", pickyWorkers, idleWorkers);
-      for (Iterator<String> itr = pickyWorkers.iterator(); itr.hasNext();) {
-        idleWorkers.add(itr.next());
-        itr.remove();
-      }
-      newJobNotifier.accept(ji.jobJO); //asyncNegotiateJobWithNextIdleWorker();
+      newJobNotifier.accept(ji.jobJO);
     }
     return CompletableFuture.completedFuture(addJob);
   }
@@ -163,26 +136,22 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
       boolean jobRecentlyAdded=timeOfLastJobAdded>timeOfJobListQuery;
       // jobItems may have changed by the time this reply is received
       if (jobRecentlyAdded) {
-        log.info("jobList has since changed; sending updated jobList to {}", workerAddr);
+        log.info("jobList has since changed since sending jobList to {}", workerAddr);
         return CompletableFuture.completedFuture(false);
       } else {
-        moveToPickyWorkers(workerAddr);
         return CompletableFuture.completedFuture(true);
       }
     } else {
       try{
         workerStartedJob(jobId, workerAddr);
-        //selectedJobReply.result().reply("proceed with "+selectedJobReply.result().body().getId());
         return CompletableFuture.completedFuture(true);
       }catch(Exception e){
         // job may have been removed while consumer was picking from the jobList
-        //selectedJobReply.result().fail(-123, e.getMessage());
         log.warn("When assigning job={} to worker={}", jobId, workerAddr, e);
-        
         return CompletableFuture.completedFuture(false);
       }
     }
-    }
+  }
 
   @Override
   public CompletableFuture<Void> jobDone(String workerAddr, String jobId) {
@@ -231,10 +200,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
             progessingJobCount+" processing -> "+
             doneJobCount+" doneJobs, "+
             failedJobCount+" failed, "+
-            removeCounter+" removed :: "+
-            idleWorkers.size()+" idle vs "+
-            pickyWorkers.size()+" picky of "+
-            knownWorkers.size()+" workers";
+            removeCounter+" removed :: ";
         if(!logMsg.equals(prevLogMsg)){
           List<String> availJobsStr=jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.AVAILABLE)).map(jiE->{
             JobItem ji = jiE.getValue();
@@ -250,7 +216,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
       }; //);
     }
 
-    log.info("Ready: addressBase={} this={}", addressBase, this);
+    log.info("Ready: this={}", this);
   }
   
   private int statusPeriod, sameLogThreshold;
@@ -263,16 +229,6 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   //negotiate with one worker at a time so workers don't choose the same job
   private boolean isNegotiating = false;
-
-  private void moveToPickyWorkers(final String workerAddr) {
-    log.debug("Moving idleWorker to pickyWorkers queue: {}", workerAddr);
-    if (!idleWorkers.remove(workerAddr)) {
-      log.error("Could not remove {} from idleWorkers={}", workerAddr, idleWorkers);
-    } else {
-      if (!pickyWorkers.add(workerAddr))
-        log.error("Could not add {} to pickyWorkers={}", workerAddr, pickyWorkers);
-    }
-  }
 
   private String toString(JobListDTO jobList) {
     StringBuilder sb = new StringBuilder();
@@ -302,31 +258,18 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   private JobItem workerStartedJob(String jobId, String workerAddr) {
     JobItem job = getJobItem(jobId);
-
     log.debug("Started job: worker={} on jobId={}", workerAddr, job.getId());
-    if (!idleWorkers.remove(workerAddr))
-      log.error("Could not remove {} from idleWorkers={}", workerAddr, idleWorkers);
-
     job.state = JobState.STARTED;
     return job;
   }
 
   private JobItem workerEndedJob(String jobId, String workerAddr, JobState newState) {
     JobItem job = getJobItem(jobId);
-
-    //String workerAddr = getWorkerAddress(jobMsg);
-    if (!idleWorkers.add(workerAddr))
-      log.error("Could not add {} to idleWorkers={}", workerAddr, idleWorkers);
-
     log.info("Setting job {} state from {} to {}", job.getId(), job.state, newState);
     job.state = newState;
     return job;
   }
 
-  private JobItem getJobItem(JobDTO jobJO) {
-    String jobId = jobJO.getId();
-    return getJobItem(jobId);
-  }
   private JobItem getJobItem(String jobId) {
     JobItem job = jobItems.get(jobId);
     checkNotNull(job, "Cannot find job with id=" + jobId);

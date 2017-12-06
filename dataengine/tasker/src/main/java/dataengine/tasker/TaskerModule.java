@@ -15,7 +15,7 @@ import dataengine.apis.DepJobService_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,12 +63,9 @@ final class TaskerModule extends AbstractModule {
   }
 
   static void deployTasker(Injector injector) {
-//    Vertx vertx = injector.getInstance(Vertx.class);
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
-//    new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
-//        .start("TaskerServiceBusAddr" + System.currentTimeMillis(), taskerSvc, true);
-    injector.getInstance(ActiveMqRpcServer.class).start(VerticleConsts.taskerBroadcastAddr, taskerSvc, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.taskerBroadcastAddr, taskerSvc, true);
   }
   
   static void deployJobListener(Injector injector) {
@@ -76,11 +73,8 @@ final class TaskerModule extends AbstractModule {
     Properties props = injector.getInstance(Properties.class);
     int progressPollIntervalSeconds=Integer.valueOf(props.getProperty("jobListener.progressPollIntervalSeconds", "2"));
     jobListener.setProgressPollIntervalSeconds(progressPollIntervalSeconds);
-    if(false) {
-    } else {
-      Properties compProps = new Properties(props);
-      compProps.setProperty("_componentId", "getFromZookeeper-jobListener"); //FIXME
-      jobListener.start(compProps);
-    }
+    Properties compProps = new Properties(props);
+    compProps.setProperty("_componentId", "getFromZookeeper-jobListener"); //FIXME
+    jobListener.start(compProps);
   }
 }
