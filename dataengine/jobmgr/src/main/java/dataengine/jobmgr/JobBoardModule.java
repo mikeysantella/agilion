@@ -2,21 +2,34 @@ package dataengine.jobmgr;
 
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
-
+import dataengine.apis.JobDTO;
+import dataengine.apis.RpcClientProvider;
+import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
+import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.graph.GrafUri;
 import net.deelam.graph.IdGrafFactoryNeo4j;
 import net.deelam.graph.IdGrafFactoryTinker;
 import net.deelam.vertx.jobboard.DepJobFrame;
 import net.deelam.vertx.jobboard.DepJobService;
 import net.deelam.vertx.jobboard.JobBoard;
+import net.deelam.vertx.jobboard.JobBoardInput_I;
 import net.deelam.vertx.jobboard.JobProducer;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
@@ -24,6 +37,7 @@ import net.deelam.vertx.rpc.RpcVerticleServer;
 @Slf4j
 public class JobBoardModule extends AbstractModule {
   final String jobBoardId;
+  final Connection connection;
   
   @Override
   protected void configure() {
@@ -32,11 +46,33 @@ public class JobBoardModule extends AbstractModule {
     JobProducer jobProducerProxy = new JobProducer(jobBoardId);
     bind(JobProducer.class).toInstance(jobProducerProxy);
 
-    JobBoard jm = new JobBoard(jobBoardId, jobBoardId+System.currentTimeMillis());
+    Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, VerticleConsts.newJobAvailableTopic);
+    JobBoard jm = new JobBoard(jobBoardId, jobBoardId+System.currentTimeMillis(), newJobPublisher);
     bind(JobBoard.class).toInstance(jm);
   }
 
-  static void deployJobBoardVerticles(Injector injector) {
+  private Consumer<JobDTO> createNewJobPublisher(Connection connection, String topicName) {
+    try {
+      Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+      Destination dest = session.createTopic(topicName);
+      MessageProducer producer = session.createProducer(dest);
+      producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+      KryoSerDe serde=new KryoSerDe(session); 
+      return jobDto -> {
+        try {
+          Message message = serde.writeObject(jobDto);
+          producer.send(message);
+          log.info("Published new job notification: {}", jobDto.getId());
+        } catch (JMSException e) {
+          log.error("When notifying JobConsumers of new job={}", jobDto, e); 
+        }
+      };
+    } catch (JMSException e) {
+      throw new IllegalStateException("When creating NewJobPublisher for JobBoard", e); 
+    }
+  }
+
+  static void deployJobBoardVerticles(Injector injector, String jobBoardId) {
     Vertx vertx = injector.getInstance(Vertx.class);
     JobProducer jobProducer = injector.getInstance(JobProducer.class);
     JobBoard jobBoard = injector.getInstance(JobBoard.class);
@@ -44,10 +80,15 @@ public class JobBoardModule extends AbstractModule {
       jobBoard.periodicLogs(10_000, 20);
     }
     
-    log.info("VERTX: TASKER: Deploying JobBoard: {} ", jobBoard); 
-    vertx.deployVerticle(jobBoard);
-    log.info("VERTX: TASKER: Deploying JobProducer for jobBoardId={}", jobProducer.getServiceType()); 
-    vertx.deployVerticle(jobProducer);
+    if(false) {
+      log.info("VERTX: TASKER: Deploying JobBoard: {} ", jobBoard); 
+      vertx.deployVerticle(jobBoard);
+      log.info("VERTX: TASKER: Deploying JobProducer for jobBoardId={}", jobProducer.getServiceType()); 
+      vertx.deployVerticle(jobProducer);
+    } else {
+      injector.getInstance(ActiveMqRpcServer.class).start(jobBoardId, jobBoard, true);
+    }
+    
   }
 
   static void deployDepJobService(Injector injector, String depJobMgrId, Properties configMap) {
@@ -66,7 +107,9 @@ public class JobBoardModule extends AbstractModule {
 
     // requires that jobProducerProxy be deployed
     Connection connection = injector.getInstance(Connection.class);
-    DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, connection, ()->jobProducer);
+    RpcClientProvider<JobBoardInput_I> jbInputRpc=
+        injector.getInstance(Key.get(new TypeLiteral<RpcClientProvider<JobBoardInput_I>>() {}));
+    DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, connection, jbInputRpc);
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
 //    new RpcVerticleServer(vertx, depJobMgrId)
 //      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);

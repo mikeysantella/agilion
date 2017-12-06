@@ -12,5 +12,6 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Data
 public class JobListDTO {
+  long timestamp;
   List<JobDTO> jobs; // job-specific parameters
 }

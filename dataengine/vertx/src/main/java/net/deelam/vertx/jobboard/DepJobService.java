@@ -30,6 +30,7 @@ import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 import dataengine.apis.DepJobService_I;
 import dataengine.apis.JobDTO;
+import dataengine.apis.RpcClientProvider;
 import io.vertx.core.eventbus.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,28 +50,12 @@ public class DepJobService implements DepJobService_I {
   
   private final Connection connection;
   
-  private final Supplier<JobProducer> jobProdS;
+  //private final Supplier<JobProducer> jobProdS;
+  final RpcClientProvider<JobBoardInput_I> jbInput;
   
-  @Getter(lazy=true)
-  private final JobProducer jobProducer=getJobProducerWithMsgHandlers();
- 
   boolean removeOnCompletion = true;
   boolean removeOnFailure = false;
   
-  private JobProducer getJobProducerWithMsgHandlers(){
-    log.info("Registering JobProducer's job completion handlers");
-    final JobProducer jobProducer=jobProdS.get();
-    if(false) {
-      jobProducer.addJobCompletionHandler((Message<JobDTO> msg) -> {
-        handleJobCompleted(msg.body().getId());
-      });
-      jobProducer.addJobFailureHandler((Message<JobDTO> msg) -> {
-        handleJobFailed(msg.body().getId());
-      });
-    }
-    return jobProducer;
-  }
-    
   DispatcherConfig config;
 
   class DispatcherConfig extends AbstractCompConfig {
@@ -96,22 +81,22 @@ public class DepJobService implements DepJobService_I {
 
   }
   
-  Session session;
+//  Session session;
   
-  public DepJobService(Properties configMap, IdGraph<?> dependencyGraph, Connection connection, Supplier<JobProducer> jobProdS) {
+  public DepJobService(Properties configMap, IdGraph<?> dependencyGraph, Connection connection, RpcClientProvider<JobBoardInput_I> jbInput) {
     config = new DispatcherConfig(configMap);
     Class<?>[] typedClasses = {DepJobFrame.class};
     FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
     graph = provider.get(dependencyGraph);
-    this.jobProdS=jobProdS;
+    this.jbInput=jbInput;
     this.connection=connection;
     
-    try {
-      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-//      listenToJobStateMsgs(session, null, config.jobDoneTopic, config.jobFailedTopic);
-    } catch (JMSException e) {
-      throw new IllegalStateException("When registering to JMS service", e);
-    }
+//    try {
+//      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+////      listenToJobStateMsgs(session, null, config.jobDoneTopic, config.jobFailedTopic);
+//    } catch (JMSException e) {
+//      throw new IllegalStateException("When registering to JMS service", e);
+//    }
   }
   
 //  void listenToJobStateMsgs(Session session, String stateTopicName, String doneTopicName,
@@ -155,7 +140,7 @@ public class DepJobService implements DepJobService_I {
   public void handleJobCompleted(String jobId) {
     log.info("DISPATCHER: Job complete: {}", jobId);
     if (removeOnCompletion)
-      getJobProducer().removeJob(jobId, null);
+      jbInput.rpc().removeJob(jobId);
     DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
     //log.debug("all jobs: {}", this);
     jobDone(jobV);
@@ -167,7 +152,7 @@ public class DepJobService implements DepJobService_I {
   public void handleJobFailed(String jobId) {
     log.info("DISPATCHER: Job failed: {}", jobId);
     if (removeOnFailure)
-      getJobProducer().removeJob(jobId, null);
+      jbInput.rpc().removeJob(jobId);
     cancelJobsDependentOn(jobId, null);
     DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
     //log.debug("all jobs: {}", this);
@@ -421,7 +406,7 @@ public class DepJobService implements DepJobService_I {
             break;
           case SUBMITTED:
             log.info("Attempting to cancel submitted job={}", jobId);
-            getJobProducer().removeJob(jobId, null); // may fail
+            jbInput.rpc().removeJob(jobId); // may fail
             submittedJobs.remove(jobId);
             setJobCancelled(jobV);
             break;
@@ -464,7 +449,8 @@ public class DepJobService implements DepJobService_I {
       // NEEDED?: jobProd.removeJob(jobV.getNodeId(), null);
     }
     submittedJobs.put(jobV.getNodeId(), job);
-    getJobProducer().addJob(job);
+    int maxRetries=0;
+    jbInput.rpc().addJob(job, maxRetries);
   }
 
   public STATE getJobStatus(String jobId) {
@@ -477,7 +463,8 @@ public class DepJobService implements DepJobService_I {
 
   private ExecutorService threadPool = Executors.newCachedThreadPool();
 
-  public Map<String, Object> queryJobStats(String jobId) {
+  @Deprecated
+  private Map<String, Object> queryJobStats(String jobId) {
     int tx = begin(graph);
     try {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
@@ -486,7 +473,7 @@ public class DepJobService implements DepJobService_I {
       Map<String, Object> map = new HashMap<>();
       if (jobV.getState() == STATE.PROCESSING) {
         threadPool.execute(() -> {
-          getJobProducer().getProgress(jobId, reply -> {
+/*          getJobProducer().getProgress(jobId, reply -> {
             synchronized (map) {
               JobDTO bodyJO = reply.result().body();
               //job = Json.decodeValue(bodyJO.toString(), DependentJob.class);
@@ -495,7 +482,8 @@ public class DepJobService implements DepJobService_I {
               map.notify();
             }
           });
-        });
+*/
+          });
 
         // wait for reply
         synchronized (map) {
