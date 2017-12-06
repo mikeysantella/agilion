@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.workers;
 
 import dataengine.apis.JobDTO;
 

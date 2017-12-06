@@ -2,38 +2,33 @@ package dataengine.workers;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
 import dataengine.apis.VerticleConsts;
 import dataengine.workers.BaseWorkerModule.DeployedJobConsumerFactory;
-import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
-import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class WorkerMain {
 
   public static void main(String[] args) throws Exception {
-    main(new CompletableFuture<>(), null);
+    main((String)null);
   }
   
-  public static void main(CompletableFuture<Vertx> vertxF, String brokerUrl) throws IOException, JMSException {
+  public static void main(String brokerUrl) throws IOException, JMSException {
     log.info("Starting {}", WorkerMain.class);
     Properties properties=new Properties();
     PropertiesUtil.loadProperties("workers.props", properties);
     Connection connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(vertxF, connection);
+    Injector injector = createInjector(connection);
     DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
     BaseWorker<?>[] hiddenWorkers = {
@@ -55,7 +50,7 @@ public class WorkerMain {
     connection.start();
   }
 
-  static Injector createInjector(CompletableFuture<Vertx> vertxF, Connection connection) {
+  static Injector createInjector(Connection connection) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -63,8 +58,7 @@ public class WorkerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new ClusteredVertxInjectionModule(vertxF),
-        new VertxRpcClients4WorkerModule(vertxF, connection),
+        new VertxRpcClients4WorkerModule(connection),
         new OperationsSubscriberModule(),
         new BaseWorkerModule(VerticleConsts.jobBoardBroadcastAddr)
         );

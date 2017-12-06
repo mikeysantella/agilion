@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.jobmgr;
 
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.Vertex;

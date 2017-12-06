@@ -1,4 +1,6 @@
-package net.deelam.vertx.jobboard;
+package dataengine.workers;
+
+import dataengine.apis.ProgressState;
 
 /**
  * Polls process for status.

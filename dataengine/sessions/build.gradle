@@ -11,8 +11,6 @@ dependencies {
   compile dep.guice
   compile dep.guava
   compile dep.activemq_rpc
-  compile project(':vertx')
-  runtime dep.vertx_ignite
   
   testCompile dep.vertx_unittest
 }

@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
@@ -24,13 +23,11 @@ import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import io.vertx.core.Vertx;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
-import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Accessors(fluent = true)
 @Slf4j
@@ -38,8 +35,8 @@ public final class DeServerGuiceInjector {
 
   // complete this vertxF before calling singleton() to provide a vertx
   // otherwise, this will create its own vertx instance
-  @Getter
-  static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
+//  @Getter
+//  static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
 
   static Injector singleton;
   public static Injector singleton() {
@@ -111,8 +108,7 @@ public final class DeServerGuiceInjector {
     try {
       Connection connection = MQClient.connect(brokerUrl);
       injector = Guice.createInjector(
-          new ClusteredVertxInjectionModule(vertxF),
-          new VertxRpcClients4ServerModule(vertxF, connection),
+          new VertxRpcClients4ServerModule(connection),
           new RestServiceModule());
       connection.start();
       log.info("Created DeServerGuiceInjector");
@@ -124,7 +120,6 @@ public final class DeServerGuiceInjector {
   static class RestServiceModule extends AbstractModule {
     @Override
     protected void configure() {
-      requireBinding(Vertx.class);
       requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
       requireBinding(Key.get(new TypeLiteral<RpcClientProvider<DepJobService_I>>() {}));
       requireBinding(Key.get(new TypeLiteral<RpcClientProvider<Tasker_I>>() {}));

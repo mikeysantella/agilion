@@ -10,6 +10,7 @@ import dataengine.api.Operation;
 import dataengine.apis.JobDTO;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationWrapper;
+import dataengine.apis.ProgressState;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import lombok.AccessLevel;
@@ -17,8 +18,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.jobboard.ProgressState;
-import net.deelam.vertx.jobboard.ProgressingDoer;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @Accessors(fluent = true)

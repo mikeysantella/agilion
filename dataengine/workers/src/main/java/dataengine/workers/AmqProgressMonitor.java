@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.workers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Timer;
@@ -12,6 +12,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import dataengine.apis.ProgressState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

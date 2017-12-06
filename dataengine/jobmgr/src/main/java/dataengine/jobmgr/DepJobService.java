@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.jobmgr;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static net.deelam.graph.GrafTxn.begin;
@@ -16,12 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Supplier;
-import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
-import javax.jms.Session;
 import com.google.common.collect.Iterables;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.TransactionalGraph;
@@ -29,18 +25,15 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 import dataengine.apis.DepJobService_I;
+import dataengine.apis.JobBoardInput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
-import io.vertx.core.eventbus.Message;
+import dataengine.jobmgr.DepJobFrame.STATE;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.Constants;
-import net.deelam.activemq.MQClient;
-import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.graph.FramedGrafSupplier;
 import net.deelam.graph.GrafTxn;
-import net.deelam.vertx.jobboard.DepJobFrame.STATE;
 
 
 @Slf4j

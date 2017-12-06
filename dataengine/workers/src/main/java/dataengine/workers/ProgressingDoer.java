@@ -1,7 +1,8 @@
-package net.deelam.vertx.jobboard;
+package dataengine.workers;
 
 import java.util.function.Consumer;
 import dataengine.apis.JobDTO;
+import dataengine.apis.ProgressState;
 
 public interface ProgressingDoer extends Consumer<JobDTO> {
   String name();

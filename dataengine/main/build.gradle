@@ -14,8 +14,7 @@ dependencies {
   compile dep.activemq_rpc
   compile dep.coord_workers
   compile project(':server')
-  runtime dep.vertx_ignite
-
+  
   // for running directly via MainJetty (without gretty)
   compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.2.v20170220'
   compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.2.v20170220'

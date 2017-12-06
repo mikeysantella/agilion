@@ -10,9 +10,11 @@ dependencies {
   compile dep.guava
   compile project(':graph')
   compile dep.activemq_rpc
-  compile project(':vertx')
-  runtime dep.vertx_ignite
-    
+  compile dep.coord_workers
+
+
+  compileOnly dep.frames
+  testCompile dep.frames    
   testCompile dep.vertx_unittest
   
 }
