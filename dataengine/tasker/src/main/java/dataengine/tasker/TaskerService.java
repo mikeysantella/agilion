@@ -6,20 +6,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.inject.Inject;
-
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.Request;
+import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.tasker.JobsCreator.JobEntry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.jobboard.DepJobService_I;
-import net.deelam.vertx.jobboard.JobDTO;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
@@ -28,8 +25,7 @@ public class TaskerService implements Tasker_I {
   final OperationsRegistry opsRegistry;
 
   final RpcClientProvider<SessionsDB_I> sessDb;
-  final RpcClientProvider<DepJobService_I> jobDispatcher;
-  
+  //final RpcClientProvider<DepJobService_I> jobDispatcher;
   final JobListener_I jobListener;
   
   // map keyed on Operation.id in a Request
@@ -140,12 +136,20 @@ public class TaskerService implements Tasker_I {
     return addJobToSessDB.thenCompose((sessDbJob) -> {
       // submit job
       log.info("Submitting job={} to jobDispatcher", job.getId());
+      JobListener_I aJobListener=chooseJobHandler();
       JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType(), sessDbJob)
-          .progressAddr(jobListener.getEventBusAddress(), jobListener.getProgressPollIntervalSeconds());
-      CompletableFuture<Boolean> submitJob = jobDispatcher.rpc().addDepJob(jobDto, inputJobIds);
+          .progressAddr(aJobListener.getEventBusAddress(), aJobListener.getProgressPollIntervalSeconds());
+      CompletableFuture<Boolean> submitJob = aJobListener.getJobDispatcher().rpc().addDepJob(jobDto, inputJobIds);
       log.debug("Added and dispatched job={}", sessDbJob);
       return submitJob;
     });
   }
 
+  // TODO: determine which jobDispatcher and jobListener based on session, i.e., all jobs for a session can go to the same jobDispatcher
+  // 1-to-1 mapping: a TaskerJobListener for each DepJobService
+  private JobListener_I chooseJobHandler() {
+    return jobListener;
+  }
+
+  
 }

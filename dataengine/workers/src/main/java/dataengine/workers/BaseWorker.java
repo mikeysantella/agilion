@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import dataengine.api.Job;
 import dataengine.api.Operation;
+import dataengine.apis.JobDTO;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationWrapper;
 import dataengine.apis.RpcClientProvider;
@@ -16,7 +17,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.jobboard.JobDTO;
 import net.deelam.vertx.jobboard.ProgressState;
 import net.deelam.vertx.jobboard.ProgressingDoer;
 

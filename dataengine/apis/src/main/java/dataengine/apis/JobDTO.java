@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.apis;
 
 import lombok.AccessLevel;
 import lombok.Data;

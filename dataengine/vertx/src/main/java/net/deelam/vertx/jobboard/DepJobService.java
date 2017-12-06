@@ -4,12 +4,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static net.deelam.graph.GrafTxn.begin;
 import static net.deelam.graph.GrafTxn.commit;
 import static net.deelam.graph.GrafTxn.rollback;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -17,17 +17,26 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
-
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Session;
 import com.google.common.collect.Iterables;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
-
+import dataengine.apis.DepJobService_I;
+import dataengine.apis.JobDTO;
 import io.vertx.core.eventbus.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.Constants;
+import net.deelam.activemq.MQClient;
+import net.deelam.activemq.rpc.KryoSerDe;
+import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.graph.FramedGrafSupplier;
 import net.deelam.graph.GrafTxn;
 import net.deelam.vertx.jobboard.DepJobFrame.STATE;
@@ -37,6 +46,8 @@ import net.deelam.vertx.jobboard.DepJobFrame.STATE;
 public class DepJobService implements DepJobService_I {
 
   private final FramedTransactionalGraph<TransactionalGraph> graph;
+  
+  private final Connection connection;
   
   private final Supplier<JobProducer> jobProdS;
   
@@ -49,37 +60,120 @@ public class DepJobService implements DepJobService_I {
   private JobProducer getJobProducerWithMsgHandlers(){
     log.info("Registering JobProducer's job completion handlers");
     final JobProducer jobProducer=jobProdS.get();
-    jobProducer.addJobCompletionHandler((Message<JobDTO> msg) -> {
-      log.info("DISPATCHER: Job complete: {}", msg.body());
-      String jobId = msg.body().getId();
-      if (removeOnCompletion)
-        jobProducer.removeJob(jobId, null);
-      DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
-      //log.debug("all jobs: {}", this);
-      jobDone(jobV);
-      if(log.isDebugEnabled())
-        log.debug("Done jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
-    });
-    jobProducer.addJobFailureHandler((Message<JobDTO> msg) -> {
-      log.warn("DISPATCHER: Job failed: {}", msg.body());
-      String jobId = msg.body().getId();
-      if (removeOnFailure)
-        jobProducer.removeJob(jobId, null);
-      cancelJobsDependentOn(jobId, null);
-      DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
-      //log.debug("all jobs: {}", this);
-      jobFailed(jobV);
-      if(log.isDebugEnabled())
-        log.debug("Failed jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
-    });
+    if(false) {
+      jobProducer.addJobCompletionHandler((Message<JobDTO> msg) -> {
+        handleJobCompleted(msg.body().getId());
+      });
+      jobProducer.addJobFailureHandler((Message<JobDTO> msg) -> {
+        handleJobFailed(msg.body().getId());
+      });
+    }
     return jobProducer;
   }
     
-  public DepJobService(IdGraph<?> dependencyGraph, Supplier<JobProducer> jobProdS) {
+  DispatcherConfig config;
+
+  class DispatcherConfig extends AbstractCompConfig {
+
+//    final String brokerUrl;
+//    final String submitJobQueue;
+//    final String getJobsTopic;
+//    final String availJobsTopic;
+//    final String pickedJobQueue;
+    int deliveryMode = DeliveryMode.NON_PERSISTENT;
+
+
+    // populate and print remaining unused properties
+    public DispatcherConfig(Properties props) {
+      super(props);
+//      brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
+//      submitJobQueue = useRequiredProperty(props, "msgQ.submitJob");
+//      getJobsTopic = useRequiredProperty(props, "msgT.getJobs");
+//      availJobsTopic = useRequiredProperty(props, "msgT.availJobs");
+//      pickedJobQueue = useProperty(props, "msgQ.pickedJob", availJobsTopic + ".pickedJob");
+      checkRemainingProps(props);
+    }
+
+  }
+  
+  Session session;
+  
+  public DepJobService(Properties configMap, IdGraph<?> dependencyGraph, Connection connection, Supplier<JobProducer> jobProdS) {
+    config = new DispatcherConfig(configMap);
     Class<?>[] typedClasses = {DepJobFrame.class};
     FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
     graph = provider.get(dependencyGraph);
     this.jobProdS=jobProdS;
+    this.connection=connection;
+    
+    try {
+      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+//      listenToJobStateMsgs(session, null, config.jobDoneTopic, config.jobFailedTopic);
+    } catch (JMSException e) {
+      throw new IllegalStateException("When registering to JMS service", e);
+    }
+  }
+  
+//  void listenToJobStateMsgs(Session session, String stateTopicName, String doneTopicName,
+//      String failedTopicName) {
+//    final KryoSerDe serde = new KryoSerDe(session);
+//
+//    if (stateTopicName != null)
+//      MQClient.createTopicConsumer(session, stateTopicName, msg -> {
+//        if (msg instanceof BytesMessage) {
+//          ProgressState state=serde.readObject((BytesMessage) msg);
+//          log.info("Job statusMessage received: {}", state);
+//        } else {
+//          log.error("Invalid statusMessage received: {}", msg);
+//        }
+//      });
+//    
+//    if (doneTopicName != null)
+//      MQClient.createTopicConsumer(session, doneTopicName, msg ->{
+//        String jobId = msg.getStringProperty(ProgressState.JOBID_KEY);
+//        if (msg instanceof BytesMessage) {
+//          //ProgressState state=serde.readObject((BytesMessage) msg);
+//          handleJobCompleted(jobProducer, jobId);
+//        } else {
+//          log.warn("Expecting BytesMessage but got {}", msg);
+//        }
+//      });
+//    
+//    if (failedTopicName != null)
+//      MQClient.createTopicConsumer(session, failedTopicName, msg ->{
+//        String jobId = msg.getStringProperty(ProgressState.JOBID_KEY);
+//        if (msg instanceof BytesMessage) {
+//          //ProgressState state=serde.readObject((BytesMessage) msg);
+//          handleJobFailed(jobProducer, jobId);
+//        } else {
+//          log.warn("Expecting BytesMessage but got {}", msg);
+//        }
+//      });
+//  }
+
+  @Override
+  public void handleJobCompleted(String jobId) {
+    log.info("DISPATCHER: Job complete: {}", jobId);
+    if (removeOnCompletion)
+      getJobProducer().removeJob(jobId, null);
+    DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
+    //log.debug("all jobs: {}", this);
+    jobDone(jobV);
+    if(log.isDebugEnabled())
+      log.debug("Done jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
+  }
+
+  @Override
+  public void handleJobFailed(String jobId) {
+    log.info("DISPATCHER: Job failed: {}", jobId);
+    if (removeOnFailure)
+      getJobProducer().removeJob(jobId, null);
+    cancelJobsDependentOn(jobId, null);
+    DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
+    //log.debug("all jobs: {}", this);
+    jobFailed(jobV);
+    if(log.isDebugEnabled())
+      log.debug("Failed jobId={} \n {}", jobId, toStringRemainingJobs(DepJobFrame.STATE_PROPKEY));
   }
 
   public synchronized void close() {

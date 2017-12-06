@@ -19,6 +19,7 @@ import dataengine.api.OperationsApiService;
 import dataengine.api.RequestApiService;
 import dataengine.api.SessionApiService;
 import dataengine.api.SessionsApiService;
+import dataengine.apis.DepJobService_I;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -30,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
 import net.deelam.vertx.ClusteredVertxInjectionModule;
-import net.deelam.vertx.jobboard.DepJobService_I;
 
 @Accessors(fluent = true)
 @Slf4j
@@ -92,7 +92,7 @@ public final class DeServerGuiceInjector {
       java.util.ArrayList.class,
       java.util.HashMap.class,
       java.util.LinkedHashMap.class,
-      net.deelam.vertx.jobboard.JobDTO.class,
+      dataengine.apis.JobDTO.class,
       Object[].class,
       String[].class,
       java.time.OffsetDateTime.class,

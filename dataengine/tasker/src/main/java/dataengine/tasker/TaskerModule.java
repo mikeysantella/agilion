@@ -14,7 +14,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
-
+import dataengine.apis.DepJobService_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
@@ -24,7 +24,6 @@ import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
-import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.RpcVerticleServer;
 
 @Slf4j
@@ -79,12 +78,17 @@ final class TaskerModule extends AbstractModule {
   }
   
   static void deployJobListener(Injector injector) {
-    Vertx vertx = injector.getInstance(Vertx.class);
     TaskerJobListener jobListener = injector.getInstance(TaskerJobListener.class);
     Properties props = injector.getInstance(Properties.class);
     int progressPollIntervalSeconds=Integer.valueOf(props.getProperty("jobListener.progressPollIntervalSeconds", "2"));
     jobListener.setProgressPollIntervalSeconds(progressPollIntervalSeconds);
-    
-    vertx.deployVerticle(jobListener);
+    if(false) {
+      Vertx vertx = injector.getInstance(Vertx.class);
+      vertx.deployVerticle(jobListener);
+    } else {
+      Properties compProps = new Properties(props);
+      compProps.setProperty("_componentId", "getFromZookeeper-jobListener"); //FIXME
+      jobListener.start(compProps);
+    }
   }
 }

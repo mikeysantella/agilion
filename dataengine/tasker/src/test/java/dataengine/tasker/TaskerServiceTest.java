@@ -28,6 +28,7 @@ import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.api.OperationSelection;
 import dataengine.api.Request;
+import dataengine.apis.DepJobService_I;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -37,7 +38,6 @@ import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.activemq.MQService;
-import net.deelam.vertx.jobboard.DepJobService_I;
 
 @Slf4j
 public class TaskerServiceTest {

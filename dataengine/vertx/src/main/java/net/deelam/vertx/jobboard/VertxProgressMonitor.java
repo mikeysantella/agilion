@@ -22,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @ToString
+@Deprecated
 public class VertxProgressMonitor implements ProgressMonitor {
 
+  @Deprecated
   @RequiredArgsConstructor(onConstructor = @__(@Inject) )
   public static class Factory implements ProgressMonitor.Factory {
     private final Vertx vertx;
@@ -179,7 +181,7 @@ public class VertxProgressMonitor implements ProgressMonitor {
 
   private List<String> otherBusAddrs = null;
 
-  @Override
+//  @Override
   public void addTargetVertxAddr(String vertxAddrPrefix) {
     if (otherBusAddrs == null) {
       otherBusAddrs = new ArrayList<>();
