@@ -2,25 +2,22 @@ package dataengine.workers;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Named;
-
+import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-
 import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.vertx.jobboard.AmqProgressMonitor;
 import net.deelam.vertx.jobboard.JobConsumer;
 import net.deelam.vertx.jobboard.ProgressMonitor;
 import net.deelam.vertx.jobboard.ProgressMonitor.Factory;
 import net.deelam.vertx.jobboard.ProgressingDoer;
 import net.deelam.vertx.jobboard.ReportingWorker;
-import net.deelam.vertx.jobboard.VertxProgressMonitor;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -33,13 +30,15 @@ public class BaseWorkerModule extends AbstractModule {
   @Override
   protected void configure() {
     requireBinding(Vertx.class);
+    requireBinding(Connection.class);
     
     checkNotNull(jobBoardId);
     checkArgument(jobBoardId.length() > 0);
     log.info("jobBoardId={}", jobBoardId);
     bindConstant().annotatedWith(Names.named(NAMED_JOB_BOARD_ID)).to(jobBoardId);
 
-    bind(ProgressMonitor.Factory.class).to(VertxProgressMonitor.Factory.class);
+    //bind(ProgressMonitor.Factory.class).to(VertxProgressMonitor.Factory.class);
+    bind(ProgressMonitor.Factory.class).to(AmqProgressMonitor.Factory.class);
   }
 
   public static class DeployedJobConsumerFactory {

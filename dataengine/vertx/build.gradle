@@ -1,5 +1,6 @@
 
 dependencies {
+  compile project(':apis')
   compile dep.xinject
   compile dep.guice
   compile dep.guava

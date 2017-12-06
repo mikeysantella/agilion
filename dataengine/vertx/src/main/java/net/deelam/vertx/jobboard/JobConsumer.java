@@ -4,7 +4,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.util.function.Function;
-
+import dataengine.apis.JobDTO;
+import dataengine.apis.JobListDTO;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -68,8 +69,8 @@ public class JobConsumer extends AbstractVerticle {
   private Function<JobListDTO, JobDTO> jobPicker = dtoList -> {
     log.debug("jobs={}", dtoList);
     JobDTO picked = null;
-    if (dtoList.jobs.size() > 0) {
-      for(JobDTO j:dtoList.jobs){
+    if (dtoList.getJobs().size() > 0) {
+      for(JobDTO j:dtoList.getJobs()){
         if((worker.canDo(j))){
           picked = j; //dto.jobs.get(0);
           break;
@@ -77,7 +78,7 @@ public class JobConsumer extends AbstractVerticle {
       }
     }
     StringBuilder jobsSb = new StringBuilder();
-    dtoList.jobs.forEach(j -> jobsSb.append(" " + j.getId()));
+    dtoList.getJobs().forEach(j -> jobsSb.append(" " + j.getId()));
     log.info("pickedJob={} from jobs={}", picked, jobsSb);
     return picked;
   };

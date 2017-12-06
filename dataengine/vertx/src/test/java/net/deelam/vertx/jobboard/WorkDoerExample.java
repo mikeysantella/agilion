@@ -5,7 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
-
+import dataengine.apis.JobDTO;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -61,7 +61,7 @@ public class WorkDoerExample {
       IdGrafFactoryTinker.register();
       GrafUri guri = new GrafUri("tinker:///");
       IdGraph<?> dependencyGraph = guri.openIdGraph();
-      DepJobService depJobMgr = new DepJobService(dependencyGraph, ()->jProducer);
+      DepJobService depJobMgr = new DepJobService(null, dependencyGraph, null, ()->jProducer);
 
       JobSubmitter submitter = new JobSubmitter(depJobMgr);
 

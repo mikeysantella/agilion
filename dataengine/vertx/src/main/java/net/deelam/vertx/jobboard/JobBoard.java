@@ -13,7 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Iterables;
-
+import dataengine.apis.JobDTO;
+import dataengine.apis.JobListDTO;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -343,7 +344,7 @@ public class JobBoard extends AbstractVerticle {
   private void asyncSendJobsTo(final String workerAddr, final JobListDTO jobList) {
     jobAdded = false;
     
-    if(jobList.jobs.size()==0){
+    if(jobList.getJobs().size()==0){
       log.debug("Not sending to {} empty jobList", workerAddr);
       moveToPickyWorkers(workerAddr);
       isNegotiating = false; // close current negotiation
@@ -412,7 +413,7 @@ public class JobBoard extends AbstractVerticle {
 
   private String toString(JobListDTO jobList) {
     StringBuilder sb = new StringBuilder();
-    jobList.getJobs().forEach(j -> sb.append("\n  ").append(j.id));
+    jobList.getJobs().forEach(j -> sb.append("\n  ").append(j.getId()));
     return sb.toString();
   }
 
@@ -486,7 +487,9 @@ public class JobBoard extends AbstractVerticle {
     };
 
     JobItem.JobState state;
+    @Deprecated
     final String completionAddr;
+    @Deprecated
     final String failureAddr;
     final int retryLimit; // 0 means don't retry
     int jobFailedCount=0;
@@ -504,7 +507,7 @@ public class JobBoard extends AbstractVerticle {
         retryLimit = Integer.parseInt(retryLimitStr);
 
 
-      checkNotNull(jobJO.id);
+      checkNotNull(jobJO.getId());
       
 //      String existingJobId = jobJO.id;
 //      if (existingJobId == null)
@@ -514,7 +517,7 @@ public class JobBoard extends AbstractVerticle {
     }
 
     public String getId() {
-      return jobJO.id;
+      return jobJO.getId();
     }
 
     @Deprecated
@@ -525,12 +528,15 @@ public class JobBoard extends AbstractVerticle {
 
   }
 
+  @Deprecated
   private static final String JOB_COMPLETE_ADDRESS = "jobCompleteAddress";
 
+  @Deprecated
   private static final String JOB_FAILURE_ADDRESS = "jobFailureAddress";
 
   private static final String JOB_RETRY_LIMIT = "jobRetryLimit";
 
+  @Deprecated
   public static DeliveryOptions createProducerHeader(String jobCompletionAddress) {
     return createProducerHeader(jobCompletionAddress, null, 0);
   }

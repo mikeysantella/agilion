@@ -32,7 +32,11 @@ public class JobManagerMain {
     Connection connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(vertxF, connection, properties);
     JobBoardModule.deployJobBoardVerticles(injector);
-    JobBoardModule.deployDepJobService(injector, VerticleConsts.depJobMgrBroadcastAddr);
+    {
+      Properties compProps = new Properties(properties);
+      compProps.setProperty("_componentId", "getFromZookeeper-DepJob"); //FIXME
+      JobBoardModule.deployDepJobService(injector, VerticleConsts.depJobMgrBroadcastAddr, compProps);
+    }
     connection.start();
   }
 

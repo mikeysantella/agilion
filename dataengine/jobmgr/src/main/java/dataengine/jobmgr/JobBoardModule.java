@@ -1,7 +1,8 @@
 package dataengine.jobmgr;
 
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
@@ -49,7 +50,7 @@ public class JobBoardModule extends AbstractModule {
     vertx.deployVerticle(jobProducer);
   }
 
-  static void deployDepJobService(Injector injector, String depJobMgrId) {
+  static void deployDepJobService(Injector injector, String depJobMgrId, Properties configMap) {
     Vertx vertx = injector.getInstance(Vertx.class);
     JobProducer jobProducer = injector.getInstance(JobProducer.class);
     GrafUri depJobGrafUri;
@@ -64,7 +65,8 @@ public class JobBoardModule extends AbstractModule {
     IdGraph<?> depJobMgrGraf = depJobGrafUri.openIdGraph();
 
     // requires that jobProducerProxy be deployed
-    DepJobService depJobMgr = new DepJobService(depJobMgrGraf, ()->jobProducer);
+    Connection connection = injector.getInstance(Connection.class);
+    DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, connection, ()->jobProducer);
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
 //    new RpcVerticleServer(vertx, depJobMgrId)
 //      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);

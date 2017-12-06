@@ -1,5 +1,7 @@
 package net.deelam.vertx.jobboard;
 
+import dataengine.apis.JobDTO;
+import dataengine.apis.JobListDTO;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -58,6 +60,7 @@ public class JobProducer extends AbstractVerticle {
       }
   }
 
+  @Deprecated
   public <T> void addJobCompletionHandler(Handler<Message<JobDTO>> jobCompletionHandler) {
     waitForEventBus();
     jobCompletionAddress = deploymentID() + "-jobComplete";
@@ -65,6 +68,7 @@ public class JobProducer extends AbstractVerticle {
     vertx.eventBus().consumer(jobCompletionAddress, jobCompletionHandler);
   }
 
+  @Deprecated
   public <T> void addJobFailureHandler(Handler<Message<JobDTO>> jobFailureHandler) {
     waitForEventBus();
     jobFailureAddress = deploymentID() + "-jobFailed";

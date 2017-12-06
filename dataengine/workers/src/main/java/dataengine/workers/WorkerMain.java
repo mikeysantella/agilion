@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -56,6 +57,12 @@ public class WorkerMain {
 
   static Injector createInjector(CompletableFuture<Vertx> vertxF, Connection connection) {
     return Guice.createInjector(
+        new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(Connection.class).toInstance(connection);
+          }
+        },
         new ClusteredVertxInjectionModule(vertxF),
         new VertxRpcClients4WorkerModule(vertxF, connection),
         new OperationsSubscriberModule(),

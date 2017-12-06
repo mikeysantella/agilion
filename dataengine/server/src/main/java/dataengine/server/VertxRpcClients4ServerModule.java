@@ -3,7 +3,7 @@ package dataengine.server;
 import java.util.concurrent.CompletableFuture;
 import javax.jms.Connection;
 import com.google.inject.Provides;
-
+import dataengine.apis.DepJobService_I;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -11,7 +11,6 @@ import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.jobboard.DepJobService_I;
 import net.deelam.vertx.rpc.VertxRpcClientsModule;
 
 /// provides verticle clients used by REST services

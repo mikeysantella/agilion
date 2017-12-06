@@ -42,6 +42,8 @@ public class ProgressState {
   private String jobId;
   private long startTime;
 
+  public static final String JOBID_KEY = "jobId";
+
   public ProgressState starting(String jobId, String msg) {
     this.jobId = jobId;
     if (metrics != null)
