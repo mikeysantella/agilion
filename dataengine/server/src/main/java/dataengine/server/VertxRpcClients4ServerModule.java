@@ -27,12 +27,12 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
   
   @Provides
   RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(){
-    return new RpcClientProvider<>(getClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr));
   }
 
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
-    return new RpcClientProvider<>(getClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr));
   }
 
   @Provides
@@ -42,7 +42,7 @@ class VertxRpcClients4ServerModule extends VertxRpcClientsModule {
 
   @Provides
   RpcClientProvider<Tasker_I> tasker_RpcClient(){
-    return new RpcClientProvider<>(getClientSupplierFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, VerticleConsts.taskerBroadcastAddr));
   }
 
 }

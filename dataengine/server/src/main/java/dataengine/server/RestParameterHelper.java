@@ -42,83 +42,97 @@ public final class RestParameterHelper {
 
 
   static Response makeResultResponse(String msg, Future<?> responseObj) {
+    Response response;
     try {
       if (responseObj.get() == null) {
         String errMsg = "Null response: " + msg;
         log.warn(errMsg);
-        return Response.status(Status.NOT_FOUND)
+        response=Response.status(Status.NOT_FOUND)
             .entity(new ApiResponseMessage(ApiResponseMessage.ERROR,
                 errMsg))
             .build();
-      } else
-        return Response.ok().entity(responseObj.get()).build();
+      } else {
+        response=Response.ok().entity(responseObj.get()).build();
+      }
     } catch (InterruptedException | ExecutionException e) {
       String errMsg = "Exception caught during " + msg + ": " + e.getCause();
       log.warn(errMsg, e);
-      return Response.status(Status.INTERNAL_SERVER_ERROR)
+      response=Response.status(Status.INTERNAL_SERVER_ERROR)
           .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
           .build();
     }
+    log.info("REST response: {}\n\t", response, response.getEntity());
+    return response;
   }
 
   static Response makeResultResponse(String objectType, String relativeLocationUriPrefix, String id,
       Future<?> responseObj) {
+    Response response;
     try {
       Object result = responseObj.get();
       if (result == null) {
         String errMsg = "Object of type " + objectType + " not found with id: " + id;
         log.warn(errMsg);
-        return Response.status(Status.NOT_FOUND)
+        response=Response.status(Status.NOT_FOUND)
             .entity(new ApiResponseMessage(ApiResponseMessage.ERROR,
                 errMsg))
             .build();
-      } else
-        return Response.ok(result)
+      } else {
+        response = Response.ok(result)
             .location(URI.create(relativeLocationUriPrefix + id))
             .build();
+      }
     } catch (InterruptedException | ExecutionException e) {
       String errMsg = objectType + " object, id=" + id + " caused exception: " + e.getCause();
       log.warn(errMsg);
-      return Response.status(Status.CONFLICT)
+      response=Response.status(Status.CONFLICT)
           .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
           .build();
     }
+    log.info("REST response: {}\n\t", response, response.getEntity());
+    return response;
   }
 
   static <T> Response tryCreateObject(String objectType, T inputObj, String relativeLocationUriPrefix,
       Function<T, String> getId, Function<String, Future<Boolean>> hasObject, Supplier<Future<T>> createObject) {
+    Response response;
     if (inputObj == null) {
       String errMsg = "Submitted " + objectType + " cannot be null!";
       log.warn(errMsg);
-      return makeBadRequestResponse(errMsg);
-    }
-    try {
-      String id = getId.apply(inputObj);
-      if (id != null && hasObject.apply(id).get()) {
-        String errMsg = "Object already exists of type " + objectType + ": " + id;
+      response=makeBadRequestResponse(errMsg);
+    } else {
+      try {
+        String id = getId.apply(inputObj);
+        if (id != null && hasObject.apply(id).get()) {
+          String errMsg = "Object already exists of type " + objectType + ": " + id;
+          log.warn(errMsg);
+          response = Response.status(Status.CONFLICT)
+              .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
+              .build();
+        } else {
+          Future<T> createF = createObject.get();
+          T newObj = createF.get(); // blocks until object created
+          if (newObj == null) {
+            String errMsg = "Object of type " + objectType + " was not created with id=" + id;
+            log.warn(errMsg);
+            response = Response.status(Status.NO_CONTENT)
+                .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
+                .build();
+          } else {
+            response = Response
+                .created(URI.create(relativeLocationUriPrefix + getId.apply(newObj)))
+                .status(Status.CREATED).entity(newObj).build();
+          }
+        }
+      } catch (Exception e) { // could be Vertx msg timeout
+        String errMsg = objectType + " object cannot be created from " + inputObj + " : " + e.getCause();
         log.warn(errMsg);
-        return Response.status(Status.CONFLICT)
+        response = Response.status(Status.CONFLICT)
             .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
             .build();
       }
-      Future<T> createF = createObject.get();
-      T newObj = createF.get(); // blocks until object created
-      if (newObj == null) {
-        String errMsg = "Object of type " + objectType + " was not created with id=" + id;
-        log.warn(errMsg);
-        return Response.status(Status.NO_CONTENT)
-            .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
-            .build();
-      }
-      return Response
-          .created(URI.create(relativeLocationUriPrefix + getId.apply(newObj)))
-          .status(Status.CREATED).entity(newObj).build();
-    } catch (Exception e) { // could be Vertx msg timeout
-      String errMsg = objectType + " object cannot be created from " + inputObj + " : " + e.getCause();
-      log.warn(errMsg);
-      return Response.status(Status.CONFLICT)
-          .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
-          .build();
     }
+    log.info("REST response: {}\n\t", response, response.getEntity());
+    return response;
   }
 }
