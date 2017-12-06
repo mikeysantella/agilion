@@ -21,7 +21,7 @@ import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import dataengine.sessions.TinkerGraphSessionsDbModule;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
@@ -46,7 +46,7 @@ public class VertxRpcSessionsTest {
         connection.start();
         // simulate REST server that uses SessionsDB RPC client 
         Injector injector = Guice.createInjector(
-            new VertxRpcClients4ServerModule(connection));
+            new RpcClients4ServerModule(connection));
         RpcClientProvider<SessionsDB_I> sessionsDbRpcClientS = injector.getInstance(
             Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
         sessionsDbRpcClient = sessionsDbRpcClientS.rpc();
@@ -69,7 +69,7 @@ public class VertxRpcSessionsTest {
         log.info("sessVert={}", sessVert);
 //        new RpcVerticleServer(vertx, VerticleConsts.sessionDbBroadcastAddr)
 //            .start("SessionsDBServiceBusAddr", sessVert, true);
-        new ActiveMqRpcServer(connection).start(VerticleConsts.sessionDbBroadcastAddr, sessVert, true);
+        new ActiveMqRpcServer(connection).start(CommunicationConsts.sessionDbBroadcastAddr, sessVert, true);
       } catch (Exception e) {
         e.printStackTrace();
       }

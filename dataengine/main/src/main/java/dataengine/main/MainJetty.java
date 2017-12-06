@@ -39,7 +39,14 @@ public class MainJetty {
         ? true : Boolean.getBoolean(onlyRunServerProject);
 
     System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
-    injectVertx(runInSingleJVM);
+    if (runInSingleJVM) {
+      log.info("======== Running all required DataEngine services in same JVM");
+      try {
+        startAllInSameJvm();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
 
     MainJetty main = new MainJetty();
     
@@ -58,24 +65,11 @@ public class MainJetty {
     }
   }
 
-  public static void injectVertx(boolean runInSingleJVM) {
-    if (runInSingleJVM) {
-      log.info("======== Running all required DataEngine services in same JVM");
-      try {
-        startAllInSameJvm();
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
-  private static void startAllInSameJvm() throws Exception {
+  public static void startAllInSameJvm() throws Exception {
     // TODO: replace with Zk-based component initialization
     AmqServiceComp amq=new AmqServiceComp();
     amq.start(DeServerGuiceInjector.properties());
     
-    // Only create 1 Vertx instance per JVM! 
-    // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
     dataengine.sessions.SessionsMain.main(BROKER_URL);
     dataengine.tasker.TaskerMain.main(BROKER_URL);
     dataengine.jobmgr.JobManagerMain.main(BROKER_URL);

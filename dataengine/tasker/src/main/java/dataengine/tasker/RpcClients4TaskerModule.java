@@ -5,15 +5,15 @@ import com.google.inject.Provides;
 import dataengine.apis.DepJobService_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.rpc.VertxRpcClientsModule;
+import net.deelam.activemq.rpc.RpcClientsModule;
 
 /// provides verticle clients used by Tasker service
 @Slf4j
-class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
+class RpcClients4TaskerModule extends RpcClientsModule {
 
-  public VertxRpcClients4TaskerModule(Connection connection) {
+  public RpcClients4TaskerModule(Connection connection) {
     super(connection);
     //debug = true;
     log.debug("VertxRpcClients4TaskerModule configured");
@@ -21,11 +21,11 @@ class VertxRpcClients4TaskerModule extends VertxRpcClientsModule {
 
   @Provides
   RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, VerticleConsts.depJobMgrBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, CommunicationConsts.depJobMgrBroadcastAddr));
   }
 
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, VerticleConsts.sessionDbBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.sessionDbBroadcastAddr));
   }
 }

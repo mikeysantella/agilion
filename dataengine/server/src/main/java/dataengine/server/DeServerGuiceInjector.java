@@ -108,7 +108,7 @@ public final class DeServerGuiceInjector {
     try {
       Connection connection = MQClient.connect(brokerUrl);
       injector = Guice.createInjector(
-          new VertxRpcClients4ServerModule(connection),
+          new RpcClients4ServerModule(connection),
           new RestServiceModule());
       connection.start();
       log.info("Created DeServerGuiceInjector");

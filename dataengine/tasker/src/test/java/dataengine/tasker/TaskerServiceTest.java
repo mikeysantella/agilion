@@ -29,7 +29,7 @@ import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import dataengine.apis.VerticleConsts;
+import dataengine.apis.CommunicationConsts;
 import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
@@ -70,7 +70,7 @@ public class TaskerServiceTest {
                 bind(Connection.class).toInstance(connection);
                 connection.start();
                 OperationsRegistry opsReg =
-                    new OperationsRegistry(connection, VerticleConsts.opsRegBroadcastAddr);
+                    new OperationsRegistry(connection, CommunicationConsts.opsRegBroadcastAddr);
                 bind(OperationsRegistry.class).toInstance(opsReg);
               } catch (Exception e) {
                 throw new RuntimeException(e);
