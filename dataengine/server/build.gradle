@@ -12,8 +12,6 @@ dependencies {
   compile dep.guice
   compile dep.activemq_rpc
   compile project(':utils')
-  compile project(':vertx')
-  runtime dep.vertx_ignite
 
   testCompile project(':sessions')
   testCompile project(':tasker')

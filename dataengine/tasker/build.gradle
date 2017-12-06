@@ -8,9 +8,8 @@ dependencies {
   compile dep.xinject
   compile dep.guice
   compile dep.activemq_rpc
+  compile dep.coord_workers
   compile dep.guava
-  compile project(':vertx')
-  runtime dep.vertx_ignite
     
   testCompile dep.vertx_unittest
   

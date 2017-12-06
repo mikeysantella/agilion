@@ -2,8 +2,6 @@ package dataengine.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -16,13 +14,9 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import dataengine.server.DeServerGuiceInjector;
-import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.coordworkers.AmqServiceComp;
-import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 /**
  * 
@@ -65,36 +59,27 @@ public class MainJetty {
   }
 
   public static void injectVertx(boolean runInSingleJVM) {
-    CompletableFuture<Vertx> vertxF = DeServerGuiceInjector.vertxF();
     if (runInSingleJVM) {
-      vertxF.complete(Vertx.vertx());
-    } else {
-      Injector injector = Guice.createInjector(
-          new ClusteredVertxInjectionModule(vertxF));
-      vertxF.complete(injector.getInstance(Vertx.class));
-    }
-    if (runInSingleJVM) {
-      vertxF.join();
-      log.info("======== Running all required DataEngine services in same JVM {}", vertxF);
+      log.info("======== Running all required DataEngine services in same JVM");
       try {
-        startAllInSameJvm(vertxF);
+        startAllInSameJvm();
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
   }
 
-  private static void startAllInSameJvm(CompletableFuture<Vertx> vertxF) throws Exception {
+  private static void startAllInSameJvm() throws Exception {
     // TODO: replace with Zk-based component initialization
     AmqServiceComp amq=new AmqServiceComp();
     amq.start(DeServerGuiceInjector.properties());
     
     // Only create 1 Vertx instance per JVM! 
     // https://groups.google.com/forum/#!topic/vertx/sGeuSg3GxwY
-    dataengine.sessions.SessionsMain.main(vertxF, BROKER_URL);
-    dataengine.tasker.TaskerMain.main(vertxF, BROKER_URL);
-    dataengine.jobmgr.JobManagerMain.main(vertxF, BROKER_URL);
-    dataengine.workers.WorkerMain.main(vertxF, BROKER_URL);
+    dataengine.sessions.SessionsMain.main(BROKER_URL);
+    dataengine.tasker.TaskerMain.main(BROKER_URL);
+    dataengine.jobmgr.JobManagerMain.main(BROKER_URL);
+    dataengine.workers.WorkerMain.main(BROKER_URL);
   }
 
   private Server startServer(int port, int sslPort, String contextPath,

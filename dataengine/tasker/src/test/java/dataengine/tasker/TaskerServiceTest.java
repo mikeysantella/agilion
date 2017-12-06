@@ -4,25 +4,21 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.jms.Connection;
-import javax.jms.JMSException;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
@@ -65,8 +61,6 @@ public class TaskerServiceTest {
 
             // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
             if(false) {
-              OperationsRegistryVerticle opsRegVert = new OperationsRegistryVerticle(VerticleConsts.opsRegBroadcastAddr);
-              bind(OperationsRegistryVerticle.class).toInstance(opsRegVert);
             } else {
               try {
                 String brokerURL="tcp://localhost:55555";

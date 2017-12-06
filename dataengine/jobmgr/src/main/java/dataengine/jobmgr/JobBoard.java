@@ -1,8 +1,7 @@
-package net.deelam.vertx.jobboard;
+package dataengine.jobmgr;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -13,24 +12,15 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
-import com.google.common.collect.Iterables;
+import dataengine.apis.JobBoardInput_I;
+import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.JobListDTO;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonObject;
+import dataengine.jobmgr.JobBoard.JobItem.JobState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.KryoMessageCodec;
-import net.deelam.vertx.VerticleUtils;
-import net.deelam.vertx.jobboard.JobBoard.JobItem.JobState;
 
 /**
  * JobProducer calls:
@@ -64,7 +54,7 @@ import net.deelam.vertx.jobboard.JobBoard.JobItem.JobState;
 @Slf4j
 @ToString
 @RequiredArgsConstructor
-public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBoardOutput_I {
+public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
   @Getter
   private final String serviceType;
 
@@ -91,16 +81,6 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
   @Deprecated
   private LinkedHashSet<String> idleWorkers = new LinkedHashSet<>();
   private LinkedHashSet<String> pickyWorkers = new LinkedHashSet<>();
-
-  private Handler<AsyncResult<Message<JsonObject>>> debugReplyHandler = (reply) -> {
-    if (reply.succeeded()) {
-      log.debug("reply={}", reply);
-    } else if (reply.failed()) {
-      log.error("failed: ", reply.cause());
-    } else {
-      log.warn("unknown reply: {}", reply);
-    }
-  };
 
   private int removeCounter=0;
 
@@ -184,8 +164,6 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
       // jobItems may have changed by the time this reply is received
       if (jobRecentlyAdded) {
         log.info("jobList has since changed; sending updated jobList to {}", workerAddr);
-        //JobListDTO availableJobs = getAvailableJobsFor(workerAddr);
-        // TODO: call findJobs() instead of asyncSendJobsTo(workerAddr, availableJobs);
         return CompletableFuture.completedFuture(false);
       } else {
         moveToPickyWorkers(workerAddr);
@@ -201,8 +179,6 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
         //selectedJobReply.result().fail(-123, e.getMessage());
         log.warn("When assigning job={} to worker={}", jobId, workerAddr, e);
         
-        //JobListDTO availableJobs = getAvailableJobsFor(workerAddr);
-        // TODO: call findJobs() instead of asyncSendJobsTo(workerAddr, availableJobs);
         return CompletableFuture.completedFuture(false);
       }
     }
@@ -213,8 +189,6 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
     log.debug("Received DONE message: {}", jobId);
     JobItem ji = workerEndedJob(jobId, workerAddr, JobState.DONE);
     log.debug("Done job: {}", ji.jobJO);
-    
-    //TODO: call findJobs() instead of asyncNegotiateJobWith(workerAddr);
     return CompletableFuture.completedFuture(null);
   }
 
@@ -224,8 +198,6 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
     log.debug("Received PARTLY_DONE message: {}", jobId);
     JobItem ji = workerEndedJob(jobId, workerAddr, JobState.AVAILABLE);
     log.debug("Partly done: {}", ji.jobJO);
-
-    // TODO: call findJobs() instead of asyncNegotiateJobWith(workerAddr);
     return CompletableFuture.completedFuture(null);
   }
 
@@ -238,74 +210,15 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
     JobState endState = (failCount >= job.retryLimit) ? JobState.FAILED : JobState.AVAILABLE;
     JobItem ji = workerEndedJob(jobId, workerAddr, endState);
     log.debug("Failed job: {}", ji.jobJO);
-    
-    // TODO: call findJobs() instead of asyncNegotiateJobWith(workerAddr);
     return CompletableFuture.completedFuture(null);
   }
   
   @Deprecated
-  @Override
   public void start() throws Exception {
-    EventBus eb = vertx.eventBus();
-    KryoMessageCodec.register(eb, JobDTO.class);
-    KryoMessageCodec.register(eb, JobListDTO.class);
-    
-    vertx.eventBus().consumer(serviceType, (Message<String> clientAddr) -> {
-      log.debug("Got client broadcast from {}", clientAddr.body());
-      vertx.eventBus().send(clientAddr.body(), addressBase);
-    });
-
-    eb.consumer(addressBase/* + BUS_ADDR.REGISTER*/, message -> {
-      String workerAddr = getWorkerAddress(message);
-      String workerType = getWorkerJobType(message);
-      log.info("Received initial message from worker: {}", workerAddr);
-      if(workerType==null){
-        log.error("Cannot register worker with null type: {}", workerAddr);
-        return;
-      }
-      
-      if (knownWorkers.containsKey(workerAddr))
-        log.info("Worker already registered: {}", workerAddr);
-      else 
-        knownWorkers.put(workerAddr, new Worker(workerAddr, workerType));
-      
-      if (idleWorkers.contains(workerAddr))
-        log.info("Worker already registered and is idle: {}", workerAddr);
-      else if (!idleWorkers.add(workerAddr))
-        log.error("Could not add {} to idleWorkers={}", workerAddr, idleWorkers);
-
-      asyncNegotiateJobWith(workerAddr);
-    });
-    
-    eb.consumer(addressBase + BUS_ADDR.UNREGISTER, message -> {
-      String workerAddr = getWorkerAddress(message);
-      log.debug("Received UNREGISTER message from {}", workerAddr);
-      if (!idleWorkers.remove(workerAddr))
-        log.error("Could not remove {} from idleWorkers={}", workerAddr, idleWorkers);
-    });
-
-    eb.consumer(addressBase + BUS_ADDR.SET_PROGRESS, (Message<JobDTO> message) -> {
-      log.debug("Received SET_PROGRESS message: {}", message.body());
-      JobItem job = getJobItem(message.body());
-      job.mergeIn(message.body());
-      job.state = JobState.PROGRESSING;
-    });
-    eb.consumer(addressBase + BUS_ADDR.GET_PROGRESS, message -> {
-      String jobId = readJobId(message);
-      log.debug("Received GET_PROGRESS message: jobId={}", jobId);
-      JobItem job = jobItems.get(jobId);
-      if (job == null) {
-        message.fail(-13, "Cannot find job with id=" + jobId);
-      } else {
-        JobDTO dto = job.jobJO;
-        //dto.getParams().put("JOB_STATE", job.state);
-        message.reply(dto);
-      }
-    });
-    
     if(statusPeriod>0){
       AtomicInteger sameLogMsgCount=new AtomicInteger(0);
-      vertx.setPeriodic(statusPeriod, id->{
+      //vertx.setPeriodic(statusPeriod, 
+      Runnable runnable= ()->{
         long availJobCount = jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.AVAILABLE)).count();
         long startedJobCount = jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.STARTED)).count();
         long progessingJobCount = jobItems.entrySet().stream().filter(e -> (e.getValue().state == JobState.PROGRESSING)).count();
@@ -334,11 +247,8 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
           if(sameLogMsgCount.incrementAndGet()>sameLogThreshold)
             prevLogMsg=null;
         }
-      });
+      }; //);
     }
-
-    // announce after setting eb.consumer
-    VerticleUtils.announceServiceType(vertx, serviceType, addressBase, true);
 
     log.info("Ready: addressBase={} this={}", addressBase, this);
   }
@@ -348,82 +258,11 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
     this.statusPeriod=statusPeriod;
     this.sameLogThreshold=sameLogThreshold;
   }
-
   
   private String prevLogMsg;
 
-  private String readJobId(Message<Object> message) {
-    if (message.body() instanceof String)
-      return (String) message.body();
-    else
-      throw new IllegalArgumentException("Cannot parse jobId from: "+message.body());
-  }
-
   //negotiate with one worker at a time so workers don't choose the same job
   private boolean isNegotiating = false;
-
-  @Deprecated
-  private void asyncNegotiateJobWithNextIdleWorker() {
-    String idleWorker = Iterables.getFirst(idleWorkers, null);
-    if (idleWorker == null) { // no workers available
-      return;
-    }
-    asyncNegotiateJobWith(idleWorker);
-  }
-  
-  @Deprecated
-  private void asyncNegotiateJobWith(String idleWorker) {
-    if (isNegotiating) {
-      log.info("Currently negotiating; skipping negotiation with {}", idleWorker);
-    } else {
-      final JobListDTO jobList = getAvailableJobsFor(idleWorker);
-      log.debug("Negotiating jobs with {}, jobList={}", idleWorker, jobList);
-      isNegotiating = true; // make sure all code paths reset this to false
-      asyncSendJobsTo(idleWorker, jobList);
-    }
-  }
-
-  private JobListDTO getAvailableJobsFor(String idleWorker) {
-    Map<String,Object> params=new HashMap<>();
-    params.put(JobBoardOutput_I.JOBTYPE_PARAM, knownWorkers.get(idleWorker).type);
-    return getAvailableJobsFor(params);
-  }
-
-  @Deprecated
-  private boolean jobAdded = false;
-
-  @Deprecated
-  private void asyncSendJobsTo(final String workerAddr, final JobListDTO jobList) {
-    jobAdded = false;
-    
-    if(jobList.getJobs().size()==0){
-      log.debug("Not sending empty jobList to {}", workerAddr);
-      moveToPickyWorkers(workerAddr);
-      isNegotiating = false; // close current negotiation
-      asyncNegotiateJobWithNextIdleWorker();
-    } else {
-      log.debug("Sending to {} available jobs={}", workerAddr, jobList);
-      DeliveryOptions delivOpt=new DeliveryOptions().setSendTimeout(10000L);
-      vertx.eventBus().send(workerAddr, jobList, delivOpt, (AsyncResult<Message<JobDTO>> selectedJobReply) -> {
-        //log.debug("reply from worker={}", selectedJobReply.result().headers().get(WORKER_ADDRESS));
-        boolean negotiateWithNextIdle = true;
-  
-        if (selectedJobReply.failed()) {
-          log.warn(
-              "selectedJobReply failed: {}.  Removing worker={} permanently -- have worker register again if appropriate",
-              workerAddr, selectedJobReply.cause());
-          if (!idleWorkers.remove(workerAddr))
-            log.error("Could not remove {} from idleWorkers={}", workerAddr, idleWorkers);
-        } else if (selectedJobReply.succeeded()) {
-        }
-  
-        if (negotiateWithNextIdle) {
-          isNegotiating = false; // close current negotiation
-          asyncNegotiateJobWithNextIdleWorker();
-        }
-      });
-    }
-  }
 
   private void moveToPickyWorkers(final String workerAddr) {
     log.debug("Moving idleWorker to pickyWorkers queue: {}", workerAddr);
@@ -541,54 +380,6 @@ public class JobBoard extends AbstractVerticle implements JobBoardInput_I, JobBo
 //        jobJO.getParams().mergeIn(job.params);
     }
 
-  }
-
-  @Deprecated
-  private static final String JOB_COMPLETE_ADDRESS = "jobCompleteAddress";
-
-  @Deprecated
-  private static final String JOB_FAILURE_ADDRESS = "jobFailureAddress";
-
-  private static final String JOB_RETRY_LIMIT = "jobRetryLimit";
-
-  @Deprecated
-  public static DeliveryOptions createProducerHeader(String jobCompletionAddress) {
-    return createProducerHeader(jobCompletionAddress, null, 0);
-  }
-
-  public static DeliveryOptions createProducerHeader(String jobCompletionAddress,
-      String jobFailureAddress, int jobRetryLimit) {
-    DeliveryOptions opts = new DeliveryOptions();
-    if (jobCompletionAddress != null)
-      opts.addHeader(JOB_COMPLETE_ADDRESS, jobCompletionAddress);
-    if (jobFailureAddress != null)
-      opts.addHeader(JOB_FAILURE_ADDRESS, jobFailureAddress);
-    opts.addHeader(JOB_RETRY_LIMIT, Integer.toString(jobRetryLimit));
-    return opts;
-  }
-
-  @Deprecated
-  private static final String WORKER_ADDRESS = "workerAddress";
-  @Deprecated
-  private static final String WORKER_JOBTYPE = "workerJobType";
-
-  @Deprecated
-  public static DeliveryOptions createWorkerHeader(String workerAddress, String workerJobType) {
-    DeliveryOptions opts = new DeliveryOptions()
-        .addHeader(WORKER_ADDRESS, workerAddress);
-    if(workerJobType!=null)
-        opts.addHeader(WORKER_JOBTYPE, workerJobType);
-    return opts;
-  }
-
-  @Deprecated
-  public static String getWorkerAddress(Message<?> message) {
-    return message.headers().get(WORKER_ADDRESS);
-  }
-
-  @Deprecated
-  public static String getWorkerJobType(Message<?> message) {
-    return message.headers().get(WORKER_JOBTYPE);
   }
 
 }

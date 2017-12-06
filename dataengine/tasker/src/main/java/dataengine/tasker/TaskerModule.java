@@ -1,14 +1,11 @@
 package dataengine.tasker;
 
 import static java.util.stream.Collectors.toList;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -20,11 +17,9 @@ import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.apis.VerticleConsts;
 import dataengine.tasker.jobcreators.AddSourceDataset;
-import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
-import net.deelam.vertx.rpc.RpcVerticleServer;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
@@ -33,7 +28,6 @@ final class TaskerModule extends AbstractModule {
   
   @Override
   protected void configure() {
-    requireBinding(Vertx.class);
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<DepJobService_I>>() {}));
     
@@ -69,7 +63,7 @@ final class TaskerModule extends AbstractModule {
   }
 
   static void deployTasker(Injector injector) {
-    Vertx vertx = injector.getInstance(Vertx.class);
+//    Vertx vertx = injector.getInstance(Vertx.class);
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
 //    new RpcVerticleServer(vertx, VerticleConsts.taskerBroadcastAddr)
@@ -83,8 +77,6 @@ final class TaskerModule extends AbstractModule {
     int progressPollIntervalSeconds=Integer.valueOf(props.getProperty("jobListener.progressPollIntervalSeconds", "2"));
     jobListener.setProgressPollIntervalSeconds(progressPollIntervalSeconds);
     if(false) {
-      Vertx vertx = injector.getInstance(Vertx.class);
-      vertx.deployVerticle(jobListener);
     } else {
       Properties compProps = new Properties(props);
       compProps.setProperty("_componentId", "getFromZookeeper-jobListener"); //FIXME

@@ -2,27 +2,23 @@ package dataengine.tasker;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
-import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
-import net.deelam.vertx.ClusteredVertxInjectionModule;
 
 @Slf4j
 public class TaskerMain {
 
   public static void main(String[] args) throws Exception {
-    main(new CompletableFuture<>(), null);
+    main((String) null);
   }
 
-  public static void main(CompletableFuture<Vertx> vertxF, String brokerUrl) throws IOException, JMSException {
+  public static void main(String brokerUrl) throws IOException, JMSException {
     log.info("Starting {}", TaskerMain.class);
     Properties properties=new Properties();
     PropertiesUtil.loadProperties("tasker.props", properties);
@@ -31,7 +27,7 @@ public class TaskerMain {
       properties.setProperty("brokerUrl", brokerUrl);
     }
     Connection connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(vertxF, connection, properties);
+    Injector injector = createInjector(connection, properties);
     
     OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector);
@@ -39,7 +35,7 @@ public class TaskerMain {
     connection.start();
   }
 
-  static Injector createInjector(CompletableFuture<Vertx> vertxF, Connection connection, Properties properties) {
+  static Injector createInjector(Connection connection, Properties properties) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -47,8 +43,7 @@ public class TaskerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new ClusteredVertxInjectionModule(vertxF),
-        new VertxRpcClients4TaskerModule(vertxF, connection),
+        new VertxRpcClients4TaskerModule(connection),
         new OperationsRegistryModule(connection),
         new TaskerModule(properties)
         );

@@ -51,9 +51,7 @@ configure(subprojects) {
       blueprints_neo: 'com.tinkerpop.blueprints:blueprints-neo4j-graph:'+ver.tinkerpop,
       frames: 'com.tinkerpop:frames:'+ver.tinkerpop,
 
-      vertx: 'io.vertx:vertx-core:'+ver.vertx,
       vertx_unittest: 'io.vertx:vertx-unit:'+ver.vertx,
-      vertx_ignite: 'io.vertx:vertx-ignite:'+ver.vertx,
 
     ]
   }

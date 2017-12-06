@@ -1,7 +1,6 @@
 package dataengine.jobmgr;
 
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -15,10 +14,10 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
+import dataengine.apis.JobBoardInput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.VerticleConsts;
-import io.vertx.core.Vertx;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
@@ -26,12 +25,6 @@ import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.graph.GrafUri;
 import net.deelam.graph.IdGrafFactoryNeo4j;
 import net.deelam.graph.IdGrafFactoryTinker;
-import net.deelam.vertx.jobboard.DepJobFrame;
-import net.deelam.vertx.jobboard.DepJobService;
-import net.deelam.vertx.jobboard.JobBoard;
-import net.deelam.vertx.jobboard.JobBoardInput_I;
-import net.deelam.vertx.jobboard.JobProducer;
-import net.deelam.vertx.rpc.RpcVerticleServer;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -41,10 +34,10 @@ public class JobBoardModule extends AbstractModule {
   
   @Override
   protected void configure() {
-    requireBinding(Vertx.class);
+    requireBinding(Connection.class);
     
-    JobProducer jobProducerProxy = new JobProducer(jobBoardId);
-    bind(JobProducer.class).toInstance(jobProducerProxy);
+//    JobProducer jobProducerProxy = new JobProducer(jobBoardId);
+//    bind(JobProducer.class).toInstance(jobProducerProxy);
 
     Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, VerticleConsts.newJobAvailableTopic);
     JobBoard jm = new JobBoard(jobBoardId, jobBoardId+System.currentTimeMillis(), newJobPublisher);
@@ -73,27 +66,17 @@ public class JobBoardModule extends AbstractModule {
   }
 
   static void deployJobBoardVerticles(Injector injector, String jobBoardId) {
-    Vertx vertx = injector.getInstance(Vertx.class);
-    JobProducer jobProducer = injector.getInstance(JobProducer.class);
     JobBoard jobBoard = injector.getInstance(JobBoard.class);
     if(DEBUG){
       jobBoard.periodicLogs(10_000, 20);
     }
     
-    if(false) {
-      log.info("VERTX: TASKER: Deploying JobBoard: {} ", jobBoard); 
-      vertx.deployVerticle(jobBoard);
-      log.info("VERTX: TASKER: Deploying JobProducer for jobBoardId={}", jobProducer.getServiceType()); 
-      vertx.deployVerticle(jobProducer);
-    } else {
-      injector.getInstance(ActiveMqRpcServer.class).start(jobBoardId, jobBoard, true);
-    }
+    log.info("AMQ: TASKER: Deploying JobBoard: {} ", jobBoard); 
+    injector.getInstance(ActiveMqRpcServer.class).start(jobBoardId, jobBoard, true);
     
   }
 
   static void deployDepJobService(Injector injector, String depJobMgrId, Properties configMap) {
-    Vertx vertx = injector.getInstance(Vertx.class);
-    JobProducer jobProducer = injector.getInstance(JobProducer.class);
     GrafUri depJobGrafUri;
     
     if(false){
@@ -111,35 +94,33 @@ public class JobBoardModule extends AbstractModule {
         injector.getInstance(Key.get(new TypeLiteral<RpcClientProvider<JobBoardInput_I>>() {}));
     DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, connection, jbInputRpc);
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
-//    new RpcVerticleServer(vertx, depJobMgrId)
-//      .start(depJobMgrId+System.currentTimeMillis(), depJobMgr, true);
     injector.getInstance(ActiveMqRpcServer.class).start(depJobMgrId, depJobMgr, true);
     
-    if(DEBUG){
-      vertx.setPeriodic(10_000, t -> {
-        if (depJobMgr.getWaitingJobs().size() > 0)
-          log.info("waitingJobs={}", depJobMgr.getWaitingJobs().keySet());
-        if (depJobMgr.getUnsubmittedJobs().size() > 0)
-          log.info("unsubmittedJobs={}", depJobMgr.getUnsubmittedJobs().keySet());
-      });
-      
-      int statusPeriod = 10_000;
-      int sameLogThreshold = 10;
-      if (statusPeriod > 0) {
-        AtomicInteger sameLogMsgCount = new AtomicInteger(0);
-        vertx.setPeriodic(statusPeriod, id -> {
-          String logMsg = depJobMgr.toStringRemainingJobs(DepJobFrame.STATE_PROPKEY);
-          if (!logMsg.equals(depJobMgrPrevLogMsg)) {
-            log.info(logMsg);
-            depJobMgrPrevLogMsg = logMsg;
-            sameLogMsgCount.set(0);
-          } else {
-            if (sameLogMsgCount.incrementAndGet() > sameLogThreshold)
-              depJobMgrPrevLogMsg = null;
-          }
-        });
-      }
-    }
+//    if(DEBUG){
+//      vertx.setPeriodic(10_000, t -> {
+//        if (depJobMgr.getWaitingJobs().size() > 0)
+//          log.info("waitingJobs={}", depJobMgr.getWaitingJobs().keySet());
+//        if (depJobMgr.getUnsubmittedJobs().size() > 0)
+//          log.info("unsubmittedJobs={}", depJobMgr.getUnsubmittedJobs().keySet());
+//      });
+//      
+//      int statusPeriod = 10_000;
+//      int sameLogThreshold = 10;
+//      if (statusPeriod > 0) {
+//        AtomicInteger sameLogMsgCount = new AtomicInteger(0);
+//        vertx.setPeriodic(statusPeriod, id -> {
+//          String logMsg = depJobMgr.toStringRemainingJobs(DepJobFrame.STATE_PROPKEY);
+//          if (!logMsg.equals(depJobMgrPrevLogMsg)) {
+//            log.info(logMsg);
+//            depJobMgrPrevLogMsg = logMsg;
+//            sameLogMsgCount.set(0);
+//          } else {
+//            if (sameLogMsgCount.incrementAndGet() > sameLogThreshold)
+//              depJobMgrPrevLogMsg = null;
+//          }
+//        });
+//      }
+//    }
   }
   
   private static final boolean DEBUG = true;

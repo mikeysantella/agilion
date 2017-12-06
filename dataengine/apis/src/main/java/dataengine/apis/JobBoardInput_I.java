@@ -1,7 +1,6 @@
-package net.deelam.vertx.jobboard;
+package dataengine.apis;
 
 import java.util.concurrent.CompletableFuture;
-import dataengine.apis.JobDTO;
 
 // for JobProducers
 public interface JobBoardInput_I {

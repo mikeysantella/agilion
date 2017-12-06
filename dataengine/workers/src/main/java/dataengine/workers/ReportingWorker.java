@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.workers;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import dataengine.apis.JobDTO;
+import dataengine.apis.ProgressState;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

@@ -10,25 +10,21 @@ import javax.jms.Session;
 import dataengine.api.Progress;
 import dataengine.api.State;
 import dataengine.apis.DepJobService_I;
+import dataengine.apis.ProgressState;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.Constants;
 import net.deelam.activemq.MQClient;
 import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.coordworkers.AbstractCompConfig;
-import net.deelam.vertx.jobboard.ProgressState;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
-public class TaskerJobListener extends AbstractVerticle implements JobListener_I {
+public class TaskerJobListener implements JobListener_I {
   
   private final Connection connection;
   final RpcClientProvider<SessionsDB_I> sessDb;
@@ -54,18 +50,6 @@ public class TaskerJobListener extends AbstractVerticle implements JobListener_I
     log.info("updateJobProgress: {} {}", jobId, progress);
     // placeholder to do any checking
     sessDb.rpc().updateJobProgress(jobId, progress);
-  }
-
-  @Override
-  public void start() throws Exception {
-    super.start();
-    
-    vertx.eventBus().consumer(eventBusAddress, msg -> {
-      JsonObject progressMsgJO = (JsonObject) msg.body();
-      ProgressState progressState = Json.decodeValue(progressMsgJO.toString(), ProgressState.class);
-      onProgressState(progressState);
-    });
-    
   }
   
   public void start(Properties configMap){

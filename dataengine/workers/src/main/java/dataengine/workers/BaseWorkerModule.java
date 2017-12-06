@@ -13,18 +13,12 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.VerticleConsts;
-import io.vertx.core.Vertx;
+import dataengine.workers.ProgressMonitor.Factory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.jobboard.AmqProgressMonitor;
-import net.deelam.vertx.jobboard.JobBoardOutput_I;
-import net.deelam.vertx.jobboard.JobConsumer;
-import net.deelam.vertx.jobboard.ProgressMonitor;
-import net.deelam.vertx.jobboard.ProgressMonitor.Factory;
-import net.deelam.vertx.jobboard.ProgressingDoer;
-import net.deelam.vertx.jobboard.ReportingWorker;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,7 +30,6 @@ public class BaseWorkerModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    requireBinding(Vertx.class);
     requireBinding(Connection.class);
     
     checkNotNull(jobBoardId);
@@ -49,15 +42,13 @@ public class BaseWorkerModule extends AbstractModule {
   }
 
   public static class DeployedJobConsumerFactory {
-    final Vertx vertx;
     final ProgressMonitor.Factory pmFactory;
     final String jobBoardId;
     final RpcClientProvider<JobBoardOutput_I> jobBoard;
     final Connection connection;
 
     @Inject
-    DeployedJobConsumerFactory(Vertx vertx, Factory pmFactory, @Named(NAMED_JOB_BOARD_ID) String jobBoardId, RpcClientProvider<JobBoardOutput_I> jobBoard, Connection connection) {
-      this.vertx = vertx;
+    DeployedJobConsumerFactory(Factory pmFactory, @Named(NAMED_JOB_BOARD_ID) String jobBoardId, RpcClientProvider<JobBoardOutput_I> jobBoard, Connection connection) {
       this.pmFactory = pmFactory;
       this.jobBoardId = jobBoardId;
       this.jobBoard=jobBoard;

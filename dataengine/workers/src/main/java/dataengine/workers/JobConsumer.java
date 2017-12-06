@@ -1,4 +1,4 @@
-package net.deelam.vertx.jobboard;
+package dataengine.workers;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,30 +9,24 @@ import java.util.function.Function;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
+import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.JobListDTO;
 import dataengine.apis.RpcClientProvider;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.eventbus.EventBus;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.Synchronized;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.vertx.KryoMessageCodec;
-import net.deelam.vertx.rpc.ServiceWaiter;
 
 @Slf4j
 @Accessors(chain = true)
 @RequiredArgsConstructor
 @ToString
-public class JobConsumer extends AbstractVerticle {
+public class JobConsumer {
   private final String serviceType;
   private final String jobType;
-  private DeliveryOptions deliveryOptions;
   
   final RpcClientProvider<JobBoardOutput_I> jobBoard;
   final Connection connection;
@@ -43,36 +37,6 @@ public class JobConsumer extends AbstractVerticle {
     return ++privateIdCounter;
   }
   
-  @Override
-  public void start() throws Exception {
-    String myAddr = deploymentID();
-    log.info("Ready: deploymentID={} jobType={}", deploymentID(), jobType);
-
-    EventBus eb = vertx.eventBus();
-    KryoMessageCodec.register(eb, JobDTO.class);
-    KryoMessageCodec.register(eb, JobListDTO.class);
-
-    deliveryOptions = JobBoard.createWorkerHeader(myAddr, jobType);
-
-    //eb.consumer(myAddr, jobListHandler);
-
-    waiter = new ServiceWaiter(vertx, serviceType);
-    waiter.listenAndBroadcast(msg -> {
-      String jobBoardPrefix = msg.body();
-      log.info("Sending client registration to {} from {}", jobBoardPrefix, myAddr);
-      vertx.eventBus().send(jobBoardPrefix, null, deliveryOptions);
-    });
-
-  }
-
-  @Getter(lazy = true)
-  private final String jobBoardPrefix = waitUntilReady();
-  private ServiceWaiter waiter;
-
-  private String waitUntilReady() {
-    return waiter.awaitServiceAddress();
-  }
-
   final Map<String, Object> searchParams=new HashMap<>();
   final LinkedBlockingQueue<String> newJobs=new LinkedBlockingQueue<>(1);
   public void start(MessageConsumer messageConsumer){

@@ -6,7 +6,6 @@ include 'apis'
 include 'utils'
 
 include 'graph'
-include 'vertx'
 include 'spark'
 
 include 'sessions'
