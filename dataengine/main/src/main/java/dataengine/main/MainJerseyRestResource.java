@@ -19,7 +19,7 @@ public class MainJerseyRestResource extends ResourceConfig {
     property("jersey.config.server.provider.classnames", 
         org.glassfish.jersey.media.multipart.MultiPartFeature.class.getCanonicalName());
     property("jersey.config.server.wadl.disableWadl", "true");
-    property("jersey.config.server.wadl.disableWadl", "true");
+    //property("jersey.config.server.wadl.disableWadl", "true");
   }
   
   /*

@@ -8,7 +8,7 @@ dependencies {
   compile dep.xinject
   compile dep.guice
   compile dep.guava
-  compile project(':graph')
+  compile dep.graph
   compile dep.activemq_rpc
   compile dep.coord_workers
 

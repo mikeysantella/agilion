@@ -38,7 +38,7 @@ public class MainJetty {
     boolean runInSingleJVM = (onlyRunServerProject == null) 
         ? true : Boolean.getBoolean(onlyRunServerProject);
 
-    System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
+    //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     if (runInSingleJVM) {
       log.info("======== Running all required DataEngine services in same JVM");
       try {
