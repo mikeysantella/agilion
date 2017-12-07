@@ -7,18 +7,17 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import dataengine.apis.CommunicationConsts;
 import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.RpcClientProvider;
-import dataengine.apis.CommunicationConsts;
 import dataengine.workers.ProgressMonitor.Factory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -64,19 +63,13 @@ public class BaseWorkerModule extends AbstractModule {
       JobConsumer jConsumer = new JobConsumer(jobBoardId, doer.jobType(), jobBoard, connection).setWorker(rw);
       log.info("AMQ: WORKER: Deploying JobConsumer jobBoardId={} with ReportingWorker for: {} type={}", 
           jobBoardId, doer.name(), doer.jobType());
-      jConsumer.start(createTopicConsumer(connection, CommunicationConsts.newJobAvailableTopic));
-      return jConsumer;
-    }
-    
-    static MessageConsumer createTopicConsumer(Connection connection, String newJobTopic){
       try {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination queue = session.createTopic(newJobTopic);
-        return session.createConsumer(queue);
+        jConsumer.start(MQClient.createTopicConsumer(session, CommunicationConsts.newJobAvailableTopic, null));
+        return jConsumer;
       } catch (JMSException e) {
-        throw new IllegalStateException("When setting up topic listener", e);
+        throw new IllegalStateException("When creating newJobs topic listener", e);
       }
     }
-
   }
 }

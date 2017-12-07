@@ -9,7 +9,7 @@ import dataengine.api.Request;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-public interface JobsCreator {
+public interface JobsCreator_I {
 
   void updateOperationParams(Map<String, Operation> currOperations);
   

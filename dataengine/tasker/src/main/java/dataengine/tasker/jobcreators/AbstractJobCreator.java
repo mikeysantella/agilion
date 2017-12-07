@@ -13,11 +13,11 @@ import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationUtils;
 import dataengine.apis.OperationWrapper;
-import dataengine.tasker.JobsCreator;
+import dataengine.tasker.JobsCreator_I;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AbstractJobCreator implements JobsCreator {
+public abstract class AbstractJobCreator implements JobsCreator_I {
 
   protected OperationWrapper opW;
 

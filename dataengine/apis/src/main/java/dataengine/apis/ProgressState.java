@@ -3,7 +3,7 @@ package dataengine.apis;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+import dataengine.api.State;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -93,6 +93,23 @@ public class ProgressState {
     if (metrics != null) {
       metrics.put(ELAPSED_MILLIS, System.currentTimeMillis() - startTime);
     }
+  }
+
+  public State getState() {
+    return percentToState(getPercent());
+  }
+  
+  public static State percentToState(int percent) {
+    if(percent>=100)
+      return State.COMPLETED;
+    else if(percent==0)
+      return State.CREATED;
+    else if(percent>0)
+      return State.RUNNING;
+    else if(percent<0)
+      return State.FAILED;
+    else
+      return null;
   }
 
 }

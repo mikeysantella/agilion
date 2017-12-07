@@ -1,21 +1,17 @@
 package dataengine.tasker;
 
 import java.util.Properties;
+import java.util.function.BiConsumer;
 import javax.inject.Inject;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.Session;
-import dataengine.api.Progress;
-import dataengine.api.State;
-import dataengine.apis.DepJobService_I;
+import com.google.inject.assistedinject.Assisted;
 import dataengine.apis.ProgressState;
-import dataengine.apis.RpcClientProvider;
-import dataengine.apis.SessionsDB_I;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
@@ -23,74 +19,34 @@ import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.coordworkers.AbstractCompConfig;
 
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
+//@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class TaskerJobListener implements JobListener_I {
   
-  private final Connection connection;
-  final RpcClientProvider<SessionsDB_I> sessDb;
+  private final BiConsumer<Message,ProgressState> updateSessionDbHook;
   
   @Getter
-  final RpcClientProvider<DepJobService_I> jobDispatcher;
-
-  @Getter
-  @Setter
-  int progressPollIntervalSeconds=2;
-
-  @Getter
-  final String eventBusAddress="JobListener-"+nextId();
-
-  void updateJobState(String jobId, State state) {
-    log.info("updateJobState: {} {}", jobId, state);
-    // placeholder to do any checking
-    if(state!=null)
-      sessDb.rpc().updateJobState(jobId, state);
-  }
-
-  void updateJobProgress(String jobId, Progress progress) {
-    log.info("updateJobProgress: {} {}", jobId, progress);
-    // placeholder to do any checking
-    sessDb.rpc().updateJobProgress(jobId, progress);
+  final String eventBusAddress;
+  private static int privateTaskerJobListenerIdCounter=0;
+  @Synchronized
+  private static int nextId() {
+    return ++privateTaskerJobListenerIdCounter;
   }
   
-  public void start(Properties configMap){
+  final Session session;
+  final TaskerJobListenerConfig config;
+  
+  @Inject
+  public TaskerJobListener(Connection connection, @Assisted Properties configMap, @Assisted BiConsumer<Message,ProgressState> handler) {
+    eventBusAddress="JobListener-"+nextId();
     config=new TaskerJobListenerConfig(configMap);
+    updateSessionDbHook = handler;
     try {
       session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      listenToJobStateMsgs(session, eventBusAddress/*config.jobStatusTopic*/);
+      listenToJobStateMsgs(session, eventBusAddress);
     } catch (JMSException e) {
       throw new IllegalStateException("When registering to JMS service", e);
     }
   }
-
-  private State onProgressState(ProgressState progressState) {
-    //Job job=(Job) progressState.getMetrics().get(JobListener_I.METRICS_KEY_JOB);
-//      progressState.getMetrics().remove(JobListener_I.METRICS_KEY_JOB);
-    Progress progress=new Progress()
-        .percent(progressState.getPercent())
-        .stats(progressState.getMetrics());
-    updateJobProgress(progressState.getJobId(), progress);
-    
-    
-    State state=null;
-    if(progressState.getPercent()>=100)
-      state=State.COMPLETED;
-    else if(progressState.getPercent()>0)
-      state=State.RUNNING;
-    else if(progressState.getPercent()<0)
-      state=State.FAILED;
-    updateJobState(progressState.getJobId(), state);
-    return state;
-  }
-  
-  
-  private static int privateTaskerJobListenerIdCounter=0;
-  @Synchronized
-  static int nextId() {
-    return ++privateTaskerJobListenerIdCounter;
-  }
-
-  Session session;
-  TaskerJobListenerConfig config;
 
   class TaskerJobListenerConfig extends AbstractCompConfig {
 
@@ -118,20 +74,7 @@ public class TaskerJobListener implements JobListener_I {
         if (msg instanceof BytesMessage) {
           ProgressState progState=serde.readObject((BytesMessage) msg);
           log.info("Job statusMessage received: {}", progState);
-          State state=onProgressState(progState);
-          if (state != null)
-            switch (state) {
-              case COMPLETED:
-                jobDispatcher.rpc().handleJobCompleted(jobId);
-                break;
-              case FAILED:
-                jobDispatcher.rpc().handleJobFailed(jobId);
-                break;
-              case CANCELLED:
-                break;
-              default:
-                break;
-            }
+          updateSessionDbHook.accept(msg, progState);
         } else {
           log.warn("Expecting BytesMessage but got {}", msg);
         }

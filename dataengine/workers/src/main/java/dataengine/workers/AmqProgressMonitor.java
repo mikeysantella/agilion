@@ -8,16 +8,15 @@ import javax.inject.Inject;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import dataengine.apis.ProgressState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
 import net.deelam.activemq.rpc.KryoSerDe;
 
 
@@ -146,9 +145,6 @@ public class AmqProgressMonitor implements ProgressMonitor {
     }
   }
 
-  MessageProducer producer;
-  KryoSerDe serde;
-
   private BytesMessage createJobStatusMsg(ProgressState state) {
     try {
       BytesMessage msg = serde.writeObject(state);
@@ -160,14 +156,16 @@ public class AmqProgressMonitor implements ProgressMonitor {
     }
   }
 
+  MessageProducer producer;
+  KryoSerDe serde;
+
   @Getter(lazy = true)
   private final Session session = privateCreateSession();
   private Session privateCreateSession() {
     try {
       Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
       serde = new KryoSerDe(sess);
-      producer = sess.createProducer(sess.createTopic(busAddr));
-      producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+      producer = MQClient.createTopicMsgSender(sess, busAddr, DeliveryMode.NON_PERSISTENT);
       return sess;
     } catch (JMSException e) {
       throw new IllegalStateException("When initializing session", e);
