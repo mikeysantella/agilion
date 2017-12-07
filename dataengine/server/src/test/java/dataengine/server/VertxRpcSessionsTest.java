@@ -69,7 +69,7 @@ public class VertxRpcSessionsTest {
         log.info("sessVert={}", sessVert);
 //        new RpcVerticleServer(vertx, VerticleConsts.sessionDbBroadcastAddr)
 //            .start("SessionsDBServiceBusAddr", sessVert, true);
-        new ActiveMqRpcServer(connection).start(CommunicationConsts.sessionDbBroadcastAddr, sessVert, true);
+        new ActiveMqRpcServer(connection).start(CommunicationConsts.SESSIONDB_RPCADDR, sessVert, true);
       } catch (Exception e) {
         e.printStackTrace();
       }

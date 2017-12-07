@@ -3,7 +3,6 @@ package dataengine.workers;
 import javax.jms.Connection;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-import dataengine.apis.CommunicationConsts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +17,7 @@ final class OperationsSubscriberModule extends AbstractModule {
   public static void deployOperationsSubscriberVerticle(Injector injector, Connection connection,
       Worker_I worker) {
     OperationsSubscriber opSubscriber =
-        new OperationsSubscriber(connection, CommunicationConsts.opsRegBroadcastAddr, worker);
+        new OperationsSubscriber(connection, worker);
     // TODO: call opSubscriber.close()
   }
 }

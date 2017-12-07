@@ -43,7 +43,7 @@ public class TaskerMain {
           }
         },
         new RpcClients4TaskerModule(connection),
-        new OperationsRegistryModule(connection),
+        new OperationsRegistryModule(),
         new TaskerModule(properties)
         );
   }

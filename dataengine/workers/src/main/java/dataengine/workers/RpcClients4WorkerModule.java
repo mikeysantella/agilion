@@ -23,7 +23,7 @@ class RpcClients4WorkerModule extends RpcClientsModule {
 
   @Provides
   RpcClientProvider<Tasker_I> tasker_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.taskerBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.TASKER_RPCADDR));
   }
 
   @Provides
@@ -33,7 +33,7 @@ class RpcClients4WorkerModule extends RpcClientsModule {
 
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.sessionDbBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));
   }
 
   @Provides

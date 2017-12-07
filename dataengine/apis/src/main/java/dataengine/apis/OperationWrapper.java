@@ -15,7 +15,6 @@ import dataengine.api.Operation;
 import dataengine.api.OperationMap;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationSelection;
-import dataengine.api.OperationSelectionMap;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,8 +68,12 @@ public final class OperationWrapper {
   public void checkForRequiredParams(OperationSelection operationSelection) {
     checkForRequiredParams(operationSelection.getId(), operationSelection.getParams());
     if (operationSelection.getSubOperationSelections() != null)
-      ((OperationSelectionMap) operationSelection.getSubOperationSelections()).values().forEach(opSel -> {
-        refOperations.get(opSel.getId()).checkForRequiredParams(opSel.getId(), opSel.getParams());
+      operationSelection.getSubOperationSelections().values().forEach(opSel -> {
+        OperationWrapper refOp = refOperations.get(opSel.getId());
+        if(refOp!=null)
+          refOp.checkForRequiredParams(opSel.getId(), opSel.getParams());
+        else
+          log.warn("Could not find '{}' in: {}", opSel.getId(), refOperations);
       });
   }
 

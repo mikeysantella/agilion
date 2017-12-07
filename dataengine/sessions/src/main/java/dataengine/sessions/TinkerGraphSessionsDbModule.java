@@ -39,6 +39,6 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
   static void deploySessionDb(Injector injector) {
     SessionsDB_I sessDbSvc = injector.getInstance(SessionsDB_I.class);
     log.info("AMQ: SERV: Deploying RPC service for SessionsDB_I: {} ", sessDbSvc); 
-    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.sessionDbBroadcastAddr, sessDbSvc/*, true*/);
+    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.SESSIONDB_RPCADDR, sessDbSvc/*, true*/);
   }
 }
