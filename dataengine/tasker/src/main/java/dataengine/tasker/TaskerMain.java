@@ -7,6 +7,7 @@ import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
@@ -42,7 +43,7 @@ public class TaskerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new RpcClients4TaskerModule(connection),
+        new RpcClients4TaskerModule(connection, CommunicationConsts.depJobMgrBroadcastAddr),
         new OperationsRegistryModule(),
         new TaskerModule(properties)
         );

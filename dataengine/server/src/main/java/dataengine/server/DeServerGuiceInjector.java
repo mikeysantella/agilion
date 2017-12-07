@@ -18,7 +18,6 @@ import dataengine.api.OperationsApiService;
 import dataengine.api.RequestApiService;
 import dataengine.api.SessionApiService;
 import dataengine.api.SessionsApiService;
-import dataengine.apis.DepJobService_I;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -121,7 +120,6 @@ public final class DeServerGuiceInjector {
     @Override
     protected void configure() {
       requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
-      requireBinding(Key.get(new TypeLiteral<RpcClientProvider<DepJobService_I>>() {}));
       requireBinding(Key.get(new TypeLiteral<RpcClientProvider<Tasker_I>>() {}));
       requireBinding(Key.get(new TypeLiteral<RpcClientProvider<OperationsRegistry_I>>() {}));
 

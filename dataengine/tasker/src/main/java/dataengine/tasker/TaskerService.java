@@ -15,7 +15,9 @@ import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.tasker.JobsCreator_I.JobEntry;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -125,7 +127,11 @@ public class TaskerService implements Tasker_I {
 //  }
 
   ///
-  
+
+  @Setter
+  @Getter
+  private String taskerRpcAddr;
+
   @Override
   public CompletableFuture<Boolean> addJob(Job job, String[] inputJobIds) {
     log.info("TASKER: addJob {} with inputs={}", job.getId(), Arrays.toString(inputJobIds));
@@ -136,6 +142,7 @@ public class TaskerService implements Tasker_I {
       log.info("Submitting job={} to jobDispatcher", job.getId());
       JobProcessingEntry jpEntry=chooseJobProcessingEntry();
       JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType(), sessDbJob)
+          .setTaskerRpcAddr(taskerRpcAddr)
           .progressAddr(jpEntry.getJobListener().getEventBusAddress(), jpEntry.getProgressPollIntervalSeconds());
       CompletableFuture<Boolean> submitJob = jpEntry.getJobDispatcher().rpc().addDepJob(jobDto, inputJobIds);
       log.debug("Added and dispatched job={}", sessDbJob);

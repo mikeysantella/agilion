@@ -16,6 +16,7 @@ import dataengine.apis.JobListDTO;
 import dataengine.jobmgr.JobBoard.JobItem.JobState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,8 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 @ToString
 @RequiredArgsConstructor
 public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
-  @Getter
-  private final String serviceType;
 
   private final Consumer<JobDTO> newJobNotifier;
 
@@ -64,9 +63,15 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   private long timeOfLastJobAdded = System.currentTimeMillis();
 
+  @Setter
+  @Getter
+  private String jobBoardRpcAddr;
+  
   @Override
   public CompletableFuture<Boolean> addJob(JobDTO job, int maxRetries) {
     log.debug("Received ADD_JOB message: {}", job);
+    job.setJobBoardRpcAddr(jobBoardRpcAddr);
+    
     JobItem ji = new JobItem(job, maxRetries);
     ji.state = JobState.AVAILABLE;
     JobItem existingJI = jobItems.get(ji.getId());
@@ -258,6 +263,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   private JobItem workerStartedJob(String jobId, String workerAddr) {
     JobItem job = getJobItem(jobId);
+    job.jobJO.setWorkerId(workerAddr);
     log.debug("Started job: worker={} on jobId={}", workerAddr, job.getId());
     job.state = JobState.STARTED;
     return job;
@@ -265,6 +271,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   private JobItem workerEndedJob(String jobId, String workerAddr, JobState newState) {
     JobItem job = getJobItem(jobId);
+    job.jobJO.setWorkerId(workerAddr);
     log.info("Setting job {} state from {} to {}", job.getId(), job.state, newState);
     job.state = newState;
     return job;

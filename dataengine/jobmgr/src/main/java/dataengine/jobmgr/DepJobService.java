@@ -16,7 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import com.google.common.collect.Iterables;
 import com.tinkerpop.blueprints.Element;
@@ -30,6 +29,7 @@ import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
 import dataengine.jobmgr.DepJobFrame.STATE;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.graph.FramedGrafSupplier;
@@ -41,9 +41,6 @@ public class DepJobService implements DepJobService_I {
 
   private final FramedTransactionalGraph<TransactionalGraph> graph;
   
-  private final Connection connection;
-  
-  //private final Supplier<JobProducer> jobProdS;
   final RpcClientProvider<JobBoardInput_I> jbInput;
   
   boolean removeOnCompletion = true;
@@ -74,60 +71,13 @@ public class DepJobService implements DepJobService_I {
 
   }
   
-//  Session session;
-  
-  public DepJobService(Properties configMap, IdGraph<?> dependencyGraph, Connection connection, RpcClientProvider<JobBoardInput_I> jbInput) {
+  public DepJobService(Properties configMap, IdGraph<?> dependencyGraph, RpcClientProvider<JobBoardInput_I> jbInput) {
     config = new DispatcherConfig(configMap);
     Class<?>[] typedClasses = {DepJobFrame.class};
     FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
     graph = provider.get(dependencyGraph);
     this.jbInput=jbInput;
-    this.connection=connection;
-    
-//    try {
-//      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-////      listenToJobStateMsgs(session, null, config.jobDoneTopic, config.jobFailedTopic);
-//    } catch (JMSException e) {
-//      throw new IllegalStateException("When registering to JMS service", e);
-//    }
   }
-  
-//  void listenToJobStateMsgs(Session session, String stateTopicName, String doneTopicName,
-//      String failedTopicName) {
-//    final KryoSerDe serde = new KryoSerDe(session);
-//
-//    if (stateTopicName != null)
-//      MQClient.createTopicConsumer(session, stateTopicName, msg -> {
-//        if (msg instanceof BytesMessage) {
-//          ProgressState state=serde.readObject((BytesMessage) msg);
-//          log.info("Job statusMessage received: {}", state);
-//        } else {
-//          log.error("Invalid statusMessage received: {}", msg);
-//        }
-//      });
-//    
-//    if (doneTopicName != null)
-//      MQClient.createTopicConsumer(session, doneTopicName, msg ->{
-//        String jobId = msg.getStringProperty(ProgressState.JOBID_KEY);
-//        if (msg instanceof BytesMessage) {
-//          //ProgressState state=serde.readObject((BytesMessage) msg);
-//          handleJobCompleted(jobProducer, jobId);
-//        } else {
-//          log.warn("Expecting BytesMessage but got {}", msg);
-//        }
-//      });
-//    
-//    if (failedTopicName != null)
-//      MQClient.createTopicConsumer(session, failedTopicName, msg ->{
-//        String jobId = msg.getStringProperty(ProgressState.JOBID_KEY);
-//        if (msg instanceof BytesMessage) {
-//          //ProgressState state=serde.readObject((BytesMessage) msg);
-//          handleJobFailed(jobProducer, jobId);
-//        } else {
-//          log.warn("Expecting BytesMessage but got {}", msg);
-//        }
-//      });
-//  }
 
   @Override
   public void handleJobCompleted(String jobId) {
@@ -230,9 +180,14 @@ public class DepJobService implements DepJobService_I {
     return addJob(true, job, inJobIds);
   }
 
+  @Setter
+  @Getter
+  private String dispatcherRpcAddr;
+  
   public synchronized CompletableFuture<Boolean> addJob(boolean addToQueue, JobDTO job, String... inJobIds) {
     String jobId = job.getId();
     log.info("DISPATCHER: addJob: {}", jobId);
+    job.setDispatcherRpcAddr(dispatcherRpcAddr);
     // add to graph
     GrafTxn.tryOn(graph, () -> {
       DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);

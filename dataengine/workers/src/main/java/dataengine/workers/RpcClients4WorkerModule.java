@@ -14,31 +14,35 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 /// provides verticle clients used by Worker service
 @Slf4j
 class RpcClients4WorkerModule extends RpcClientsModule {
+  private final String depJobMgrBroadcastAddr;
+  private final String jobBoardBroadcastAddr;
 
-  public RpcClients4WorkerModule(Connection connection) {
+  public RpcClients4WorkerModule(Connection connection, String depJobMgrBroadcastAddr, String jobBoardBroadcastAddr) {
     super(connection);
+    this.depJobMgrBroadcastAddr=depJobMgrBroadcastAddr;
+    this.jobBoardBroadcastAddr=jobBoardBroadcastAddr;
 //    debug = true;
     log.debug("RpcClients4WorkerModule configured");
   }
 
   @Provides
-  RpcClientProvider<Tasker_I> tasker_RpcClient(){
+  RpcClientProvider<Tasker_I> taskerRpcClient(){
     return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.TASKER_RPCADDR));
   }
 
   @Provides
-  RpcClientProvider<DepJobService_I> depJobService_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, CommunicationConsts.depJobMgrBroadcastAddr));
+  RpcClientProvider<DepJobService_I> depJobServiceRpcClient(){
+    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, depJobMgrBroadcastAddr));
   }
 
   @Provides
-  RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
+  RpcClientProvider<SessionsDB_I> sessionsDbRpcClient(){
     return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));
   }
 
   @Provides
-  RpcClientProvider<JobBoardOutput_I> jobConsumer_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardOutput_I.class, CommunicationConsts.jobBoardBroadcastAddr));
+  RpcClientProvider<JobBoardOutput_I> jobConsumerRpcClient(){
+    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardOutput_I.class, jobBoardBroadcastAddr));
   }
 
 }

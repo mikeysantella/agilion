@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @ToString
 public class JobConsumer {
-  private final String serviceType;
   private final String jobType;
   
   final RpcClientProvider<JobBoardOutput_I> jobBoard;
@@ -40,7 +39,7 @@ public class JobConsumer {
   final Map<String, Object> searchParams=new HashMap<>();
   final LinkedBlockingQueue<String> newJobs=new LinkedBlockingQueue<>(1);
   public void start(MessageConsumer messageConsumer){
-    final String workerAddr = serviceType+nextId();
+    final String workerAddr = "JobConsumer"+nextId();
     searchParams.put(JobBoardOutput_I.JOBTYPE_PARAM, jobType);
     try {
       log.info("Listening for new jobs: {}", messageConsumer);
@@ -90,8 +89,6 @@ public class JobConsumer {
     }, "jobRunner-" + workerAddr).start();
   }
 
-//  private JobDTO pickedJob = null;
-
   @Setter
   private JobWorker worker;
   
@@ -113,26 +110,6 @@ public class JobConsumer {
     return picked;
   };
 
-//  @Setter
-//  private Handler<Message<JobListDTO>> jobListHandler = msg -> {
-//    try {
-//      checkState(pickedJob == null, "Job in progress! " + pickedJob);
-//      JobListDTO jobs = msg.body();
-//      pickedJob = jobPicker.apply(jobs);
-//    } finally {
-//      // reply immediately so conversation doesn't timeout
-//      // must reply even if picked==null
-//      msg.reply(pickedJob, deliveryOptions, ack -> {
-//        if (pickedJob != null) {
-//          if (ack.succeeded())
-//            doJob(pickedJob);
-//          else
-//            pickedJob = null; // job may have been removed while I was picking
-//        }
-//      });
-//    }
-//  };
-
   private boolean doJob(JobDTO pickedJob) {
     try {
       return worker.apply(pickedJob);
@@ -142,10 +119,4 @@ public class JobConsumer {
     }
   }
   
-//  private void sendJobEndStatus(BUS_ADDR method) {
-//    checkNotNull(pickedJob, "No job picked!");
-//    JobDTO doneJob = pickedJob;
-//    pickedJob = null; // set to null before notifying jobMarket, which will offer more jobs
-//    vertx.eventBus().send(getJobBoardPrefix() + method, doneJob, deliveryOptions);
-//  }
 }
