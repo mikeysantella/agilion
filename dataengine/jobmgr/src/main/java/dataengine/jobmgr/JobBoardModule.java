@@ -4,7 +4,6 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -14,12 +13,13 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
+import dataengine.apis.CommunicationConsts;
 import dataengine.apis.JobBoardInput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
-import dataengine.apis.CommunicationConsts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.MQClient;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
 import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.graph.GrafUri;
@@ -36,9 +36,6 @@ public class JobBoardModule extends AbstractModule {
   protected void configure() {
     requireBinding(Connection.class);
     
-//    JobProducer jobProducerProxy = new JobProducer(jobBoardId);
-//    bind(JobProducer.class).toInstance(jobProducerProxy);
-
     Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, CommunicationConsts.newJobAvailableTopic);
     JobBoard jm = new JobBoard(jobBoardId, newJobPublisher);
     bind(JobBoard.class).toInstance(jm);
@@ -47,9 +44,7 @@ public class JobBoardModule extends AbstractModule {
   private Consumer<JobDTO> createNewJobPublisher(Connection connection, String topicName) {
     try {
       Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      Destination dest = session.createTopic(topicName);
-      MessageProducer producer = session.createProducer(dest);
-      producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+      MessageProducer producer = MQClient.createTopicMsgSender(session, topicName, DeliveryMode.NON_PERSISTENT);
       KryoSerDe serde=new KryoSerDe(session); 
       return jobDto -> {
         try {

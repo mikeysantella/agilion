@@ -14,7 +14,7 @@ import dataengine.apis.JobDTO;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import dataengine.tasker.JobsCreator.JobEntry;
+import dataengine.tasker.JobsCreator_I.JobEntry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,11 +25,9 @@ public class TaskerService implements Tasker_I {
   final OperationsRegistry opsRegistry;
 
   final RpcClientProvider<SessionsDB_I> sessDb;
-  //final RpcClientProvider<DepJobService_I> jobDispatcher;
-  final JobListener_I jobListener;
   
   // map keyed on Operation.id in a Request
-  final Map<String, JobsCreator> jobsCreatorMap = new ConcurrentHashMap<>();
+  final Map<String, JobsCreator_I> jobsCreatorMap = new ConcurrentHashMap<>();
 
   @Override
   public CompletableFuture<Request> submitRequest(Request req) {
@@ -38,7 +36,7 @@ public class TaskerService implements Tasker_I {
     if (!opsRegistry.getOperations().containsKey(reqOperationId))
       throw new IllegalArgumentException("Unknown operationId=" + reqOperationId);
 
-    JobsCreator jc = jobsCreatorMap.get(reqOperationId);
+    JobsCreator_I jc = jobsCreatorMap.get(reqOperationId);
     if (jc == null)
       throw new UnsupportedOperationException("No JobsCreator found for " + reqOperationId);
 
@@ -49,7 +47,7 @@ public class TaskerService implements Tasker_I {
     return f;
   }
 
-  private CompletableFuture<Request> submitJobs(Request addedReq, JobsCreator jc) {
+  private CompletableFuture<Request> submitJobs(Request addedReq, JobsCreator_I jc) {
     log.info("submitJobs for: {}", addedReq);
     
     // get last jobs of prior requests
@@ -102,7 +100,7 @@ public class TaskerService implements Tasker_I {
     return f;
   }
 
-  private final List<JobsCreator> jobCreators; 
+  private final List<JobsCreator_I> jobCreators; 
 
   @Override
   public CompletableFuture<Void> refreshJobsCreators() {
@@ -112,7 +110,7 @@ public class TaskerService implements Tasker_I {
       
       jobCreators.forEach(jc -> {
         jc.updateOperationParams(currOps);
-        JobsCreator oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
+        JobsCreator_I oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
         if(oldJc!=null && oldJc!=jc)
           log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);
         opsRegistry.mergeOperation(jc.getOperation());
@@ -136,22 +134,30 @@ public class TaskerService implements Tasker_I {
     return addJobToSessDB.thenCompose((sessDbJob) -> {
       // submit job
       log.info("Submitting job={} to jobDispatcher", job.getId());
-      JobListener_I aJobListener=chooseJobHandler();
+      JobProcessingEntry jpEntry=chooseJobProcessingEntry();
       JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType(), sessDbJob)
-          .progressAddr(aJobListener.getEventBusAddress(), aJobListener.getProgressPollIntervalSeconds());
-      CompletableFuture<Boolean> submitJob = aJobListener.getJobDispatcher().rpc().addDepJob(jobDto, inputJobIds);
+          .progressAddr(jpEntry.getJobListener().getEventBusAddress(), jpEntry.getProgressPollIntervalSeconds());
+      CompletableFuture<Boolean> submitJob = jpEntry.getJobDispatcher().rpc().addDepJob(jobDto, inputJobIds);
       log.debug("Added and dispatched job={}", sessDbJob);
       return submitJob;
     });
   }
-
+  
+  final List<JobProcessingEntry> jpEntries=new ArrayList<>();
+  
   // TODO: determine which jobDispatcher and jobListener based on session, i.e., all jobs for a session can go to the same jobDispatcher
   // TODO: When a new JobManager JVM is created, it must register itself with this class such that a new TaskerJobListener is created  
   // JobManager JVM consists of: DepJobService <-> JobProducer -> JobBoard
   // 1-to-1 mapping: a TaskerJobListener for each DepJobService
-  private JobListener_I chooseJobHandler() {
-    return jobListener;
+  private JobProcessingEntry chooseJobProcessingEntry() {
+    return jpEntries.get(0);
   }
 
+  final JobProcessingEntry.Factory jobProcessingEntryFactory;
+
+  public void handleNewDepJobService(String amqAddress) {
+    jpEntries.add(jobProcessingEntryFactory.create(amqAddress, -1));
+  }
   
+
 }

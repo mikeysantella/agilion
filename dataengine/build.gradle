@@ -38,9 +38,11 @@ configure(subprojects) {
       activemq_rpc: 'net.deelam:activemq-rpc:0.1.0',
       coord_workers: 'net.deelam:coord-workers:0.1.0',
 
-      commons_io: 'commons-io:commons-io:2.5',
       xinject: 'javax.inject:javax.inject:1',
       guice: 'com.google.inject:guice:4.1.0',
+      guice_assisted: 'com.google.inject.extensions:guice-assistedinject:4.1.0',
+      
+      commons_io: 'commons-io:commons-io:2.5',
       guava: 'com.google.guava:guava:21.0',
       
       scala_library: 'org.scala-lang:scala-library:2.11.8',

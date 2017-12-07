@@ -50,7 +50,7 @@ public class ReportingWorker implements JobWorker, HasProgress {
     if(progressMonitorProvider!=DUMMY_PM_PROVIDER)
       log.warn("WORKER: Overriding previously set progressMonitorProvider={}", progressMonitorProvider);
     progressMonitorProvider = job -> {
-      return pmFactory.create(job.getId(), job.getProgressPollIntervalSeconds(), job.getProgressVertxAddr());
+      return pmFactory.create(job.getId(), job.getProgressPollIntervalSeconds(), job.getProgressAddr());
     };
     return this;
   }
