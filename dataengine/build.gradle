@@ -19,7 +19,7 @@ configure(subprojects) {
     mavenCentral()
     jcenter()
    maven {
-       url 'file://'+System.getProperty("user.dir")+'/extJars'
+       url 'file://'+rootProject.projectDir.absolutePath+'/extJars'
    }
   }
 
