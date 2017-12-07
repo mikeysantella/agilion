@@ -4,7 +4,7 @@ apply plugin: 'application'
 mainClassName = "net.deelam.spark.Launcher"
 
 dependencies {
-  compile project(':utils')
+  compile dep.utils_zero
   compile dep.scala_library
   compile group: 'org.apache.spark', name: 'spark-core_2.11', version: '2.0.2'
   compile dep.hadoop_common

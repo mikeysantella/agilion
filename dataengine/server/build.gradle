@@ -11,7 +11,7 @@ dependencies {
   compile dep.dataengine_api
   compile dep.guice
   compile dep.activemq_rpc
-  compile project(':utils')
+  compile dep.utils_zero
 
   testCompile project(':sessions')
   testCompile project(':tasker')
