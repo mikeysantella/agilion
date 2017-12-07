@@ -2,11 +2,10 @@ package dataengine.tasker;
 
 import javax.inject.Singleton;
 import javax.jms.Connection;
-import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.CommunicationConsts;
+import dataengine.apis.OperationsRegistry_I;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
@@ -14,32 +13,21 @@ import net.deelam.activemq.rpc.ActiveMqRpcServer;
 @RequiredArgsConstructor
 @Slf4j
 final class OperationsRegistryModule extends AbstractModule {
-  final Connection connection;
 
   @Override
   protected void configure() {
     requireBinding(Connection.class);
 
-    // See
-    // http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
+    // See http://stackoverflow.com/questions/14781471/guice-differences-between-singleton-class-and-singleton
 
-    // OperationsRegistry_I used by clients
-    bind(OperationsRegistry_I.class).to(OperationsRegistryRpcService.class);
-    bind(OperationsRegistryRpcService.class).in(Singleton.class);
-
-    try {
-      // OperationsRegistry to which operations are registered by providers (ie, Workers)
-      OperationsRegistry opsReg =
-          new OperationsRegistry(connection, CommunicationConsts.opsRegBroadcastAddr);
-      bind(OperationsRegistry.class).toInstance(opsReg);
-    } catch (JMSException e) {
-      throw new RuntimeException(e);
-    }
+    // OperationsRegistryRpcService wraps OperationsRegistry and is used as a proxy to OperationsSubscribers (ie, Workers)
+    bind(OperationsRegistry_I.class).to(OperationsRegistry.class);
+    bind(OperationsRegistry.class).in(Singleton.class);
   }
 
   static void deployOperationsRegistry(Injector injector) {
-    OperationsRegistry_I opsRegSvc = injector.getInstance(OperationsRegistry_I.class);
+    OperationsRegistry_I opsRegSvc = injector.getInstance(OperationsRegistry.class);
     log.info("AMQ: TASKER: Deploying RPC service for OperationsRegistry_I: {} ", opsRegSvc);
-    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.opsRegBroadcastAddr, opsRegSvc);
+    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.OPSREGISTRY_RPCADDR, opsRegSvc, true);
   }
 }

@@ -26,6 +26,6 @@ class RpcClients4TaskerModule extends RpcClientsModule {
 
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.sessionDbBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));
   }
 }

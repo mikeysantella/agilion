@@ -9,8 +9,10 @@ import dataengine.api.Operation;
 
 public interface OperationsRegistry_I {
 
+  String COMMAND_PARAM="command";
+  
   enum OPERATIONS_REG_API {
-    QUERY_OPS
+    GET_OPERATIONS
   }
 
   Class<?>[] msgBodyClasses={ Operation.class, ArrayList.class, List.class };

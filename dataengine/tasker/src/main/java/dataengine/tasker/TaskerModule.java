@@ -72,7 +72,7 @@ final class TaskerModule extends AbstractModule {
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
-    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.taskerBroadcastAddr, taskerSvc, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.TASKER_RPCADDR, taskerSvc, true);
 
     // TODO: replace with detection via Zookeeper
     taskerSvc.handleNewDepJobService(CommunicationConsts.depJobMgrBroadcastAddr);

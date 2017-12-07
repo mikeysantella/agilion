@@ -2,13 +2,17 @@ package dataengine.apis;
 
 public final class CommunicationConsts {
 
-  public final static String sessionDbBroadcastAddr = "sessionDbBroadcastAMQ";
-  public final static String opsRegBroadcastAddr = "opsRegBroadcastAMQ";
-  public final static String taskerBroadcastAddr = "taskerBroadcastAMQ";
-  public final static String jobBoardBroadcastAddr = "jobBoardBroadcastAMQ";
-  public final static String depJobMgrBroadcastAddr = "depJobMgrBroadcastAMQ";
+  public static final String SESSIONDB_RPCADDR = "sessionDbRpcAddr";
+  public static final String TASKER_RPCADDR = "taskerRpcAddr";
+  public static final String OPSREGISTRY_RPCADDR = "opsRegistryRpcAddr";
+  public static final String OPSREGISTRY_SUBSCRIBER_TOPIC = "opsRegSubscriberTopic";
+  
+  
+  @Deprecated
+  public static final String jobBoardBroadcastAddr = "jobBoardBroadcastAMQ";
+  @Deprecated
+  public static final String depJobMgrBroadcastAddr = "depJobMgrBroadcastAMQ";
+  @Deprecated
   public static final String newJobAvailableTopic = "newJobAvailableTopic";
   
-  //public final static String jobListenerBroadcastAddr = "jobListenerBroadcastInbox";
-
 }

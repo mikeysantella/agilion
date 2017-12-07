@@ -1,6 +1,5 @@
 package dataengine.workers;
 
-import static dataengine.apis.OperationsRegistry_I.OPERATIONS_REG_API.QUERY_OPS;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,8 +10,10 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.jms.TextMessage;
 import dataengine.api.Operation;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.OperationsRegistry_I;
+import dataengine.apis.OperationsRegistry_I.OPERATIONS_REG_API;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.activemq.rpc.KryoSerDe;
@@ -25,10 +26,10 @@ public class OperationsSubscriber implements Closeable {
   private MessageProducer producer;
   private final Worker_I[] workers;
 
-  public OperationsSubscriber(Connection connection, String serviceType, Worker_I... workers) {
+  public OperationsSubscriber(Connection connection, Worker_I... workers) {
     this.connection = connection;
     this.workers = workers;
-    listen(serviceType + QUERY_OPS.name());
+    listen(CommunicationConsts.OPSREGISTRY_SUBSCRIBER_TOPIC);
   }
 
   private void listen(String topicName) {
@@ -38,22 +39,21 @@ public class OperationsSubscriber implements Closeable {
       producer = MQClient.createGenericMsgResponder(session, DeliveryMode.NON_PERSISTENT);
       
       MQClient.createTopicConsumer(session, topicName, message -> {
-        if (message instanceof TextMessage) {
-          String body = ((TextMessage) message).getText();
-          if (QUERY_OPS.name().equals(body)) {
-            ArrayList<Operation> list = new ArrayList<>();
-            for (Worker_I worker : workers)
-              list.add(worker.operation());
-            BytesMessage response = serde.writeObject(list);
-            response.setJMSCorrelationID(message.getJMSCorrelationID());
-            log.info("Sending response: {}", response);
-            producer.send(message.getJMSReplyTo(), response);
-          } else {
-            log.warn("Unknown request: {}", body);
+          String command = message.getStringProperty(OperationsRegistry_I.COMMAND_PARAM);
+          switch (OPERATIONS_REG_API.valueOf(command)) {
+            case GET_OPERATIONS: {
+              ArrayList<Operation> list = new ArrayList<>();
+              for (Worker_I worker : workers)
+                list.add(worker.operation());
+              BytesMessage response = serde.writeObject(list);
+              response.setJMSCorrelationID(message.getJMSCorrelationID());
+              log.info("Sending response: {}", response);
+              producer.send(message.getJMSReplyTo(), response);
+              break;
+            }
+            default:
+              log.warn("Unknown request: {}", message);
           }
-        } else {
-          log.warn("Unhandled message type: {}", message);
-        }
       });
 
     } catch (Exception e) {
