@@ -21,7 +21,7 @@ public class JobDTO {
 
   @Override
   public String toString() {
-    return "JobDTO [id=" + id + ", type=" + type + "]";
+    return "JobDTO [id=" + id + ", type=" + type +" "+taskerRpcAddr+" "+dispatcherRpcAddr+" "+jobBoardRpcAddr+" "+workerId+ "]";
   }
 
   String progressAddr;
@@ -35,4 +35,10 @@ public class JobDTO {
 
   boolean updatable = true;
 
+  // job processing history
+  String taskerRpcAddr;
+  String dispatcherRpcAddr;
+  String jobBoardRpcAddr;
+  String workerId;
+  
 }

@@ -35,8 +35,9 @@ public class WorkerMain {
         injector.getInstance(PreRequestWorker.class),        
         injector.getInstance(PostRequestWorker.class)        
     };
+    String newJobAvailableTopic=properties.getProperty("newJobAvailableTopic", CommunicationConsts.newJobAvailableTopic);
     for(BaseWorker<?> worker:hiddenWorkers)    {
-      jcFactory.create(worker);
+      jcFactory.create(worker, newJobAvailableTopic);
     }    
     BaseWorker<?>[] workers = {
         injector.getInstance(IngestTelephoneDummyWorker.class),
@@ -45,7 +46,7 @@ public class WorkerMain {
     };
     for(BaseWorker<?> worker:workers)    {
       OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, connection, worker);
-      jcFactory.create(worker);
+      jcFactory.create(worker, newJobAvailableTopic);
     }
     connection.start();
   }
@@ -58,9 +59,9 @@ public class WorkerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new RpcClients4WorkerModule(connection),
+        new RpcClients4WorkerModule(connection, CommunicationConsts.depJobMgrBroadcastAddr, CommunicationConsts.jobBoardBroadcastAddr),
         new OperationsSubscriberModule(),
-        new BaseWorkerModule(CommunicationConsts.jobBoardBroadcastAddr)
+        new BaseWorkerModule()
         );
   }
 }

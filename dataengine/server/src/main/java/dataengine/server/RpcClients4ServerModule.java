@@ -2,12 +2,11 @@ package dataengine.server;
 
 import javax.jms.Connection;
 import com.google.inject.Provides;
-import dataengine.apis.DepJobService_I;
+import dataengine.apis.CommunicationConsts;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
-import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.RpcClientsModule;
 
@@ -22,11 +21,6 @@ class RpcClients4ServerModule extends RpcClientsModule {
     log.debug("RpcClients4ServerModule configured");
   }
   
-  @Provides
-  RpcClientProvider<DepJobService_I> jobDispatcher_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, CommunicationConsts.depJobMgrBroadcastAddr));
-  }
-
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
     return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));

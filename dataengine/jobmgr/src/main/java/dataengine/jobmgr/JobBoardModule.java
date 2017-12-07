@@ -29,16 +29,18 @@ import net.deelam.graph.IdGrafFactoryTinker;
 @RequiredArgsConstructor
 @Slf4j
 public class JobBoardModule extends AbstractModule {
-  final String jobBoardId;
+  final String jobBoardRpcAddr;
+  final String newJobAvailableTopic;
   final Connection connection;
   
   @Override
   protected void configure() {
     requireBinding(Connection.class);
     
-    Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, CommunicationConsts.newJobAvailableTopic);
-    JobBoard jm = new JobBoard(jobBoardId, newJobPublisher);
-    bind(JobBoard.class).toInstance(jm);
+    Consumer<JobDTO> newJobPublisher=createNewJobPublisher(connection, newJobAvailableTopic);
+    JobBoard jobBoard = new JobBoard(newJobPublisher);
+    jobBoard.setJobBoardRpcAddr(jobBoardRpcAddr);
+    bind(JobBoard.class).toInstance(jobBoard);
   }
 
   private Consumer<JobDTO> createNewJobPublisher(Connection connection, String topicName) {
@@ -60,18 +62,18 @@ public class JobBoardModule extends AbstractModule {
     }
   }
 
-  static void deployJobBoardVerticles(Injector injector, String jobBoardId) {
+  static void deployJobBoardVerticles(Injector injector) {
     JobBoard jobBoard = injector.getInstance(JobBoard.class);
     if(DEBUG){
       jobBoard.periodicLogs(10_000, 20);
     }
     
     log.info("AMQ: TASKER: Deploying JobBoard: {} ", jobBoard); 
-    injector.getInstance(ActiveMqRpcServer.class).start(jobBoardId, jobBoard, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(jobBoard.getJobBoardRpcAddr(), jobBoard, true);
     
   }
 
-  static void deployDepJobService(Injector injector, String depJobMgrId, Properties configMap) {
+  static void deployDepJobService(Injector injector, String dispatcherRpcAddr, Properties configMap) {
     GrafUri depJobGrafUri;
     
     if(false){
@@ -84,12 +86,12 @@ public class JobBoardModule extends AbstractModule {
     IdGraph<?> depJobMgrGraf = depJobGrafUri.openIdGraph();
 
     // requires that jobProducerProxy be deployed
-    Connection connection = injector.getInstance(Connection.class);
     RpcClientProvider<JobBoardInput_I> jbInputRpc=
         injector.getInstance(Key.get(new TypeLiteral<RpcClientProvider<JobBoardInput_I>>() {}));
-    DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, connection, jbInputRpc);
+    DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, jbInputRpc);
+    depJobMgr.setDispatcherRpcAddr(dispatcherRpcAddr);
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
-    injector.getInstance(ActiveMqRpcServer.class).start(depJobMgrId, depJobMgr, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(depJobMgr.getDispatcherRpcAddr(), depJobMgr, true);
     
 //    if(DEBUG){
 //      vertx.setPeriodic(10_000, t -> {

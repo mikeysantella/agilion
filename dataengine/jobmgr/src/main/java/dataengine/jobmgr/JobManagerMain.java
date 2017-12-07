@@ -27,7 +27,7 @@ public class JobManagerMain {
     }
     Connection connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, properties);
-    JobBoardModule.deployJobBoardVerticles(injector, CommunicationConsts.jobBoardBroadcastAddr);
+    JobBoardModule.deployJobBoardVerticles(injector);
     {
       Properties compProps = new Properties(properties);
       compProps.setProperty("_componentId", "getFromZookeeper-DepJob"); //FIXME
@@ -44,8 +44,8 @@ public class JobManagerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new RpcClients4JobMgrModule(connection),
-        new JobBoardModule(CommunicationConsts.jobBoardBroadcastAddr, connection)
+        new RpcClients4JobMgrModule(connection, CommunicationConsts.jobBoardBroadcastAddr),
+        new JobBoardModule(CommunicationConsts.jobBoardBroadcastAddr, CommunicationConsts.newJobAvailableTopic, connection)
         );
   }
 }
