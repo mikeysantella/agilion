@@ -35,6 +35,7 @@ configure(subprojects) {
     dep = [
       dataengine_api: 'agilion:dataengine-api:0.0.3-SNAPSHOT',
 
+      utils_zero: 'net.deelam:utils-zero:0.1.0',
       activemq_rpc: 'net.deelam:activemq-rpc:0.1.0',
       coord_workers: 'net.deelam:coord-workers:0.1.0',
 
@@ -100,7 +101,7 @@ configure([
 ]) {
   afterEvaluate {
     dependencies {
-      compile project(':utils')
+      compile dep.utils_zero
     }
     jar {
       manifest {

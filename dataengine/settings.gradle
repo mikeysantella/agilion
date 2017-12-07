@@ -3,7 +3,6 @@ rootProject.name = 'dataengine'
 
 include 'constants'
 include 'apis'
-include 'utils'
 
 include 'graph'
 include 'spark'
