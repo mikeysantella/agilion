@@ -18,6 +18,9 @@ configure(subprojects) {
     mavenLocal()
     mavenCentral()
     jcenter()
+   maven {
+       url 'file://'+System.getProperty("user.dir")+'/extJars'
+   }
   }
 
   gradle.projectsEvaluated {
@@ -35,6 +38,7 @@ configure(subprojects) {
     dep = [
       dataengine_api: 'agilion:dataengine-api:0.0.3-SNAPSHOT',
 
+      graph: 'net.deelam:graph:0.1.0',
       utils_zero: 'net.deelam:utils-zero:0.1.0',
       activemq_rpc: 'net.deelam:activemq-rpc:0.1.0',
       coord_workers: 'net.deelam:coord-workers:0.1.0',

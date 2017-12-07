@@ -5,7 +5,7 @@ mainClassName = "dataengine.sessions.SessionsMain"
 
 dependencies {
   compile project(':apis')
-  compile project(':graph')
+  compile dep.graph
   compile dep.frames
   compile dep.xinject
   compile dep.guice
