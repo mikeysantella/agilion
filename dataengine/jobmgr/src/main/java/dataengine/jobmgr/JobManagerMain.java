@@ -30,11 +30,20 @@ public class JobManagerMain {
 
   public static void main(String brokerUrl, Properties properties, String dispatcherRpcAddr, String jobBoardRpcAddr, String newJobAvailableTopic) throws JMSException {
     log.info("Starting {}", JobManagerMain.class);
-    Connection connection = MQClient.connect(brokerUrl);
+    connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, jobBoardRpcAddr, newJobAvailableTopic);
     JobBoardModule.deployJobBoardVerticles(injector);
     JobBoardModule.deployDepJobService(injector, dispatcherRpcAddr);
     connection.start();
+  }
+  
+  private static Connection connection;
+  public static void shutdown() {
+    try {
+      connection.close();
+    } catch (JMSException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   static Injector createInjector(Connection connection, String jobBoardRpcAddr, String newJobAvailableTopic) {

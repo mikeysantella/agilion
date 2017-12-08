@@ -1,6 +1,8 @@
 package dataengine.workers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import javax.inject.Inject;
 import javax.jms.Connection;
@@ -37,7 +39,7 @@ public class WorkerMain {
   }
 
   public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr, String jobBoardRpcAddr) throws JMSException {
-    Connection connection = MQClient.connect(brokerUrl);
+    connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr);
     DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
@@ -46,21 +48,34 @@ public class WorkerMain {
         injector.getInstance(PostRequestWorker.class)        
     };
     
-    for(BaseWorker<?> worker:hiddenWorkers)    {
-      jcFactory.create(worker, newJobAvailableTopic);
-    }    
     BaseWorker<?>[] workers = {
         injector.getInstance(IngestTelephoneDummyWorker.class),
         injector.getInstance(IngestPeopleDummyWorker.class),
         injector.getInstance(IndexDatasetDummyWorker.class)
     };
+    
+    jConsumers=new ArrayList<>(hiddenWorkers.length+workers.length);
+    for(BaseWorker<?> worker:hiddenWorkers)    {
+      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
+    }    
     for(BaseWorker<?> worker:workers)    {
       OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, connection, worker);
-      jcFactory.create(worker, newJobAvailableTopic);
+      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
     }
     connection.start();
   }
-
+  
+  private static List<JobConsumer> jConsumers;
+  private static Connection connection;
+  public static void shutdown() {
+    jConsumers.forEach(JobConsumer::shutdown);
+    try {
+      connection.close();
+    } catch (JMSException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+  
   static Injector createInjector(Connection connection, String dispatcherRpcAddr, String jobBoardRpcAddr) {
     return Guice.createInjector(
         new AbstractModule() {

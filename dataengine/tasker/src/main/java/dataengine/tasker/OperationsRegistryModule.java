@@ -25,9 +25,11 @@ final class OperationsRegistryModule extends AbstractModule {
     bind(OperationsRegistry.class).in(Singleton.class);
   }
 
-  static void deployOperationsRegistry(Injector injector) {
-    OperationsRegistry_I opsRegSvc = injector.getInstance(OperationsRegistry.class);
+  // returning OperationsRegistry so it can be closed
+  static OperationsRegistry deployOperationsRegistry(Injector injector) {
+    OperationsRegistry opsRegSvc = injector.getInstance(OperationsRegistry.class);
     log.info("AMQ: TASKER: Deploying RPC service for OperationsRegistry_I: {} ", opsRegSvc);
     injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.OPSREGISTRY_RPCADDR, opsRegSvc, true);
+    return opsRegSvc;
   }
 }

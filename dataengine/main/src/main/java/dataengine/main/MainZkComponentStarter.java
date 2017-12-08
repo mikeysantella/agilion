@@ -2,6 +2,7 @@ package dataengine.main;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.curator.framework.CuratorFramework;
@@ -25,15 +26,21 @@ public class MainZkComponentStarter {
     if (args.length > 0) {
       System.setProperty(COMPONENT_IDS, args[0]);
     }
-    new Thread(() -> {
+    //new Thread(() -> {
       try {
         startZkComponentStarter("startup.props");
       } catch (Exception e) {
         throw new IllegalStateException("While running myZkComponentStarterThread", e);
       }
-    }, "myZkComponentStarterThread").start();
+      shutdown();
+    //}, "myZkComponentStarterThread").start();
   }
 
+  static CuratorFramework cf;
+  static void shutdown() {
+    if(cf!=null) 
+      cf.close();
+  }
   static List<String> startZkComponentStarter(String propFile) throws Exception {
     Configuration config = ConfigReader.parseFile(propFile);
     //log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
@@ -49,7 +56,7 @@ public class MainZkComponentStarter {
         new GModuleZooKeeper(config), //
         moduleZkComponentStarter);
 
-    CuratorFramework cf = injector.getInstance(CuratorFramework.class);
+    cf = injector.getInstance(CuratorFramework.class);
     String startupPath =
         injector.getInstance(Key.get(String.class, Names.named(Constants.ZOOKEEPER_STARTUPPATH)));
 
@@ -60,21 +67,24 @@ public class MainZkComponentStarter {
       log.info("Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
     }
 
-    Thread.sleep(1000);
-    log.info("---------- Waiting for components to start: {}",
-        moduleZkComponentStarter.getStartedLatch().getCount());
-    moduleZkComponentStarter.getStartedLatch().await();
+    long notStartedCount = moduleZkComponentStarter.getStartedLatch().getCount();
+    do {
+      log.info("---------- Waiting for components to start: {}", notStartedCount);
+      moduleZkComponentStarter.getStartedLatch().await(1, TimeUnit.SECONDS);
+      notStartedCount = moduleZkComponentStarter.getStartedLatch().getCount();
+    } while (notStartedCount > 0);
 
     log.info("---------- All components started: {}", compIdList);
     log.info("Tree after all components started: {}", ZkConnector.treeToString(cf, startupPath));
-    Thread.sleep(1000);
-    log.info("Waiting for components to end: {}",
-        moduleZkComponentStarter.getCompletedLatch().getCount());
-    moduleZkComponentStarter.getCompletedLatch().await();
+
+    long compsStillRunning = moduleZkComponentStarter.getCompletedLatch().getCount();
+    do {
+      log.info("Waiting for components to end: {}", compsStillRunning);
+      moduleZkComponentStarter.getCompletedLatch().await(1, TimeUnit.MINUTES);
+      compsStillRunning = moduleZkComponentStarter.getCompletedLatch().getCount();
+    } while (compsStillRunning > 0);
 
     log.info("---------- Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
-
-
 
     return compIdList;
   }

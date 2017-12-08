@@ -37,14 +37,20 @@ public final class DeServerGuiceInjector {
 //  @Getter
 //  static CompletableFuture<Vertx> vertxF = new CompletableFuture<>();
 
+  static DeServerGuiceInjector deServerGuiceInjector;
   static Injector singleton;
   public static Injector singleton() {
     if(singleton==null) {
       log.info("Starting {}", DeServerGuiceInjector.class);
       String brokerUrl = brokerUrl4Java();
-      singleton=new DeServerGuiceInjector(brokerUrl).injector();
+      deServerGuiceInjector = new DeServerGuiceInjector(brokerUrl);
+      singleton=deServerGuiceInjector.injector();
     }
     return singleton;
+  }
+  public static void shutdownSingleton() {
+    if(deServerGuiceInjector!=null)
+      deServerGuiceInjector.shutdown();
   }
 
   // load brokerUrl from file; return first url starting with "tcp:"
@@ -102,10 +108,10 @@ public final class DeServerGuiceInjector {
   
   @Getter
   final Injector injector;
-
+  private final Connection connection;
   private DeServerGuiceInjector(String brokerUrl) {
     try {
-      Connection connection = MQClient.connect(brokerUrl);
+      connection = MQClient.connect(brokerUrl);
       injector = Guice.createInjector(
           new RpcClients4ServerModule(connection),
           new RestServiceModule());
@@ -113,6 +119,13 @@ public final class DeServerGuiceInjector {
       log.info("Created DeServerGuiceInjector");
     } catch (JMSException e) {
       throw new RuntimeException(e);
+    }
+  }
+  public void shutdown() {
+    try {
+      connection.close();
+    } catch (JMSException e) {
+      throw new IllegalStateException(e);
     }
   }
 

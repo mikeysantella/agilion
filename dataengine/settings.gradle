@@ -4,7 +4,6 @@ rootProject.name = 'dataengine'
 include 'constants'
 include 'apis'
 
-include 'graph'
 include 'spark'
 
 include 'sessions'

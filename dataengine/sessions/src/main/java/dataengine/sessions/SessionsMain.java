@@ -29,10 +29,19 @@ public class SessionsMain {
   }
   public static void main(String brokerUrl, Properties properties) throws JMSException {
     log.info("Starting {}", SessionsMain.class);
-    Connection connection = MQClient.connect(brokerUrl);
+    connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, properties);
     TinkerGraphSessionsDbModule.deploySessionDb(injector);
     connection.start();
+  }
+  
+  private static Connection connection;
+  public static void shutdown() {
+    try {
+      connection.close();
+    } catch (JMSException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   static Injector createInjector(Connection connection, Properties properties) {

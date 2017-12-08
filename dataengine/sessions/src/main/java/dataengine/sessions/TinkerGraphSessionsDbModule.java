@@ -30,7 +30,7 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
     } finally {
       Thread shutdownSessionGraphThread=new Thread(()->{
         sessGraphUri.shutdown();
-      });
+      },"mySessionGraphShutdown");
       Runtime.getRuntime().addShutdownHook(shutdownSessionGraphThread);
     }
     log.info("TinkerGraphSessionsDbModule configured");
