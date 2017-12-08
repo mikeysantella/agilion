@@ -33,7 +33,7 @@ public class MainJetty {
 
   static ConsolePrompter prompter=new ConsolePrompter(">>>>>> ");
   public static void main(String[] args) throws Exception {
-    boolean promptUser=true; //System.getProperty("PROMPT")!=null;
+    boolean promptUser=System.getProperty("PROMPT")!=null;
     prompter.setSkipPrompt(!promptUser);
     
     String onlyRunServerProject = System.getProperty("ONLY_RUN_SERVER");
@@ -138,7 +138,7 @@ public class MainJetty {
       log.info("Waiting for Zookeeper to start...");
       MainZookeeper.zookeeperConnectF.get();
       // need to wait for Zookeeper to start
-      Thread.sleep(2000);
+      Thread.sleep(4000);
     }
     
     String zkStartupPath = "/test/fromEclipse/startup";
@@ -148,7 +148,7 @@ public class MainJetty {
         "myZkConfigPopulator").start();
 
     // need to wait for MainZkConfigPopulator to get further along
-    Thread.sleep(3000);
+    Thread.sleep(5000);
 
     // start all componentIds configured by MainZkConfigPopulator
     String componentIds = MainZkConfigPopulator.componentIdsF.get();

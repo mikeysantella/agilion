@@ -36,12 +36,12 @@ public class MainZkComponentStarter {
 
   static List<String> startZkComponentStarter(String propFile) throws Exception {
     Configuration config = ConfigReader.parseFile(propFile);
-    log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
+    //log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
 
     String componentIds = System.getProperty(COMPONENT_IDS, config.getString(COMPONENT_IDS, ""));
     List<String> compIdList =
         Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
-    log.info("componentIds to start: {}", compIdList);
+    log.info("---------- componentIds to start: {}", compIdList);
     
     GModuleZkComponentStarter moduleZkComponentStarter =
         new GModuleZkComponentStarter(compIdList.size());
@@ -55,23 +55,24 @@ public class MainZkComponentStarter {
 
     // starts components given an compId and ComponentI subclass
     for (String compId : compIdList) {
+      log.info("---------- Starting {}", compId);
       ZkComponentStarter.startComponent(injector, compId);
       log.info("Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
     }
 
     Thread.sleep(1000);
-    log.info("Awaiting components to start: {}",
+    log.info("---------- Waiting for components to start: {}",
         moduleZkComponentStarter.getStartedLatch().getCount());
     moduleZkComponentStarter.getStartedLatch().await();
 
-    log.info("All components started: {}", compIdList);
+    log.info("---------- All components started: {}", compIdList);
     log.info("Tree after all components started: {}", ZkConnector.treeToString(cf, startupPath));
     Thread.sleep(1000);
-    log.info("Awaiting components to end: {}",
+    log.info("Waiting for components to end: {}",
         moduleZkComponentStarter.getCompletedLatch().getCount());
     moduleZkComponentStarter.getCompletedLatch().await();
 
-    log.info("Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
+    log.info("---------- Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
 
 
 

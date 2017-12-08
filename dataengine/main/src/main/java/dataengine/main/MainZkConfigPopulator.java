@@ -36,12 +36,12 @@ public class MainZkConfigPopulator {
   static List<String> startZookeeperConfigPopulator(String propFile, boolean startFresh)
       throws Exception {
     Configuration config = ConfigReader.parseFile(propFile);
-    log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
+    //log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
 
     String componentIds = System.getProperty(COMPONENT_IDS, config.getString(COMPONENT_IDS, ""));
     List<String> compIdList =
         Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
-    log.info("componentIds for configuration: {}", compIdList);
+    log.info("---------- componentIds for configuration: {}", compIdList);
 
     log.info("ZOOKEEPER_CONNECT=", System.getProperty(GModuleZooKeeper.ZOOKEEPER_CONNECT));
     Injector injector = Guice.createInjector(new GModuleZooKeeper(config));
