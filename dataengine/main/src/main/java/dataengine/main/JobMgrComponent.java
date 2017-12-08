@@ -63,13 +63,14 @@ public class JobMgrComponent implements ComponentI {
 
   @Override
   public boolean reinit(Properties configMap) {
-    log.info("Reinitializing component '{}' with: {}", getComponentId(), configMap);
+    log.error("Reinitializing component '{}' with: {}", getComponentId(), configMap);
     return false;
   }
 
   @Override
   public void stop() {
     log.info("Stopping component: {}", getComponentId());
+    dataengine.jobmgr.JobManagerMain.shutdown();
     running = false;
   }
 

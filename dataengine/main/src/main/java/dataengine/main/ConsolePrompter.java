@@ -49,6 +49,8 @@ public class ConsolePrompter {
   Thread prompterThread;
   PromptMessage promptMsg = new PromptMessage();
 
+  private boolean stayAlive=true;
+
   public String getUserInput(String msg, long sleepTime) {
     return getUserInput(msg, sleepTime, -1);
   }
@@ -59,7 +61,7 @@ public class ConsolePrompter {
     }
     if (prompterThread == null) {
       prompterThread = new Thread(() -> {
-        while (true) {
+        while (stayAlive) {
           try {
             promptMsg.pause();
             if (!promptMsg.showPrompt())
@@ -67,7 +69,8 @@ public class ConsolePrompter {
                 prompterThread.wait();
               }
           } catch (InterruptedException e) {
-            log.info("While waiting for user input: {}", e.getMessage());
+            if(stayAlive)
+              log.info("While waiting for user input: {}", e.getMessage());
           }
         }
       }, "myConsolePrompterThread");
@@ -90,4 +93,10 @@ public class ConsolePrompter {
     }
   }
 
+  public void shutdown() {
+    if(prompterThread!=null) {
+      stayAlive=false;
+      prompterThread.interrupt();
+    }
+  }
 }

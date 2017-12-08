@@ -52,14 +52,8 @@ public class JobConsumer {
       throw new IllegalStateException("When setting up topic listener", e);
     }
     
-    Thread jobRunner = new Thread(() -> {
-      while(true) {
-        try {
-          newJobs.take();
-          newJobs.clear();
-        } catch (InterruptedException e) {
-          log.warn("While waiting for new jobs", e);
-        }
+    jobRunner = new Thread(() -> {
+      while(stayAlive) {
         log.info("Picking a job: {}", workerAddr);
         try {
           CompletableFuture<JobListDTO> jobsF = jobBoard.rpc().findJobs(searchParams);
@@ -81,6 +75,13 @@ public class JobConsumer {
           } else { // retry
             newJobs.add("get new jobList"); 
           }
+          try {
+            newJobs.take();
+            newJobs.clear();
+          } catch (InterruptedException e) {
+            if(stayAlive)
+              log.warn("While waiting for new jobs", e);
+          }
         } catch (InterruptedException | ExecutionException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -89,6 +90,15 @@ public class JobConsumer {
     }, "jobRunner-" + workerAddr);
     jobRunner.setDaemon(true);
     jobRunner.start();
+  }
+  
+  Thread jobRunner;
+  boolean stayAlive=true;
+  public void shutdown(){
+    if(jobRunner!=null) {
+      stayAlive=false;
+      jobRunner.interrupt();
+    }
   }
 
   @Setter

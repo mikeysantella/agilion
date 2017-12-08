@@ -1,7 +1,5 @@
 package dataengine.workers;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
@@ -9,7 +7,6 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import com.google.inject.AbstractModule;
-import dataengine.apis.CommunicationConsts;
 import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.workers.ProgressMonitor.Factory;

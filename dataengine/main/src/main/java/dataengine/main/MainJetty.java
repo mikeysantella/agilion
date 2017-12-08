@@ -2,6 +2,9 @@ package dataengine.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -14,6 +17,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
+import com.google.common.base.Stopwatch;
+import dataengine.server.DeServerGuiceInjector;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.zkbasedinit.ZkComponentStopper;
 
@@ -32,6 +37,7 @@ import net.deelam.zkbasedinit.ZkComponentStopper;
 public class MainJetty {
 
   static ConsolePrompter prompter=new ConsolePrompter(">>>>>> ");
+  static Stopwatch timer = Stopwatch.createStarted();
   public static void main(String[] args) throws Exception {
     boolean promptUser=System.getProperty("PROMPT")!=null;
     prompter.setSkipPrompt(!promptUser);
@@ -42,7 +48,7 @@ public class MainJetty {
 
     //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     if (runInSingleJVM) {
-      log.info("======== Running all required DataEngine services in same JVM");
+      log.info("{} ======== Running all required DataEngine services in same JVM", timer);
       try {
         startAllInSameJvm();
       } catch (Exception e) {
@@ -59,53 +65,76 @@ public class MainJetty {
     Server jettyServer = main.startServer(8080, 8083, contextPath,
         null, null, false); // TODO: 4: enable SSL
 
-    promptToShutdown(jettyServer);
     
     try {
       jettyServer.start();
+      log.info("======== Data Engine REST server ready: startup time={}", timer);
+      startPromptToShutdownThread(jettyServer);
       jettyServer.join();
     } finally {
-      if(!jettyServer.isStopped()) {
+      if(!jettyServer.isStopping()) {
+        System.err.println("Is this still needed?????????????????????????????????");
         jettyServer.stop();
         jettyServer.destroy();
       }
+      log.info("Uptime={} ======== REST server is shutdown", timer);
     }
   }
 
-  private static void promptToShutdown(Server jettyServer) {
-    new Thread(()->{
+  private static void startPromptToShutdownThread(Server jettyServer) {
+    Thread stopperThread = new Thread(()->{
       prompter.setSkipPrompt(false);
       String input="";
-      while(!"L".equals(input) && !"l".equals(input)) {
-        input = prompter.getUserInput("Type 'L' then Enter to terminate application.", 60000);
+      while(!"0".equals(input) && !"L".equals(input) && !"l".equals(input)) {
+        input = prompter.getUserInput("Enter '0' or 'L' to terminate application.", 60000);
       }
+      
       System.err.println("Terminating ...");
+      log.info("Active threads: {}", Thread.activeCount());
+      
+      prompter.shutdown();
       try {
         jettyServer.stop();
+        DeServerGuiceInjector.shutdownSingleton();
       } catch (Exception e) {
         log.warn("While shutting down webserver", e);
       }
 
-      stopZkComponents();
+      log.info("{} ======== Shutting down components", timer);
+      ZkComponentStopper.main(new String[0]);
       
-      if(MainZookeeper.zookeeper!=null)
-        MainZookeeper.zookeeper.stop();
+      log.info("{} ======== Shutting down Zookeeper-related components", timer);
+      MainZkConfigPopulator.shutdown();
+      MainZkComponentStarter.shutdown();
+      MainZookeeper.shutdown();
       
+      //checkRemainingThreads();
+      System.err.println("Done.");
+    }, "myConsoleUiThread");
+    stopperThread.setDaemon(true);
+    stopperThread.start();
+  }
+
+  static void checkRemainingThreads() {
+    int nonDaemonThreads;
+    do{
       try {
         Thread.sleep(3000);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      System.err.println("Done.");
-    }, "myConsoleUiThread").start();
-  }
-
-  private static void stopZkComponents() {
-    try {
-      ZkComponentStopper.main(new String[0]);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+      
+      Set<Thread> ndThreads = Thread.getAllStackTraces().keySet().stream().filter(th->!th.isDaemon()).collect(Collectors.toSet());
+      nonDaemonThreads=ndThreads.size();
+      for(Thread th:ndThreads){
+        synchronized(th) {
+          th.notify();
+        }
+        th.interrupt();
+        log.warn("{} {}: {}", th, th.getState(), Arrays.toString(th.getStackTrace()).replaceAll(",", "\n\t"));
+      };
+      log.info("{}/{} remaining non-daemon threads: {}", nonDaemonThreads, Thread.activeCount(), ndThreads);
+    }while(nonDaemonThreads>1);
   }
 
   /**
@@ -144,17 +173,21 @@ public class MainJetty {
     String zkStartupPath = "/test/fromEclipse/startup";
     System.setProperty(net.deelam.zkbasedinit.Constants.ZOOKEEPER_STARTUPPATH, zkStartupPath);
     prompter.getUserInput("Press Enter to start MainZkConfigPopulator: " + zkStartupPath, 3000);
-    new Thread(() -> MainZkConfigPopulator.main(new String[] {"dataengine.props"}),
-        "myZkConfigPopulator").start();
+    new Thread(() -> {
+      MainZkConfigPopulator.main(new String[] {"dataengine.props"});
+      log.info("{} ======== Components configured", timer);
+    }, "myZkConfigPopulator").start();
 
     // need to wait for MainZkConfigPopulator to get further along
-    Thread.sleep(5000);
+    Thread.sleep(7000);
 
     // start all componentIds configured by MainZkConfigPopulator
     String componentIds = MainZkConfigPopulator.componentIdsF.get();
     prompter.getUserInput("Press Enter to start MainZkComponentStarter: " + componentIds, 3000);
-    new Thread(() -> MainZkComponentStarter.main(new String[] {componentIds}),
-        "myZkConfigPopulator").start();
+    new Thread(() -> {
+      MainZkComponentStarter.main(new String[] {componentIds});
+      log.info("{} ======== All started components have ended", timer);
+    }, "myZkComponentStarter").start();
 
   }
 

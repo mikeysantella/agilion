@@ -15,13 +15,18 @@ public class MainZookeeper {
       System.setProperty(GModuleZooKeeper.ZOOKEEPER_CONNECT, connectionString);
       zookeeperConnectF.complete(connectionString);
       zookeeper.runServer(); // blocks until Zookeeper shuts down
-      log.info("Zookeeper shut down.");
+      log.info("======== Zookeeper shut down.");
     } catch (Exception e) {
       throw new IllegalStateException("While running MainZookeeper", e);
     }
   }
 
   static EmbeddedZookeeper zookeeper;
+  static void shutdown() {
+    if(zookeeper!=null)
+      zookeeper.stop();
+  }
+  
   static CompletableFuture<String> zookeeperConnectF = new CompletableFuture<>();
 
 }

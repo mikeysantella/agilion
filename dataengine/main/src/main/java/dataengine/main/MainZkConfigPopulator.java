@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.Getter;
@@ -28,11 +29,18 @@ public class MainZkConfigPopulator {
     } catch (Exception e) {
       throw new IllegalStateException("While running MainZkConfigPopulator", e);
     }
+    shutdown();
   }
 
   @Getter
   static CompletableFuture<String> componentIdsF = new CompletableFuture<>();
 
+  static CuratorFramework cf;
+  static void shutdown() {
+    if(cf!=null)
+      cf.close();
+  }
+  
   static List<String> startZookeeperConfigPopulator(String propFile, boolean startFresh)
       throws Exception {
     Configuration config = ConfigReader.parseFile(propFile);
@@ -45,6 +53,7 @@ public class MainZkConfigPopulator {
 
     log.info("ZOOKEEPER_CONNECT=", System.getProperty(GModuleZooKeeper.ZOOKEEPER_CONNECT));
     Injector injector = Guice.createInjector(new GModuleZooKeeper(config));
+    cf = injector.getInstance(CuratorFramework.class);
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);
 
     if (startFresh) {
@@ -55,7 +64,7 @@ public class MainZkConfigPopulator {
     componentIdsF.complete(componentIds);
     
     cp.populateConfigurations(config, compIdList); //blocks until all required components started
-    log.info("Tree after config: {}", ZkConnector.treeToString(cp.getClient(), cp.getAppPrefix()));
+    log.info("---------- Tree after config: {}", ZkConnector.treeToString(cp.getClient(), cp.getAppPrefix()));
 
     return compIdList;
   }

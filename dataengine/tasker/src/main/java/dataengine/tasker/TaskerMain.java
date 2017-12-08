@@ -30,14 +30,29 @@ public class TaskerMain {
 
   public static void main(String brokerUrl, Properties properties, String dispatcherRpcAddr) throws JMSException {
     log.info("Starting {}", TaskerMain.class);
-    Connection connection = MQClient.connect(brokerUrl);
+    connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, properties, dispatcherRpcAddr);
     
-    OperationsRegistryModule.deployOperationsRegistry(injector);
+    opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector, dispatcherRpcAddr);
     connection.start();
   }
 
+  private static OperationsRegistry opsRegistry;
+  private static Connection connection;
+  public static void shutdown() {
+    try {
+      opsRegistry.shutdown();
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+    try {
+      connection.close();
+    } catch (JMSException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+  
   static Injector createInjector(Connection connection, Properties properties, String dispatcherRpcAddr) {
     return Guice.createInjector(
         new AbstractModule() {

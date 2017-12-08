@@ -2,6 +2,7 @@ package dataengine.tasker;
 
 import static dataengine.apis.OperationsRegistry_I.OPERATIONS_REG_API.GET_OPERATIONS;
 import static java.util.stream.Collectors.toMap;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -39,6 +40,10 @@ public class OperationsRegistry implements OperationsRegistry_I {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     topicUtils = new TopicUtils(session, session.createTopic(CommunicationConsts.OPSREGISTRY_SUBSCRIBER_TOPIC));
     topicUtils.listenToTopicConsumerResponses(GET_OPERATIONS.name(), null);
+  }
+  
+  public void shutdown() throws IOException {
+    topicUtils.close();
   }
   
   CompletableFuture<Map<String, Operation>> queryOperations() {
