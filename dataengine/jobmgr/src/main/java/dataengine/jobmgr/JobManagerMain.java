@@ -7,7 +7,6 @@ import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 
@@ -15,37 +14,37 @@ import net.deelam.activemq.MQClient;
 public class JobManagerMain {
 
   public static void main(String[] args) throws Exception {
-    main((String)null);
+    main((String) null);
   }
+
   public static void main(String brokerUrl) throws IOException, JMSException {
-    log.info("Starting {}", JobManagerMain.class);
-    Properties properties=new Properties();
-//    PropertiesUtil.loadProperties("jobmgr.props", properties);
-    if(brokerUrl!=null) {
+    Properties properties = new Properties();
+    properties.setProperty("_componentId", "getFromZookeeper-DepJob");
+    // PropertiesUtil.loadProperties("jobmgr.props", properties);
+    if (brokerUrl != null) {
       log.info("Setting brokerUrl={}", brokerUrl);
       properties.setProperty("brokerUrl", brokerUrl);
     }
+    main(brokerUrl, properties, "depJobMgrBroadcastAMQ", "jobBoardBroadcastAMQ", "newJobAvailableTopic");
+  }
+
+  public static void main(String brokerUrl, Properties properties, String dispatcherRpcAddr, String jobBoardRpcAddr, String newJobAvailableTopic) throws JMSException {
+    log.info("Starting {}", JobManagerMain.class);
     Connection connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, properties);
+    Injector injector = createInjector(connection, jobBoardRpcAddr, newJobAvailableTopic);
     JobBoardModule.deployJobBoardVerticles(injector);
-    {
-      Properties compProps = new Properties(properties);
-      compProps.setProperty("_componentId", "getFromZookeeper-DepJob"); //FIXME
-      JobBoardModule.deployDepJobService(injector, CommunicationConsts.depJobMgrBroadcastAddr, compProps);
-    }
+    JobBoardModule.deployDepJobService(injector, dispatcherRpcAddr);
     connection.start();
   }
 
-  static Injector createInjector(Connection connection, Properties properties) {
-    return Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(Connection.class).toInstance(connection);
-          }
-        },
-        new RpcClients4JobMgrModule(connection, CommunicationConsts.jobBoardBroadcastAddr),
-        new JobBoardModule(CommunicationConsts.jobBoardBroadcastAddr, CommunicationConsts.newJobAvailableTopic, connection)
-        );
+  static Injector createInjector(Connection connection, String jobBoardRpcAddr, String newJobAvailableTopic) {
+    return Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(Connection.class).toInstance(connection);
+      }
+    }, new RpcClients4JobMgrModule(connection, jobBoardRpcAddr),
+        new JobBoardModule(jobBoardRpcAddr,
+            newJobAvailableTopic, connection));
   }
 }

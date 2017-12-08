@@ -7,7 +7,6 @@ import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import dataengine.apis.CommunicationConsts;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
@@ -20,22 +19,26 @@ public class TaskerMain {
   }
 
   public static void main(String brokerUrl) throws IOException, JMSException {
-    log.info("Starting {}", TaskerMain.class);
     Properties properties=new Properties();
     PropertiesUtil.loadProperties("tasker.props", properties);
     if(brokerUrl!=null) {
       log.info("Setting brokerUrl={}", brokerUrl);
       properties.setProperty("brokerUrl", brokerUrl);
     }
+    main(brokerUrl, properties, "depJobMgrBroadcastAMQ");
+  }
+
+  public static void main(String brokerUrl, Properties properties, String dispatcherRpcAddr) throws JMSException {
+    log.info("Starting {}", TaskerMain.class);
     Connection connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, properties);
+    Injector injector = createInjector(connection, properties, dispatcherRpcAddr);
     
     OperationsRegistryModule.deployOperationsRegistry(injector);
-    TaskerModule.deployTasker(injector);
+    TaskerModule.deployTasker(injector, dispatcherRpcAddr);
     connection.start();
   }
 
-  static Injector createInjector(Connection connection, Properties properties) {
+  static Injector createInjector(Connection connection, Properties properties, String dispatcherRpcAddr) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -43,7 +46,7 @@ public class TaskerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new RpcClients4TaskerModule(connection, CommunicationConsts.depJobMgrBroadcastAddr),
+        new RpcClients4TaskerModule(connection),
         new OperationsRegistryModule(),
         new TaskerModule(properties)
         );

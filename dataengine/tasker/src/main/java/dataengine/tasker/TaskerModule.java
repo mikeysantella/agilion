@@ -68,7 +68,7 @@ final class TaskerModule extends AbstractModule {
     return jobCreators;
   }
 
-  static void deployTasker(Injector injector) {
+  static void deployTasker(Injector injector, String dispatcherRpcAddr) {
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
@@ -76,7 +76,7 @@ final class TaskerModule extends AbstractModule {
     injector.getInstance(ActiveMqRpcServer.class).start(taskerSvc.getTaskerRpcAddr(), taskerSvc, true);
 
     // TODO: replace with detection via Zookeeper
-    taskerSvc.handleNewDepJobService(CommunicationConsts.depJobMgrBroadcastAddr);
+    taskerSvc.handleNewDepJobService(dispatcherRpcAddr);
   }
 
 }

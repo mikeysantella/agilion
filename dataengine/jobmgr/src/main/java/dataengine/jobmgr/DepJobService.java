@@ -9,14 +9,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.jms.DeliveryMode;
 import com.google.common.collect.Iterables;
 import com.tinkerpop.blueprints.Element;
 import com.tinkerpop.blueprints.TransactionalGraph;
@@ -31,7 +29,6 @@ import dataengine.jobmgr.DepJobFrame.STATE;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.graph.FramedGrafSupplier;
 import net.deelam.graph.GrafTxn;
 
@@ -46,33 +43,7 @@ public class DepJobService implements DepJobService_I {
   boolean removeOnCompletion = true;
   boolean removeOnFailure = false;
   
-  DispatcherConfig config;
-
-  class DispatcherConfig extends AbstractCompConfig {
-
-//    final String brokerUrl;
-//    final String submitJobQueue;
-//    final String getJobsTopic;
-//    final String availJobsTopic;
-//    final String pickedJobQueue;
-    int deliveryMode = DeliveryMode.NON_PERSISTENT;
-
-
-    // populate and print remaining unused properties
-    public DispatcherConfig(Properties props) {
-      super(props);
-//      brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
-//      submitJobQueue = useRequiredProperty(props, "msgQ.submitJob");
-//      getJobsTopic = useRequiredProperty(props, "msgT.getJobs");
-//      availJobsTopic = useRequiredProperty(props, "msgT.availJobs");
-//      pickedJobQueue = useProperty(props, "msgQ.pickedJob", availJobsTopic + ".pickedJob");
-      checkRemainingProps(props);
-    }
-
-  }
-  
-  public DepJobService(Properties configMap, IdGraph<?> dependencyGraph, RpcClientProvider<JobBoardInput_I> jbInput) {
-    config = new DispatcherConfig(configMap);
+  public DepJobService(IdGraph<?> dependencyGraph, RpcClientProvider<JobBoardInput_I> jbInput) {
     Class<?>[] typedClasses = {DepJobFrame.class};
     FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
     graph = provider.get(dependencyGraph);

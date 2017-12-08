@@ -1,4 +1,4 @@
-componentIds=amq, dataEngine
+componentIds=amq, sessions, tasker, jobMgr1207, workers
 
 
 include=startup.props
@@ -9,6 +9,20 @@ amq.brokerUrl=tcp://localhost:33330,stomp://localhost:33331
 needsAmq.brokerUrl.ref=amq/connectionUrl
 
 
-dataEngine.classname=dataengine.main.DataEngineComponent
-dataEngine.include=needsAmq
+sessions.classname=dataengine.main.SessionsDbComponent
+sessions.include=needsAmq
+
+tasker.classname=dataengine.main.TaskerComponent
+# TODO: remove ref to jobMgr1207.msgQ
+tasker.include=needsAmq, jobMgr1207.msgQ.dispatcherRpcAddr
+tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset
+
+jobMgr1207.classname=dataengine.main.JobMgrComponent
+jobMgr1207.include=needsAmq
+jobMgr1207.msgT.newJobAvailable=jobMgr1207_newJobAvailableTopic_toJobConsumers
+jobMgr1207.msgQ.dispatcherRpcAddr=jobMgr1207_dispatcherQueue
+jobMgr1207.msgQ.jobBoardRpcAddr=jobMgr1207_jobBoardQueue
+
+workers.classname=dataengine.main.WorkersComponent
+workers.include=needsAmq, jobMgr1207.msgT.newJobAvailable, jobMgr1207.msgQ
 

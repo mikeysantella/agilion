@@ -73,7 +73,7 @@ public class JobBoardModule extends AbstractModule {
     
   }
 
-  static void deployDepJobService(Injector injector, String dispatcherRpcAddr, Properties configMap) {
+  static void deployDepJobService(Injector injector, String dispatcherRpcAddr) {
     GrafUri depJobGrafUri;
     
     if(false){
@@ -88,7 +88,7 @@ public class JobBoardModule extends AbstractModule {
     // requires that jobProducerProxy be deployed
     RpcClientProvider<JobBoardInput_I> jbInputRpc=
         injector.getInstance(Key.get(new TypeLiteral<RpcClientProvider<JobBoardInput_I>>() {}));
-    DepJobService depJobMgr = new DepJobService(configMap, depJobMgrGraf, jbInputRpc);
+    DepJobService depJobMgr = new DepJobService(depJobMgrGraf, jbInputRpc);
     depJobMgr.setDispatcherRpcAddr(dispatcherRpcAddr);
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
     injector.getInstance(ActiveMqRpcServer.class).start(depJobMgr.getDispatcherRpcAddr(), depJobMgr, true);
