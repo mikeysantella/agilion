@@ -1,6 +1,5 @@
 package dataengine.main;
 
-import java.io.IOException;
 import java.util.Properties;
 import javax.jms.JMSException;
 import lombok.Getter;
@@ -10,7 +9,7 @@ import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.zkbasedinit.ComponentI;
 
 @Slf4j
-public class DataEngineComponent implements ComponentI {
+public class TaskerComponent implements ComponentI {
   
   @Getter
   private boolean running = true;
@@ -24,7 +23,7 @@ public class DataEngineComponent implements ComponentI {
   class DataEngineConfig extends AbstractCompConfig {
 
     final String brokerUrl;
-//    final String submitJobQueue;
+    final String dispatcherRpcAddr;
 //    final String jobDoneTopic;
 //    final String jobFailedTopic;
 //    final String getJobsTopic;
@@ -37,7 +36,7 @@ public class DataEngineComponent implements ComponentI {
     public DataEngineConfig(Properties props) {
       super(props);
       brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
-//      submitJobQueue = useRequiredProperty(props, "msgQ.submitJob");
+      dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
 //      jobDoneTopic = useRequiredProperty(props, "msgT.jobDone");
 //      jobFailedTopic = useRequiredProperty(props, "msgT.jobFailed");
 //      getJobsTopic = useRequiredProperty(props, "msgT.getJobs");
@@ -54,11 +53,8 @@ public class DataEngineComponent implements ComponentI {
 
     log.info("Starting {}", this);
     try {
-      dataengine.sessions.SessionsMain.main(config.brokerUrl);
-      dataengine.tasker.TaskerMain.main(config.brokerUrl);
-      dataengine.jobmgr.JobManagerMain.main(config.brokerUrl);
-      dataengine.workers.WorkerMain.main(config.brokerUrl);
-    } catch (IOException | JMSException e) {
+      dataengine.tasker.TaskerMain.main(config.brokerUrl, configMap, config.dispatcherRpcAddr);
+    } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }
     running = true;
