@@ -2,6 +2,16 @@
 apply plugin: 'application'
 
 mainClassName = "dataengine.main.MainJetty"
+run {
+	// enable reading from stdin
+   standardInput = System.in
+
+	// pass all the properties
+	//systemProperties System.getProperties()
+
+   // Or just each by name:
+   systemProperty "PROMPT", System.getProperty("PROMPT")
+}
 
 //apply plugin: 'jar'
 apply plugin: 'war'

@@ -52,7 +52,7 @@ public class JobConsumer {
       throw new IllegalStateException("When setting up topic listener", e);
     }
     
-    new Thread(() -> {
+    Thread jobRunner = new Thread(() -> {
       while(true) {
         try {
           newJobs.take();
@@ -86,7 +86,9 @@ public class JobConsumer {
           e.printStackTrace();
         }
       }
-    }, "jobRunner-" + workerAddr).start();
+    }, "jobRunner-" + workerAddr);
+    jobRunner.setDaemon(true);
+    jobRunner.start();
   }
 
   @Setter

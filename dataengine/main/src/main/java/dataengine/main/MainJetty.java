@@ -14,9 +14,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
-import dataengine.server.DeServerGuiceInjector;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.coordworkers.AmqServiceComp;
+import net.deelam.zkbasedinit.ZkComponentStopper;
 
 /**
  * 
@@ -31,9 +30,12 @@ import net.deelam.coordworkers.AmqServiceComp;
  */
 @Slf4j
 public class MainJetty {
-  private static final String BROKER_URL = DeServerGuiceInjector.brokerUrl4Java();
 
+  static ConsolePrompter prompter=new ConsolePrompter(">>>>>> ");
   public static void main(String[] args) throws Exception {
+    boolean promptUser=true; //System.getProperty("PROMPT")!=null;
+    prompter.setSkipPrompt(!promptUser);
+    
     String onlyRunServerProject = System.getProperty("ONLY_RUN_SERVER");
     boolean runInSingleJVM = (onlyRunServerProject == null) 
         ? true : Boolean.getBoolean(onlyRunServerProject);
@@ -48,8 +50,8 @@ public class MainJetty {
       }
     }
 
+    prompter.getUserInput("Press Enter to start webserver", 2000);
     MainJetty main = new MainJetty();
-    
     // this contextPath mimics gretty's default behavior
     String contextPath="/main" // gretty uses the project name
         + "/DataEngine/0.0.3"; // matches the path in web.xml
@@ -57,23 +59,103 @@ public class MainJetty {
     Server jettyServer = main.startServer(8080, 8083, contextPath,
         null, null, false); // TODO: 4: enable SSL
 
+    promptToShutdown(jettyServer);
+    
     try {
       jettyServer.start();
       jettyServer.join();
     } finally {
-      jettyServer.destroy();
+      if(!jettyServer.isStopped()) {
+        jettyServer.stop();
+        jettyServer.destroy();
+      }
     }
   }
 
+  private static void promptToShutdown(Server jettyServer) {
+    new Thread(()->{
+      prompter.setSkipPrompt(false);
+      String input="";
+      while(!"L".equals(input) && !"l".equals(input)) {
+        input = prompter.getUserInput("Type 'L' then Enter to terminate application.", 60000);
+      }
+      System.err.println("Terminating ...");
+      try {
+        jettyServer.stop();
+      } catch (Exception e) {
+        log.warn("While shutting down webserver", e);
+      }
+
+      stopZkComponents();
+      
+      if(MainZookeeper.zookeeper!=null)
+        MainZookeeper.zookeeper.stop();
+      
+      try {
+        Thread.sleep(3000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      System.err.println("Done.");
+    }, "myConsoleUiThread").start();
+  }
+
+  private static void stopZkComponents() {
+    try {
+      ZkComponentStopper.main(new String[0]);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Several services to start:
+   * JVM1:
+   * MainJetty = webserver = 'server' project
+   * 
+   * JVM2a:
+   * Zookeeper (embedded or external)
+   * 
+   * JVM2b:
+   * ZookeeperConfigPopulator
+   * 
+   * JVM3:
+   * ZkComponentStarter: requires startup.props and componentIds to start
+   *    starts AMQ 
+   *    desired DataEngine components
+   * 
+   * JVM4:
+   * ZkComponentStarter: requires startup.props and componentIds to start
+   *    desired DataEngine components
+   *  
+   */
   public static void startAllInSameJvm() throws Exception {
-    // TODO: replace with Zk-based component initialization
-    AmqServiceComp amq=new AmqServiceComp();
-    amq.start(DeServerGuiceInjector.properties());
+    File zkConfFile = new File("zoo.cfg");
+    if (zkConfFile.exists()) {
+      prompter.getUserInput("Press Enter to start MainZookeeper: " + zkConfFile, 3000);
+      new Thread(() -> MainZookeeper.main(new String[] {zkConfFile.getAbsolutePath()}),
+          "myEmbeddedZookeeperThread").start();
+      log.info("Waiting for Zookeeper to start...");
+      MainZookeeper.zookeeperConnectF.get();
+      // need to wait for Zookeeper to start
+      Thread.sleep(2000);
+    }
     
-    dataengine.sessions.SessionsMain.main(BROKER_URL);
-    dataengine.tasker.TaskerMain.main(BROKER_URL);
-    dataengine.jobmgr.JobManagerMain.main(BROKER_URL);
-    dataengine.workers.WorkerMain.main(BROKER_URL);
+    String zkStartupPath = "/test/fromEclipse/startup";
+    System.setProperty(net.deelam.zkbasedinit.Constants.ZOOKEEPER_STARTUPPATH, zkStartupPath);
+    prompter.getUserInput("Press Enter to start MainZkConfigPopulator: " + zkStartupPath, 3000);
+    new Thread(() -> MainZkConfigPopulator.main(new String[] {"dataengine.props"}),
+        "myZkConfigPopulator").start();
+
+    // need to wait for MainZkConfigPopulator to get further along
+    Thread.sleep(3000);
+
+    // start all componentIds configured by MainZkConfigPopulator
+    String componentIds = MainZkConfigPopulator.componentIdsF.get();
+    prompter.getUserInput("Press Enter to start MainZkComponentStarter: " + componentIds, 3000);
+    new Thread(() -> MainZkComponentStarter.main(new String[] {componentIds}),
+        "myZkConfigPopulator").start();
+
   }
 
   private Server startServer(int port, int sslPort, String contextPath,

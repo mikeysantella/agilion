@@ -157,7 +157,8 @@ task clean {
 
 task runDE (dependsOn: [
   //':configureRunAllInJvm',
-  ':main:jettyRun'
+  //':main:jettyRun'
+  ':main:run'
 ])
 task configureRunAllInJvm {
   doFirst{
