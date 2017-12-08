@@ -10,7 +10,7 @@ run {
 	//systemProperties System.getProperties()
 
    // Or just each by name:
-   systemProperty "PROMPT", System.getProperty("PROMPT")
+   //systemProperty "PROMPT", System.getProperty("PROMPT")
 }
 
 //apply plugin: 'jar'
