@@ -20,6 +20,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import com.google.common.base.Stopwatch;
 import dataengine.server.DeServerGuiceInjector;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.zkbasedinit.ConstantsZk;
 import net.deelam.zkbasedinit.ZkComponentStopper;
 
 /**
@@ -178,7 +179,7 @@ public class MainJetty {
     }
     
     String zkStartupPath = "/test/fromEclipse/startup";
-    System.setProperty(net.deelam.zkbasedinit.Constants.ZOOKEEPER_STARTUPPATH, zkStartupPath);
+    System.setProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
     prompter.getUserInput("Press Enter to start MainZkConfigPopulator: " + zkStartupPath, 3000);
     new Thread(() -> {
       String dataenginePropsFile=System.getProperty("PROPFILE");

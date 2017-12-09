@@ -6,10 +6,11 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.Constants;
+import net.deelam.activemq.ConstantsAmq;
 import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.zkbasedinit.ComponentConfigI;
 import net.deelam.zkbasedinit.ComponentI;
+import net.deelam.zkbasedinit.ConstantsZk;
 
 @Slf4j
 public class TaskerComponent implements ComponentI {
@@ -22,11 +23,17 @@ public class TaskerComponent implements ComponentI {
 
   class TaskerConfig extends AbstractCompConfig {
     final String brokerUrl;
+    final String jobCreators;
+    final String dispatcherComponentType;
+    final String zkStartupPath;
     // int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
     public TaskerConfig(Properties props) {
       super(props);
-      brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
+      brokerUrl = ConstantsAmq.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
+      jobCreators = useProperty(props, "jobCreators", null);
+      dispatcherComponentType = useRequiredProperty(props, "dispatcherComponentType");
+      zkStartupPath=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
       checkRemainingProps(props);
     }
   }
@@ -37,7 +44,7 @@ public class TaskerComponent implements ComponentI {
 
     log.info("Starting {}", this);
     try {
-      dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.brokerUrl, configMap, "config.dispatcherRpcAddr");
+      dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.zkStartupPath, config.brokerUrl, config.jobCreators, config.dispatcherComponentType);
     } catch (JMSException | ConfigurationException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

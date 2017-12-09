@@ -40,7 +40,9 @@ public class DepJobService implements DepJobService_I {
   
   final RpcClientProvider<JobBoardInput_I> jbInput;
   
-  boolean removeOnCompletion = true;
+  @Deprecated
+  boolean removeOnCompletion = false;
+  @Deprecated
   boolean removeOnFailure = false;
   
   public DepJobService(IdGraph<?> dependencyGraph, RpcClientProvider<JobBoardInput_I> jbInput) {
@@ -450,7 +452,7 @@ public class DepJobService implements DepJobService_I {
   private void jobDone(DepJobFrame job) {
     synchronized (graph) {
       job.setState(STATE.DONE);
-      markDependants(job);
+      markDependantsAndSubmitReadyJobs(job);
       graph.commit();
     }
   }
@@ -462,7 +464,7 @@ public class DepJobService implements DepJobService_I {
     }
   }
 
-  private void markDependants(DepJobFrame doneJob) {
+  private void markDependantsAndSubmitReadyJobs(DepJobFrame doneJob) {
     /**
      * When a task is DONE, it iterate through each dependee (i.e., task that it feeds):
     If dependee is DONE, change its state to NEEDS_UPDATE if it is not QUEUED.

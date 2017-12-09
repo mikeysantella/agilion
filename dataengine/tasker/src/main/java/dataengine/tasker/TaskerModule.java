@@ -26,7 +26,7 @@ import net.deelam.activemq.rpc.ActiveMqRpcServer;
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 final class TaskerModule extends AbstractModule {
-  final Properties properties;
+  final String jobCreatorsString;
   
   @Override
   protected void configure() {
@@ -34,7 +34,7 @@ final class TaskerModule extends AbstractModule {
     requireBinding(CuratorFramework.class); // for DispatcherComponentListener
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
     
-    bind(Properties.class).toInstance(properties);
+//    bind(Properties.class).toInstance(properties);
 
     install(new FactoryModuleBuilder()
         .implement(JobListener_I.class, TaskerJobListener.class)
@@ -52,10 +52,14 @@ final class TaskerModule extends AbstractModule {
   @Provides
   List<JobsCreator_I> getJobCreators(Injector injector) {
     // read jobCreators from file
-    String[] jobCreatorClasses={
-      AddSourceDataset.class.getCanonicalName()
-    };
-    String jobCreatorsStr = properties.getProperty("jobCreators",String.join(" ",jobCreatorClasses));
+    String jobCreatorsStr=jobCreatorsString;
+    if(jobCreatorsStr==null) {
+      String[] defaultJobCreatorClasses={
+        AddSourceDataset.class.getCanonicalName()
+      };
+      jobCreatorsStr = String.join(" ",defaultJobCreatorClasses);
+      log.info("Using default jobCreators: {}", jobCreatorsStr);
+    }
     List<String> classes = Arrays.asList(jobCreatorsStr.split(" "));
     List<JobsCreator_I> jobCreators = classes.stream().map(jcClassName -> {
       try {

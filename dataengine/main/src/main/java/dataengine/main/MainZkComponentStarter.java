@@ -12,7 +12,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.utils.PropertiesUtil;
-import net.deelam.zkbasedinit.Constants;
+import net.deelam.zkbasedinit.ConstantsZk;
 import net.deelam.zkbasedinit.GModuleZkComponentStarter;
 import net.deelam.zkbasedinit.GModuleZooKeeper;
 import net.deelam.zkbasedinit.ZkComponentStarter;
@@ -56,8 +56,8 @@ public class MainZkComponentStarter {
         Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
     log.info("---------- componentIds to start: {}", compIdList);
     
-    String zkConnectionString=properties.getProperty(Constants.ZOOKEEPER_CONNECT);
-    String zkStartupPathHome=properties.getProperty(Constants.ZOOKEEPER_STARTUPPATH);
+    String zkConnectionString=properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
+    String zkStartupPathHome=properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
     
     GModuleZkComponentStarter moduleZkComponentStarter =
         new GModuleZkComponentStarter(compIdList.size());
@@ -67,7 +67,7 @@ public class MainZkComponentStarter {
 
     cf = injector.getInstance(CuratorFramework.class);
     String startupPath =
-        injector.getInstance(Key.get(String.class, Names.named(Constants.ZOOKEEPER_STARTUPPATH)));
+        injector.getInstance(Key.get(String.class, Names.named(ConstantsZk.ZOOKEEPER_STARTUPPATH)));
 
     // starts components given an compId and ComponentI subclass
     for (String compId : compIdList) {

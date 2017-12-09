@@ -25,7 +25,7 @@ import dataengine.apis.Tasker_I;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.Constants;
+import net.deelam.activemq.ConstantsAmq;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
 
@@ -56,11 +56,11 @@ public final class DeServerGuiceInjector {
 
   // load brokerUrl from file; return first url starting with "tcp:"
   public static String brokerUrl4Java() {
-    String brokerUrlStr = System.getProperty(Constants.BROKER_URL);
+    String brokerUrlStr = System.getProperty(ConstantsAmq.BROKER_URL);
     if (brokerUrlStr == null || brokerUrlStr.length()==0)
       brokerUrlStr=properties().getProperty("brokerUrl");
     checkNotNull(brokerUrlStr);
-    return Constants.getTcpBrokerUrl(brokerUrlStr);
+    return ConstantsAmq.getTcpBrokerUrl(brokerUrlStr);
   }
 
   public static Properties properties() {

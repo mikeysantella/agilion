@@ -15,6 +15,7 @@ sessions.include=needsAmq
 tasker.classname=dataengine.main.TaskerComponent
 tasker.include=needsAmq
 tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset
+tasker.dispatcherComponentType=jobMgrType
 
 jobMgrType.classname=dataengine.main.JobMgrComponent
 jobMgrType.include=needsAmq
