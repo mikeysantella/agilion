@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.jms.Connection;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.curator.framework.CuratorFramework;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +35,8 @@ import io.vertx.core.Vertx;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.activemq.MQService;
+import net.deelam.zkbasedinit.GModuleZooKeeper;
+import net.deelam.zkbasedinit.ZkConnector;
 
 @Slf4j
 public class TaskerServiceTest {
@@ -86,6 +89,11 @@ public class TaskerServiceTest {
           @Provides
           RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient() {
             return new RpcClientProvider<>(() -> sessDB);
+          }
+          
+          @Provides
+          CuratorFramework mockCuratorFramework() {
+            return Mockito.mock(CuratorFramework.class); //ZkConnector.connectToCluster(zookeeperConnectionString)
           }
 
         });

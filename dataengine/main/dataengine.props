@@ -1,4 +1,4 @@
-componentIds=amq, sessions, tasker, jobMgr1207, workers
+componentIds=amq, sessions, tasker, jobMgrType, workers
 
 
 include=startup.props
@@ -13,16 +13,19 @@ sessions.classname=dataengine.main.SessionsDbComponent
 sessions.include=needsAmq
 
 tasker.classname=dataengine.main.TaskerComponent
-# TODO: remove ref to jobMgr1207.msgQ
-tasker.include=needsAmq, jobMgr1207.msgQ.dispatcherRpcAddr
+tasker.include=needsAmq
 tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset
 
-jobMgr1207.classname=dataengine.main.JobMgrComponent
-jobMgr1207.include=needsAmq
-jobMgr1207.msgT.newJobAvailable=jobMgr1207_newJobAvailableTopic_toJobConsumers
-jobMgr1207.msgQ.dispatcherRpcAddr=jobMgr1207_dispatcherQueue
-jobMgr1207.msgQ.jobBoardRpcAddr=jobMgr1207_jobBoardQueue
+jobMgrType.classname=dataengine.main.JobMgrComponent
+jobMgrType.include=needsAmq
+jobMgrType.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
+jobMgrType.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
+jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
 
 workers.classname=dataengine.main.WorkersComponent
-workers.include=needsAmq, jobMgr1207.msgT.newJobAvailable, jobMgr1207.msgQ
+workers.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
+// TODO: remove; use jobDto instead
+workers.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
+workers.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
+workers.include=needsAmq, 
 

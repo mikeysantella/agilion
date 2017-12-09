@@ -39,12 +39,10 @@ public class MainJetty {
   static ConsolePrompter prompter=new ConsolePrompter(">>>>>> ");
   static Stopwatch timer = Stopwatch.createStarted();
   public static void main(String[] args) throws Exception {
-    boolean promptUser=System.getProperty("PROMPT")!=null;
+    boolean promptUser=Boolean.parseBoolean(System.getProperty("PROMPT"));
     prompter.setSkipPrompt(!promptUser);
     
-    String onlyRunServerProject = System.getProperty("ONLY_RUN_SERVER");
-    boolean runInSingleJVM = (onlyRunServerProject == null) 
-        ? true : Boolean.getBoolean(onlyRunServerProject);
+    boolean runInSingleJVM = !Boolean.parseBoolean(System.getProperty("ONLY_RUN_SERVER"));
 
     //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     if (runInSingleJVM) {
@@ -58,13 +56,14 @@ public class MainJetty {
 
     prompter.getUserInput("Press Enter to start webserver", 2000);
     MainJetty main = new MainJetty();
-    // this contextPath mimics gretty's default behavior
-    String contextPath="/main" // gretty uses the project name
-        + "/DataEngine/0.0.3"; // matches the path in web.xml
-        
+    String contextPath=System.getProperty("RESTURLPATH");
+    if(contextPath==null || contextPath.length()==0) {
+      // this contextPath mimics gretty's default behavior
+      contextPath="/main" // gretty uses the project name
+          + "/DataEngine/0.0.3"; // matches the path in web.xml
+    }
     Server jettyServer = main.startServer(8080, 8083, contextPath,
         null, null, false); // TODO: 4: enable SSL
-
     
     try {
       jettyServer.start();
@@ -73,7 +72,6 @@ public class MainJetty {
       jettyServer.join();
     } finally {
       if(!jettyServer.isStopping()) {
-        System.err.println("Is this still needed?????????????????????????????????");
         jettyServer.stop();
         jettyServer.destroy();
       }
@@ -106,6 +104,12 @@ public class MainJetty {
       log.info("{} ======== Shutting down Zookeeper-related components", timer);
       MainZkConfigPopulator.shutdown();
       MainZkComponentStarter.shutdown();
+      try {
+        log.info("-- Sleeping to allow components to shutdown before Zookeeper");
+        Thread.sleep(3000); // Allowing components to shutdown before Zookeeper
+      } catch (Exception e) {
+      }
+      log.info("{} ======== Shutting down Zookeeper", timer);
       MainZookeeper.shutdown();
       
       //checkRemainingThreads();
@@ -119,6 +123,7 @@ public class MainJetty {
     int nonDaemonThreads;
     do{
       try {
+        log.info("-- Sleeping to allowing threads to shutdown before checking for remaining threads");
         Thread.sleep(3000);
       } catch (InterruptedException e) {
         e.printStackTrace();
@@ -156,6 +161,7 @@ public class MainJetty {
    * JVM4:
    * ZkComponentStarter: requires startup.props and componentIds to start
    *    desired DataEngine components
+   * @param dataenginePropsFile 
    *  
    */
   public static void startAllInSameJvm() throws Exception {
@@ -167,6 +173,7 @@ public class MainJetty {
       log.info("Waiting for Zookeeper to start...");
       MainZookeeper.zookeeperConnectF.get();
       // need to wait for Zookeeper to start
+      log.info("-- Sleeping to wait for Zookeeper to start");
       Thread.sleep(4000);
     }
     
@@ -174,11 +181,15 @@ public class MainJetty {
     System.setProperty(net.deelam.zkbasedinit.Constants.ZOOKEEPER_STARTUPPATH, zkStartupPath);
     prompter.getUserInput("Press Enter to start MainZkConfigPopulator: " + zkStartupPath, 3000);
     new Thread(() -> {
-      MainZkConfigPopulator.main(new String[] {"dataengine.props"});
+      String dataenginePropsFile=System.getProperty("PROPFILE");
+      if(dataenginePropsFile==null || dataenginePropsFile.length()==0)
+        dataenginePropsFile="dataengine.props";
+      MainZkConfigPopulator.main(new String[] {dataenginePropsFile});
       log.info("{} ======== Components configured", timer);
     }, "myZkConfigPopulator").start();
 
     // need to wait for MainZkConfigPopulator to get further along
+    log.info("-- Sleeping to wait for MainZkConfigPopulator to get further along");
     Thread.sleep(7000);
 
     // start all componentIds configured by MainZkConfigPopulator

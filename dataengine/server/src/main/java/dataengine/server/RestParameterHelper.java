@@ -126,7 +126,7 @@ public final class RestParameterHelper {
         }
       } catch (Exception e) { // could be Vertx msg timeout
         String errMsg = objectType + " object cannot be created from " + inputObj + " : " + e.getCause();
-        log.warn(errMsg);
+        log.warn(errMsg, e.getCause());
         response = Response.status(Status.CONFLICT)
             .entity(new ApiResponseMessage(ApiResponseMessage.ERROR, errMsg))
             .build();

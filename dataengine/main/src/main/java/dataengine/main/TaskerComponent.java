@@ -2,10 +2,13 @@ package dataengine.main;
 
 import java.util.Properties;
 import javax.jms.JMSException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.Constants;
 import net.deelam.coordworkers.AbstractCompConfig;
+import net.deelam.zkbasedinit.ComponentConfigI;
 import net.deelam.zkbasedinit.ComponentI;
 
 @Slf4j
@@ -14,47 +17,28 @@ public class TaskerComponent implements ComponentI {
   @Getter
   private boolean running = true;
 
-  public String getComponentId() {
-    return config.componentId();
-  }
+  @Delegate(types=ComponentConfigI.class)
+  TaskerConfig config;
 
-  DataEngineConfig config;
-
-  class DataEngineConfig extends AbstractCompConfig {
-
+  class TaskerConfig extends AbstractCompConfig {
     final String brokerUrl;
-    final String dispatcherRpcAddr;
-//    final String jobDoneTopic;
-//    final String jobFailedTopic;
-//    final String getJobsTopic;
-//    final String availJobsTopic;
-//    final String pickedJobQueue;
-//    int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    // int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
-
-    // populate and print remaining unused properties
-    public DataEngineConfig(Properties props) {
+    public TaskerConfig(Properties props) {
       super(props);
       brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
-      dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
-//      jobDoneTopic = useRequiredProperty(props, "msgT.jobDone");
-//      jobFailedTopic = useRequiredProperty(props, "msgT.jobFailed");
-//      getJobsTopic = useRequiredProperty(props, "msgT.getJobs");
-//      availJobsTopic = useRequiredProperty(props, "msgT.availJobs");
-//      pickedJobQueue = useProperty(props, "msgQ.pickedJob", availJobsTopic + ".pickedJob");
       checkRemainingProps(props);
     }
-
   }
   
   @Override
   public void start(Properties configMap) {
-    config = new DataEngineConfig(configMap);
+    config = new TaskerConfig(configMap);
 
     log.info("Starting {}", this);
     try {
-      dataengine.tasker.TaskerMain.main(config.brokerUrl, configMap, config.dispatcherRpcAddr);
-    } catch (JMSException e) {
+      dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.brokerUrl, configMap, "config.dispatcherRpcAddr");
+    } catch (JMSException | ConfigurationException e) {
       throw new IllegalStateException("While starting "+this, e);
     }
     running = true;
