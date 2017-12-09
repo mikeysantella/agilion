@@ -3,9 +3,11 @@ package dataengine.main;
 import java.util.Properties;
 import javax.jms.JMSException;
 import lombok.Getter;
+import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.Constants;
 import net.deelam.coordworkers.AbstractCompConfig;
+import net.deelam.zkbasedinit.ComponentConfigI;
 import net.deelam.zkbasedinit.ComponentI;
 
 @Slf4j
@@ -14,10 +16,7 @@ public class WorkersComponent implements ComponentI {
   @Getter
   private boolean running = true;
 
-  public String getComponentId() {
-    return config.componentId();
-  }
-
+  @Delegate(types=ComponentConfigI.class)
   WorkersConfig config;
 
   static class WorkersConfig extends AbstractCompConfig {
@@ -25,28 +24,17 @@ public class WorkersComponent implements ComponentI {
     final String brokerUrl;
     final String dispatcherRpcAddr;
     final String jobBoardRpcAddr;
-//    final String jobFailedTopic;
-//    final String getJobsTopic;
     final String newJobAvailableTopic;
-//    final String pickedJobQueue;
 //    int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
-
-    // populate and print remaining unused properties
     public WorkersConfig(Properties props) {
       super(props);
       brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
       dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
       jobBoardRpcAddr = useRequiredProperty(props, "msgQ.jobBoardRpcAddr");
-//      submitJobQueue = useRequiredProperty(props, "msgQ.submitJob");
-//      jobDoneTopic = useRequiredProperty(props, "msgT.jobDone");
-//      jobFailedTopic = useRequiredProperty(props, "msgT.jobFailed");
-//      getJobsTopic = useRequiredProperty(props, "msgT.getJobs");
       newJobAvailableTopic = useRequiredProperty(props, "msgT.newJobAvailable");
-//      pickedJobQueue = useProperty(props, "msgQ.pickedJob", availJobsTopic + ".pickedJob");
       checkRemainingProps(props);
     }
-
   }
   
   @Override

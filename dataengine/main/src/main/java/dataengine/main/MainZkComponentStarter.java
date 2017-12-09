@@ -2,16 +2,16 @@ package dataengine.main;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.apache.commons.configuration2.Configuration;
 import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.zkbasedinit.ConfigReader;
+import net.deelam.utils.PropertiesUtil;
 import net.deelam.zkbasedinit.Constants;
 import net.deelam.zkbasedinit.GModuleZkComponentStarter;
 import net.deelam.zkbasedinit.GModuleZooKeeper;
@@ -42,18 +42,27 @@ public class MainZkComponentStarter {
       cf.close();
   }
   static List<String> startZkComponentStarter(String propFile) throws Exception {
-    Configuration config = ConfigReader.parseFile(propFile);
+    Properties properties=new Properties();
+    PropertiesUtil.loadProperties(propFile, properties);
+
+    //Configuration config = ConfigReader.parseFile(propFile);
     //log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
 
-    String componentIds = System.getProperty(COMPONENT_IDS, config.getString(COMPONENT_IDS, ""));
+    String componentIds = System.getProperty(COMPONENT_IDS);
+    if(componentIds==null || componentIds.length()==0)
+      componentIds=properties.getProperty(COMPONENT_IDS, "");    
+
     List<String> compIdList =
         Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
     log.info("---------- componentIds to start: {}", compIdList);
     
+    String zkConnectionString=properties.getProperty(Constants.ZOOKEEPER_CONNECT);
+    String zkStartupPathHome=properties.getProperty(Constants.ZOOKEEPER_STARTUPPATH);
+    
     GModuleZkComponentStarter moduleZkComponentStarter =
         new GModuleZkComponentStarter(compIdList.size());
     Injector injector = Guice.createInjector( //
-        new GModuleZooKeeper(config), //
+        new GModuleZooKeeper(zkConnectionString, zkStartupPathHome), //
         moduleZkComponentStarter);
 
     cf = injector.getInstance(CuratorFramework.class);

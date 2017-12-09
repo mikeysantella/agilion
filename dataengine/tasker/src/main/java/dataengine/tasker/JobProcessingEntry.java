@@ -37,7 +37,7 @@ class JobProcessingEntry {
   public JobProcessingEntry(Properties props, Connection connection,
       JobListener_I.Factory jobListenerFactory, RpcClientProvider<SessionsDB_I> sessDb,
       @Assisted String amqAddress, @Assisted int progressPollIntervalSeconds) {
-    super();
+    log.info("------ Creating {} at {}", this, amqAddress);
     this.connection = connection;
     this.sessDb = sessDb;
     this.progressPollIntervalSeconds = progressPollIntervalSeconds;

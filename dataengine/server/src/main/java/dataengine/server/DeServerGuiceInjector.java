@@ -25,6 +25,7 @@ import dataengine.apis.Tasker_I;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.Constants;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
 
@@ -55,12 +56,11 @@ public final class DeServerGuiceInjector {
 
   // load brokerUrl from file; return first url starting with "tcp:"
   public static String brokerUrl4Java() {
-    String brokerUrl=properties().getProperty("brokerUrl"); // "tcp://localhost:33333,stomp://localhost:45679";
-    checkNotNull(brokerUrl);
-    for(String url:brokerUrl.split(","))
-      if(url.toLowerCase().startsWith("tcp://"))
-          return url;
-    throw new IllegalArgumentException("Could not identify URL starting with 'tcp://'");
+    String brokerUrlStr = System.getProperty(Constants.BROKER_URL);
+    if (brokerUrlStr == null || brokerUrlStr.length()==0)
+      brokerUrlStr=properties().getProperty("brokerUrl");
+    checkNotNull(brokerUrlStr);
+    return Constants.getTcpBrokerUrl(brokerUrlStr);
   }
 
   public static Properties properties() {
@@ -118,7 +118,7 @@ public final class DeServerGuiceInjector {
       connection.start();
       log.info("Created DeServerGuiceInjector");
     } catch (JMSException e) {
-      throw new RuntimeException(e);
+      throw new IllegalArgumentException(e);
     }
   }
   public void shutdown() {

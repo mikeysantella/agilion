@@ -1,16 +1,15 @@
 package dataengine.main;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import org.apache.commons.configuration2.Configuration;
 import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.zkbasedinit.ConfigReader;
+import net.deelam.utils.PropertiesUtil;
+import net.deelam.zkbasedinit.Constants;
 import net.deelam.zkbasedinit.GModuleZooKeeper;
 import net.deelam.zkbasedinit.ZkConfigPopulator;
 import net.deelam.zkbasedinit.ZkConnector;
@@ -24,8 +23,8 @@ public class MainZkConfigPopulator {
     try {
       // must run in Thread to allow ZkComponentStarter to start required components before
       // ZkConfigs are fully populated
-      boolean startFresh=System.getProperty("KEEP_PREV_ZKCONFIG")==null;
-      startZookeeperConfigPopulator(propsFile, startFresh);
+      boolean keepPrevConfig=Boolean.parseBoolean(System.getProperty("KEEP_PREV_ZKCONFIG"));
+      startZookeeperConfigPopulator(propsFile, !keepPrevConfig);
     } catch (Exception e) {
       throw new IllegalStateException("While running MainZkConfigPopulator", e);
     }
@@ -43,16 +42,19 @@ public class MainZkConfigPopulator {
   
   static List<String> startZookeeperConfigPopulator(String propFile, boolean startFresh)
       throws Exception {
-    Configuration config = ConfigReader.parseFile(propFile);
-    //log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
+    Properties properties=new Properties();
+    PropertiesUtil.loadProperties(propFile, properties);
 
-    String componentIds = System.getProperty(COMPONENT_IDS, config.getString(COMPONENT_IDS, ""));
-    List<String> compIdList =
-        Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
-    log.info("---------- componentIds for configuration: {}", compIdList);
+    String componentIds = System.getProperty(COMPONENT_IDS);
+    if(componentIds==null || componentIds.length()==0)
+      componentIds=properties.getProperty(COMPONENT_IDS, "");    
+//    List<String> compIdList =
+//        Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
+//    log.info("---------- componentIds for configuration: {}", compIdList);
 
-    log.info("ZOOKEEPER_CONNECT=", System.getProperty(GModuleZooKeeper.ZOOKEEPER_CONNECT));
-    Injector injector = Guice.createInjector(new GModuleZooKeeper(config));
+    String zkConnectionString=properties.getProperty(Constants.ZOOKEEPER_CONNECT);
+    String zkStartupPathHome=properties.getProperty(Constants.ZOOKEEPER_STARTUPPATH);
+    Injector injector = Guice.createInjector(new GModuleZooKeeper(zkConnectionString, zkStartupPathHome));
     cf = injector.getInstance(CuratorFramework.class);
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);
 
@@ -63,7 +65,7 @@ public class MainZkConfigPopulator {
 
     componentIdsF.complete(componentIds);
     
-    cp.populateConfigurations(config, compIdList); //blocks until all required components started
+    List<String> compIdList=cp.populateConfigurations(propFile); //blocks until all required components started
     log.info("---------- Tree after config: {}", ZkConnector.treeToString(cp.getClient(), cp.getAppPrefix()));
 
     return compIdList;

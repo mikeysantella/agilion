@@ -157,13 +157,17 @@ public class TaskerService implements Tasker_I {
   // JobManager JVM consists of: DepJobService <-> JobProducer -> JobBoard
   // 1-to-1 mapping: a TaskerJobListener for each DepJobService
   private JobProcessingEntry chooseJobProcessingEntry() {
-    return jpEntries.get(0);
+    if(jpEntries.isEmpty())
+      throw new IllegalStateException("No Job Dispatcher has registered");
+    return jpEntries.get(0); //FIXME
   }
 
   final JobProcessingEntry.Factory jobProcessingEntryFactory;
 
   public void handleNewDepJobService(String amqAddress) {
-    jpEntries.add(jobProcessingEntryFactory.create(amqAddress, -1));
+    JobProcessingEntry jpEntry = jobProcessingEntryFactory.create(amqAddress, -1);
+    jpEntries.add(jpEntry);
+    log.info("jobProcessingEntries={}", jpEntries);
   }
   
 

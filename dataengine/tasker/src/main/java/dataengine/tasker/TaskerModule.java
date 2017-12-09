@@ -7,6 +7,7 @@ import java.util.Properties;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.jms.Connection;
+import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -30,6 +31,7 @@ final class TaskerModule extends AbstractModule {
   @Override
   protected void configure() {
     requireBinding(Connection.class);
+    requireBinding(CuratorFramework.class); // for DispatcherComponentListener
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
     
     bind(Properties.class).toInstance(properties);
@@ -68,15 +70,20 @@ final class TaskerModule extends AbstractModule {
     return jobCreators;
   }
 
-  static void deployTasker(Injector injector, String dispatcherRpcAddr) {
+  static void deployTasker(Injector injector) {
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
     taskerSvc.setTaskerRpcAddr(CommunicationConsts.TASKER_RPCADDR);
     injector.getInstance(ActiveMqRpcServer.class).start(taskerSvc.getTaskerRpcAddr(), taskerSvc, true);
-
-    // TODO: replace with detection via Zookeeper
-    taskerSvc.handleNewDepJobService(dispatcherRpcAddr);
+  }
+  
+  static DispatcherComponentListener deployDispatcherListener(Injector injector, String dispatcherTypeZkPath) {
+    // detection via Zookeeper
+    DispatcherComponentListener dispatcherListener = injector.getInstance(DispatcherComponentListener.class);
+    log.info("ZK: SERV: Deploying DispatcherComponentListener for TaskerService: {} ", dispatcherListener); 
+    dispatcherListener.start(dispatcherTypeZkPath);
+    return dispatcherListener;
   }
 
 }
