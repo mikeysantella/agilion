@@ -180,7 +180,7 @@ public class MainJetty {
     
     String zkStartupPath = "/test/fromEclipse/startup";
     System.setProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
-    prompter.getUserInput("Press Enter to start MainZkConfigPopulator: " + zkStartupPath, 3000);
+    prompter.getUserInput("Press Enter to start MainZkConfigPopulator: ZOOKEEPER_STARTUPPATH=" + zkStartupPath, 3000);
     new Thread(() -> {
       String dataenginePropsFile=System.getProperty("PROPFILE");
       if(dataenginePropsFile==null || dataenginePropsFile.length()==0)

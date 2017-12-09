@@ -2,8 +2,8 @@ package dataengine.main;
 
 import java.util.concurrent.CompletableFuture;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.zkbasedinit.ConstantsZk;
 import net.deelam.zkbasedinit.EmbeddedZookeeper;
-import net.deelam.zkbasedinit.GModuleZooKeeper;
 
 @Slf4j
 public class MainZookeeper {
@@ -12,7 +12,9 @@ public class MainZookeeper {
     try {
       zookeeper = new EmbeddedZookeeper(configFile);
       String connectionString = zookeeper.getConnectionString();
-      System.setProperty(GModuleZooKeeper.ZOOKEEPER_CONNECT, connectionString);
+      System.setProperty(ConstantsZk.ZOOKEEPER_CONNECT, connectionString);
+      log.info("System.setProperty: {}={}", ConstantsZk.ZOOKEEPER_CONNECT, connectionString);
+
       zookeeperConnectF.complete(connectionString);
       zookeeper.runServer(); // blocks until Zookeeper shuts down
       log.info("======== Zookeeper shut down.");

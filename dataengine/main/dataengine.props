@@ -5,9 +5,11 @@ include=startup.props
 
 # ActiveMQ service: shares connectionUrl
 amq.classname=net.deelam.coordworkers.AmqServiceComp
-amq.brokerUrl=tcp://localhost:33330,stomp://localhost:33331
-needsAmq.brokerUrl.ref=amq/connectionUrl
+amq.brokerUrls=tcp://localhost:33330,stomp://localhost:33331
 
+
+# 'connectionTcpUrl' is a SharedValue set by AmqServiceComp named 'amq' in this property file
+needsAmq.brokerUrl.ref=amq/connectionTcpUrl
 
 sessions.classname=dataengine.main.SessionsDbComponent
 sessions.include=needsAmq
