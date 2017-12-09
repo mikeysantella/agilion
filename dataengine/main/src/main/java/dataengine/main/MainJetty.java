@@ -21,7 +21,6 @@ import com.google.common.base.Stopwatch;
 import dataengine.server.DeServerGuiceInjector;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.zkbasedinit.ConstantsZk;
-import net.deelam.zkbasedinit.ZkComponentStopper;
 
 /**
  * 
@@ -100,7 +99,8 @@ public class MainJetty {
       }
 
       log.info("{} ======== Shutting down components", timer);
-      ZkComponentStopper.main(new String[0]);
+      MainZkComponentStopper.main(new String[0]);
+      MainZkComponentStopper.shutdown();
       
       log.info("{} ======== Shutting down Zookeeper-related components", timer);
       MainZkConfigPopulator.shutdown();
