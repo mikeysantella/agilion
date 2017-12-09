@@ -26,14 +26,12 @@ public class MainZkComponentStarter {
     if (args.length > 0) {
       System.setProperty(COMPONENT_IDS, args[0]);
     }
-    //new Thread(() -> {
-      try {
-        startZkComponentStarter("startup.props");
-      } catch (Exception e) {
-        throw new IllegalStateException("While running myZkComponentStarterThread", e);
-      }
-      shutdown();
-    //}, "myZkComponentStarterThread").start();
+    try {
+      startZkComponentStarter("startup.props");
+    } catch (Exception e) {
+      throw new IllegalStateException("While running myZkComponentStarterThread", e);
+    }
+    shutdown();
   }
 
   static CuratorFramework cf;

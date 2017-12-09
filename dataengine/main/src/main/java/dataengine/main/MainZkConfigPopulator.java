@@ -16,8 +16,7 @@ import net.deelam.zkbasedinit.ZkConnector;
 
 @Slf4j
 public class MainZkConfigPopulator {
-  private static final String COMPONENT_IDS = "componentIds";
-
+  
   public static void main(String[] args) {
     String propsFile=(args.length>0)?args[0]:"dataengine.props";
     try {
@@ -45,9 +44,9 @@ public class MainZkConfigPopulator {
     Properties properties=new Properties();
     PropertiesUtil.loadProperties(propFile, properties);
 
-    String componentIds = System.getProperty(COMPONENT_IDS);
+    String componentIds = System.getProperty(ZkConfigPopulator.COMPONENT_IDS);
     if(componentIds==null || componentIds.length()==0)
-      componentIds=properties.getProperty(COMPONENT_IDS, "");    
+      componentIds=properties.getProperty(ZkConfigPopulator.COMPONENT_IDS, "");    
 //    List<String> compIdList =
 //        Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
 //    log.info("---------- componentIds for configuration: {}", compIdList);
@@ -59,20 +58,18 @@ public class MainZkConfigPopulator {
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);
 
     if (startFresh) {
-      cleanup(cp);
+      log.info("cleanup: {}", zkStartupPathHome);
+      ZkConnector.deletePath(cf, zkStartupPathHome);
       Thread.sleep(3000);
     }
 
     componentIdsF.complete(componentIds);
     
     List<String> compIdList=cp.populateConfigurations(propFile); //blocks until all required components started
-    log.info("---------- Tree after config: {}", ZkConnector.treeToString(cp.getClient(), cp.getAppPrefix()));
+    log.info("---------- Tree after config: {}",
+        ZkConnector.treeToString(cf, zkStartupPathHome));
 
     return compIdList;
   }
 
-  public static void cleanup(ZkConfigPopulator cp) throws Exception {
-    log.info("cleanup: {}", cp.getAppPrefix());
-    ZkConnector.deletePath(cp.getClient(), cp.getAppPrefix());
-  }
 }
