@@ -29,24 +29,26 @@ class JobProcessingEntry {
   @Getter
   final JobListener_I jobListener;
   @Getter
+  final String amqAddress;
+  @Getter
   final RpcClientProvider<DepJobService_I> jobDispatcher;
   @Getter
   private int progressPollIntervalSeconds;
 
   @Inject
-  public JobProcessingEntry(Properties props, Connection connection,
+  public JobProcessingEntry(Connection connection,
       JobListener_I.Factory jobListenerFactory, RpcClientProvider<SessionsDB_I> sessDb,
       @Assisted String amqAddress, @Assisted int progressPollIntervalSeconds) {
     log.info("------ Creating {} at {}", this, amqAddress);
     this.connection = connection;
     this.sessDb = sessDb;
+    this.amqAddress=amqAddress;
     this.progressPollIntervalSeconds = progressPollIntervalSeconds;
     if (progressPollIntervalSeconds < 0)
-      this.progressPollIntervalSeconds =
-          Integer.valueOf(props.getProperty("jobListener.progressPollIntervalSeconds", "2"));
+      this.progressPollIntervalSeconds = 2;
     jobDispatcher = new RpcClientProvider<>(
         RpcClientsModule.getAmqClientSupplierFor(connection, DepJobService_I.class, amqAddress, true));
-    this.jobListener = createJobListener(jobListenerFactory, props, jobDispatcher);
+    this.jobListener = createJobListener(jobListenerFactory, jobDispatcher);
   }
 
   private JobListener_I createJobListenerForDispatcher(JobListener_I.Factory jobListenerFactory,
@@ -54,6 +56,7 @@ class JobProcessingEntry {
     return jobListenerFactory.create(compProps, (msg, progressState) -> {
       updateSessionDb(sessDb, progressState);
       
+      // notify jobDispatcher so that dependent jobs can be triggered
       State state = progressState.getState();
       if (state != null)
         switch (state) {
@@ -86,13 +89,11 @@ class JobProcessingEntry {
       sessDb.rpc().updateJobState(progressState.getJobId(), state);
   }
 
-  JobListener_I createJobListener(JobListener_I.Factory jobListenerFactory, Properties props,
+  JobListener_I createJobListener(JobListener_I.Factory jobListenerFactory, 
       RpcClientProvider<DepJobService_I> depJobSvcRpc) {
-    Properties compProps = new Properties(props);
-    compProps.setProperty("_componentId", "getFromZookeeper-jobListener"); // FIXME
-    JobListener_I newJobListener =
-        createJobListenerForDispatcher(jobListenerFactory, compProps, depJobSvcRpc);
-    return newJobListener;
+    Properties compProps = new Properties();
+    compProps.setProperty("_componentId", amqAddress+"-JobListener");
+    return createJobListenerForDispatcher(jobListenerFactory, compProps, depJobSvcRpc);
   }
 
 

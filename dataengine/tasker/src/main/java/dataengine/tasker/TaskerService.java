@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import dataengine.api.Job;
 import dataengine.api.Operation;
@@ -137,33 +138,51 @@ public class TaskerService implements Tasker_I {
     log.info("TASKER: addJob {} with inputs={}", job.getId(), Arrays.toString(inputJobIds));
     // add job to sessionsDB
     CompletableFuture<Job> addJobToSessDB = sessDb.rpc().addJob(job);
-    return addJobToSessDB.thenCompose((sessDbJob) -> {
+    return addJobToSessDB
+        .thenCompose(sessDbJob -> sessDb.rpc().getRequest(sessDbJob.getRequestId()))
+        .thenCombine(addJobToSessDB, (req, sessDbJob)->{
       // submit job
-      log.info("Submitting job={} to jobDispatcher", job.getId());
-      JobProcessingEntry jpEntry=chooseJobProcessingEntry();
+      JobProcessingEntry jpEntry=chooseJobProcessingEntry(req.getSessionId(), sessDbJob, inputJobIds);
+      log.info("Submitting job={} to jobDispatcher at {}", job.getId(), jpEntry.getAmqAddress());
       JobDTO jobDto = new JobDTO(sessDbJob.getId(), sessDbJob.getType(), sessDbJob)
           .setTaskerRpcAddr(taskerRpcAddr)
           .progressAddr(jpEntry.getJobListener().getEventBusAddress(), jpEntry.getProgressPollIntervalSeconds());
       CompletableFuture<Boolean> submitJob = jpEntry.getJobDispatcher().rpc().addDepJob(jobDto, inputJobIds);
       log.debug("Added and dispatched job={}", sessDbJob);
-      return submitJob;
+      try {
+        return submitJob.get();
+      } catch (InterruptedException | ExecutionException e) {
+        log.error("Not sure about usage of thenCombine and thenCompose w.r.t. rpc()", e);
+        return false;
+      }
     });
   }
   
   final List<JobProcessingEntry> jpEntries=new ArrayList<>();
   
   // TODO: determine which jobDispatcher and jobListener based on session, i.e., all jobs for a session can go to the same jobDispatcher
-  // TODO: When a new JobManager JVM is created, it must register itself with this class such that a new TaskerJobListener is created  
   // JobManager JVM consists of: DepJobService <-> JobProducer -> JobBoard
   // 1-to-1 mapping: a TaskerJobListener for each DepJobService
-  private JobProcessingEntry chooseJobProcessingEntry() {
+  private JobProcessingEntry chooseJobProcessingEntry(String sessionId, Job job, String[] inputJobIds) {
     if(jpEntries.isEmpty())
       throw new IllegalStateException("No Job Dispatcher has registered");
-    return jpEntries.get(0); //FIXME
+    
+    try { // TODO: 6 improve on selection of JobProcessingEntry based on job
+      //String sessionId = "";//sessDb.rpc().getRequest(job.getRequestId()).get().getSessionId();
+      return jpEntries.get(Math.abs(sessionId.hashCode()%jpEntries.size()));
+    } catch (Exception e) {
+      log.warn("Could not determine consistent JobProcessingEntry, defaulting to the first one", e);
+      return jpEntries.get(0);
+    }
+  }
+  
+  public static void main(String[] args) {
+    System.out.println(-12%5);
   }
 
   final JobProcessingEntry.Factory jobProcessingEntryFactory;
 
+  // When a new JobManager JVM is created, it must register itself with this class such that a new TaskerJobListener is created  
   public void handleNewDepJobService(String amqAddress) {
     JobProcessingEntry jpEntry = jobProcessingEntryFactory.create(amqAddress, -1);
     jpEntries.add(jpEntry);

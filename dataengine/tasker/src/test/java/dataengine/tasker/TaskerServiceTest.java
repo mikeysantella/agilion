@@ -56,7 +56,7 @@ public class TaskerServiceTest {
   public void setUp() throws Exception {
     CompletableFuture<Vertx> vertxF = CompletableFuture.completedFuture(Vertx.vertx());
     Injector injector = Guice.createInjector(
-        new TaskerModule(new Properties()),
+        new TaskerModule(null),
         new AbstractModule() {
           @Override
           protected void configure() {

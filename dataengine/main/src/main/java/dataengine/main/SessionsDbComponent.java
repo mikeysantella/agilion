@@ -5,7 +5,7 @@ import javax.jms.JMSException;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.Constants;
+import net.deelam.activemq.ConstantsAmq;
 import net.deelam.coordworkers.AbstractCompConfig;
 import net.deelam.zkbasedinit.ComponentConfigI;
 import net.deelam.zkbasedinit.ComponentI;
@@ -28,7 +28,7 @@ public class SessionsDbComponent implements ComponentI {
     // populate and print remaining unused properties
     public DataEngineConfig(Properties props) {
       super(props);
-      brokerUrl = Constants.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
+      brokerUrl = ConstantsAmq.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
       checkRemainingProps(props);
     }
 

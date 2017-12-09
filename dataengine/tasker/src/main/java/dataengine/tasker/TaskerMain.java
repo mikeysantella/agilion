@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Properties;
 import javax.jms.Connection;
 import javax.jms.JMSException;
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -12,8 +11,9 @@ import com.google.inject.Injector;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
-import net.deelam.zkbasedinit.ConfigReader;
+import net.deelam.zkbasedinit.ConstantsZk;
 import net.deelam.zkbasedinit.GModuleZooKeeper;
+import net.deelam.zkbasedinit.ZkComponentStarterI;
 
 @Slf4j
 public class TaskerMain {
@@ -23,30 +23,31 @@ public class TaskerMain {
   }
 
   public static void main(String brokerUrl) throws Exception {
-    Properties properties=new Properties();
-    PropertiesUtil.loadProperties("tasker.props", properties);
-    if(brokerUrl!=null) {
-      log.info("Setting brokerUrl={}", brokerUrl);
-      properties.setProperty("brokerUrl", brokerUrl);
-    }
+//    Properties properties=new Properties();
+//    PropertiesUtil.loadProperties("tasker.props", properties);
+//    if(brokerUrl!=null) {
+//      log.info("Setting brokerUrl={}", brokerUrl);
+//      properties.setProperty("brokerUrl", brokerUrl);
+//    }
     
     String propFile = "startup.props";
-    Configuration config = ConfigReader.parseFile(propFile);
-    //log.info("{}\n------", ConfigReader.toStringConfig(config, config.getKeys()));
-    String zookeeperConnectStr=config.getString("ZOOKEEPER.CONNECT", "127.0.0.1:2181");
+    Properties properties=new Properties();
+    PropertiesUtil.loadProperties(propFile, properties);
 
-    main(zookeeperConnectStr, brokerUrl, properties, "depJobMgrBroadcastAMQ");
+    String zkConnectionString=properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
+    String zkStartupPathHome=properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
+    main(zkConnectionString, zkStartupPathHome, brokerUrl, null, "jobMgrType");
   }
 
-  public static void main(String zookeeperConnectStr, String brokerUrl, Properties properties, String dispatcherRpcAddr) throws JMSException, ConfigurationException {
+  public static void main(String zookeeperConnectStr, String zkStartupPath, String brokerUrl, String jobCreatorsString, String dispatcherComponentType) throws JMSException, ConfigurationException {
     log.info("Starting {}", TaskerMain.class);
     
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(zookeeperConnectStr, connection, properties);
+    Injector injector = createInjector(zookeeperConnectStr, connection, jobCreatorsString);
     
     opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector);
-    dispatcherListener = TaskerModule.deployDispatcherListener(injector, "/test/fromEclipse/startup/jobMgrType/copies"); //FIXME
+    dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+"/"+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH); //FIXME
     connection.start();
   }
 
@@ -71,7 +72,7 @@ public class TaskerMain {
     }
   }
   
-  static Injector createInjector(String zkConnectionString, Connection connection, Properties properties) {
+  static Injector createInjector(String zkConnectionString, Connection connection, String jobCreatorsString) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -82,7 +83,7 @@ public class TaskerMain {
         new GModuleZooKeeper(zkConnectionString, null),
         new RpcClients4TaskerModule(connection),
         new OperationsRegistryModule(),
-        new TaskerModule(properties)
+        new TaskerModule(jobCreatorsString)
         );
   }
 

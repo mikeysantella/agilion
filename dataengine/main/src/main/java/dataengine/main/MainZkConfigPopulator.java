@@ -9,7 +9,7 @@ import com.google.inject.Injector;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.utils.PropertiesUtil;
-import net.deelam.zkbasedinit.Constants;
+import net.deelam.zkbasedinit.ConstantsZk;
 import net.deelam.zkbasedinit.GModuleZooKeeper;
 import net.deelam.zkbasedinit.ZkConfigPopulator;
 import net.deelam.zkbasedinit.ZkConnector;
@@ -52,8 +52,8 @@ public class MainZkConfigPopulator {
 //        Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
 //    log.info("---------- componentIds for configuration: {}", compIdList);
 
-    String zkConnectionString=properties.getProperty(Constants.ZOOKEEPER_CONNECT);
-    String zkStartupPathHome=properties.getProperty(Constants.ZOOKEEPER_STARTUPPATH);
+    String zkConnectionString=properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
+    String zkStartupPathHome=properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
     Injector injector = Guice.createInjector(new GModuleZooKeeper(zkConnectionString, zkStartupPathHome));
     cf = injector.getInstance(CuratorFramework.class);
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);

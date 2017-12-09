@@ -274,6 +274,16 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
     job.jobJO.setWorkerId(workerAddr);
     log.info("Setting job {} state from {} to {}", job.getId(), job.state, newState);
     job.state = newState;
+    
+    switch(newState) {
+      case DONE:
+      case FAILED:
+        log.info("Removing {} job: {}", job.state, job.getId());
+        jobItems.remove(jobId);
+        break;
+      default:
+        break;
+    }
     return job;
   }
 
