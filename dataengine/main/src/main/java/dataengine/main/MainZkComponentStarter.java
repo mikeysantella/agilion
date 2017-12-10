@@ -38,8 +38,10 @@ public class MainZkComponentStarter {
 
   static CuratorFramework cf;
   static void shutdown() {
-    if(cf!=null) 
+    if(cf!=null) {
       cf.close();
+      cf=null;
+    }
   }
   
   @Getter(lazy=true)
@@ -81,7 +83,7 @@ public class MainZkComponentStarter {
     for (String compId : compIdList) {
       log.info("---------- Starting {}", compId);
       ZkComponentStarter.startComponent(injector, compId);
-      log.info("Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
+      if(MainJetty.DEBUG) log.info("Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
     }
 
     long notStartedCount = moduleZkComponentStarter.getStartedLatch().getCount();
@@ -92,7 +94,7 @@ public class MainZkComponentStarter {
     } while (notStartedCount > 0);
 
     log.info("---------- All components started: {}", compIdList);
-    log.info("Tree after all components started: {}", ZkConnector.treeToString(cf, startupPath));
+    if(MainJetty.DEBUG) log.info("Tree after all components started: {}", ZkConnector.treeToString(cf, startupPath));
 
     long compsStillRunning = moduleZkComponentStarter.getCompletedLatch().getCount();
     do {
@@ -101,8 +103,9 @@ public class MainZkComponentStarter {
       compsStillRunning = moduleZkComponentStarter.getCompletedLatch().getCount();
     } while (compsStillRunning > 0);
 
-    log.info("---------- Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
-
+    if(MainJetty.DEBUG) log.info("---------- Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
+    shutdown();
     return compIdList;
   }
+
 }

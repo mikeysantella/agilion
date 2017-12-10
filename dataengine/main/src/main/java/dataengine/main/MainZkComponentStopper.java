@@ -35,8 +35,10 @@ public class MainZkComponentStopper {
   static CuratorFramework cf;
 
   static void shutdown() {
-    if (cf != null)
+    if(cf!=null) {
       cf.close();
+      cf=null;
+    }
   }
 
   @Getter(lazy=true)
@@ -59,7 +61,7 @@ public class MainZkComponentStopper {
     ZkComponentStopper stopper = injector.getInstance(ZkComponentStopper.class);
     
     String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    log.info("---------- Tree before stopping: {}",
+    if(MainJetty.DEBUG) log.info("---------- Tree before stopping: {}",
         ZkConnector.treeToString(cf, zkStartupPathHome));
 
     List<String> compIds = stopper.listRunningComponents();
@@ -73,7 +75,7 @@ public class MainZkComponentStopper {
     });
 
     try {
-      Thread.sleep(2000); // allow time for modifications to take effect
+      Thread.sleep(2*MainJetty.SLEEPTIME); // allow time for modifications to take effect
       log.info("---------- Tree after stopping all components: {}",
           ZkConnector.treeToString(cf, zkStartupPathHome));
     } catch (InterruptedException e) {
@@ -81,8 +83,14 @@ public class MainZkComponentStopper {
     }
 
     if (cleanUp) {
-      log.info("cleanup: {}", zkStartupPathHome);
-      stopper.cleanup();
+      while (true)
+        try {
+          log.info("cleanup: {}", zkStartupPathHome);
+          stopper.cleanup();
+          break;
+        } catch (Exception e) {
+          log.error("Trying to clean up Zookeeper configs again", e);
+        }
     }
 
     shutdown();
