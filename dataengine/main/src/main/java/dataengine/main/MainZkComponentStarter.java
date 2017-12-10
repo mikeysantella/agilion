@@ -30,31 +30,35 @@ public class MainZkComponentStarter {
       log.info("System.setProperty: {}={}", COMPONENT_IDS, args[0]);
       System.setProperty(COMPONENT_IDS, args[0]);
     }
+    
+    new MainZkComponentStarter().startAndWaitUntilStopped("startup.props");
+  }
+  
+  public void startAndWaitUntilStopped(String propertyFile){
     try {
-      startZkComponentStarter("startup.props");
+      startZkComponentStarter(propertyFile);
     } catch (Exception e) {
       throw new IllegalStateException("While running myZkComponentStarterThread", e);
     }
-    shutdown();
   }
 
-  static CuratorFramework cf;
-  static void shutdown() {
+  private CuratorFramework cf;
+  void shutdown() {
     if(cf!=null) {
       cf.close();
       cf=null;
     }
   }
   
-  static CompletableFuture<Boolean> isDone=new CompletableFuture<>(); 
-  static void blockUntilDone() {
+  CompletableFuture<Boolean> isDone=new CompletableFuture<>(); 
+  void blockUntilDone() {
     isDone.join();
   }
   
   @Getter(lazy=true)
-  private static final Properties properties = privateGetProperties();
-  static String propFile;
-  private static Properties privateGetProperties() {
+  private final Properties properties = privateGetProperties();
+  private String propFile;
+  private Properties privateGetProperties() {
     Properties properties = new Properties();
     try {
       PropertiesUtil.loadProperties(propFile, properties);
@@ -64,7 +68,7 @@ public class MainZkComponentStarter {
     return properties;
   }
 
-  static void startZkComponentStarter(String propertyFile) throws Exception {
+  void startZkComponentStarter(String propertyFile) throws Exception {
     propFile = propertyFile;
 
     String componentIds = System.getProperty(COMPONENT_IDS);
