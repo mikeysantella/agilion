@@ -69,7 +69,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
   
   @Override
   public CompletableFuture<Boolean> addJob(JobDTO job, int maxRetries) {
-    log.debug("Received ADD_JOB message: {}", job);
+    log.info("JOBBRD: add job={} maxRetries={}", job.getId(), maxRetries);
     job.setJobBoardRpcAddr(jobBoardRpcAddr);
     
     JobItem ji = new JobItem(job, maxRetries);
@@ -105,7 +105,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   @Override
   public CompletableFuture<Boolean> removeJob(String jobId) {
-    log.info("Received REMOVE_JOB message: jobId={}", jobId);
+    log.info("JOBBRD: Remove job={}", jobId);
     JobItem ji = jobItems.get(jobId);
     if (ji == null) {
       log.warn("Cannot find job with id={}", jobId);
@@ -136,7 +136,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
   @Override
   public CompletableFuture<Boolean> pickedJob(String workerAddr, String jobId, long timeOfJobListQuery) {
     if (jobId == null) {
-      log.debug("Worker {} did not choose a job: {}", workerAddr);
+      log.info("JOBBRD: worker={} did not choose a job", workerAddr);
 
       boolean jobRecentlyAdded=timeOfLastJobAdded>timeOfJobListQuery;
       // jobItems may have changed by the time this reply is received
@@ -147,6 +147,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
         return CompletableFuture.completedFuture(true);
       }
     } else {
+      log.info("JOBBRD: pickedJob: worker={} job={}", workerAddr, jobId);
       try{
         workerStartedJob(jobId, workerAddr);
         return CompletableFuture.completedFuture(true);
@@ -160,7 +161,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   @Override
   public CompletableFuture<Void> jobDone(String workerAddr, String jobId) {
-    log.debug("Received DONE message: {}", jobId);
+    log.info("JOBBRD: Received DONE message: {} from worker={}", jobId, workerAddr);
     JobItem ji = workerEndedJob(jobId, workerAddr, JobState.DONE);
     log.debug("Done job: {}", ji.jobJO);
     return CompletableFuture.completedFuture(null);
@@ -169,7 +170,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
   @Override
   public CompletableFuture<Void> jobPartlyDone(String workerAddr, String jobId) {
     // worker completed its part of the job
-    log.debug("Received PARTLY_DONE message: {}", jobId);
+    log.info("JOBBRD: Received PARTLY_DONE message: {} from worker={}", jobId, workerAddr);
     JobItem ji = workerEndedJob(jobId, workerAddr, JobState.AVAILABLE);
     log.debug("Partly done: {}", ji.jobJO);
     return CompletableFuture.completedFuture(null);
@@ -177,7 +178,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
 
   @Override
   public CompletableFuture<Void> jobFailed(String workerAddr, String jobId) {
-    log.info("Received FAIL message: {}", jobId);
+    log.info("JOBBRD: Received FAIL message: {} from worker={}", jobId, workerAddr);
     JobItem job = getJobItem(jobId);
     int failCount = job.incrementFailCount();
 
@@ -262,17 +263,18 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
   }
 
   private JobItem workerStartedJob(String jobId, String workerAddr) {
+    log.info("JOBBRD: worker={} started jobId={}", workerAddr, jobId);
     JobItem job = getJobItem(jobId);
     job.jobJO.setWorkerId(workerAddr);
-    log.debug("Started job: worker={} on jobId={}", workerAddr, job.getId());
     job.state = JobState.STARTED;
     return job;
   }
 
   private JobItem workerEndedJob(String jobId, String workerAddr, JobState newState) {
+    log.info("JOBBRD: worker={} ended jobId={} with state={}", workerAddr, jobId, newState);
     JobItem job = getJobItem(jobId);
     job.jobJO.setWorkerId(workerAddr);
-    log.info("Setting job {} state from {} to {}", job.getId(), job.state, newState);
+    log.debug("Setting job {} state from {} to {}", job.getId(), job.state, newState);
     job.state = newState;
     
     switch(newState) {

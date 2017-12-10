@@ -18,7 +18,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 public class JacksonJsonProvider extends JacksonJaxbJsonProvider {
 
     public JacksonJsonProvider() {
-System.out.println("  ------ JacksonJsonProvider created ");
+//System.out.println("  ------ JacksonJsonProvider created ");
 // TODO: 7: Mimic client-side dataengine.JSON class ?
         ObjectMapper objectMapper = new ObjectMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

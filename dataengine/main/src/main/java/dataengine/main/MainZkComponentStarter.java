@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
@@ -26,6 +27,7 @@ public class MainZkComponentStarter {
 
   public static void main(String[] args) {
     if (args.length > 0) {
+      log.info("System.setProperty: {}={}", COMPONENT_IDS, args[0]);
       System.setProperty(COMPONENT_IDS, args[0]);
     }
     try {
@@ -44,6 +46,11 @@ public class MainZkComponentStarter {
     }
   }
   
+  static CompletableFuture<Boolean> isDone=new CompletableFuture<>(); 
+  static void blockUntilDone() {
+    isDone.join();
+  }
+  
   @Getter(lazy=true)
   private static final Properties properties = privateGetProperties();
   static String propFile;
@@ -52,12 +59,12 @@ public class MainZkComponentStarter {
     try {
       PropertiesUtil.loadProperties(propFile, properties);
     } catch (IOException e) {
-      log.warn("Couldn't load property file={}", propFile, e);
+      log.warn("ZK: Couldn't load property file={}", propFile, e);
     }
     return properties;
   }
 
-  static List<String> startZkComponentStarter(String propertyFile) throws Exception {
+  static void startZkComponentStarter(String propertyFile) throws Exception {
     propFile = propertyFile;
 
     String componentIds = System.getProperty(COMPONENT_IDS);
@@ -66,7 +73,7 @@ public class MainZkComponentStarter {
 
     List<String> compIdList =
         Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
-    log.info("---------- componentIds to start: {}", compIdList);
+    log.info("ZK: ---------- componentIds to start: {}", compIdList);
     
     GModuleZkComponentStarter moduleZkComponentStarter =
         new GModuleZkComponentStarter(compIdList.size());
@@ -81,31 +88,32 @@ public class MainZkComponentStarter {
 
     // starts components given an compId and ComponentI subclass
     for (String compId : compIdList) {
-      log.info("---------- Starting {}", compId);
+      log.info("ZK: ---------- Starting {}", compId);
       ZkComponentStarter.startComponent(injector, compId);
-      if(MainJetty.DEBUG) log.info("Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
+      if(MainJetty.DEBUG) log.info("ZK: Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
     }
 
     long notStartedCount = moduleZkComponentStarter.getStartedLatch().getCount();
     do {
-      log.info("---------- Waiting for components to start: {}", notStartedCount);
+      log.info("ZK: ---------- Waiting for components to start: {}", notStartedCount);
       moduleZkComponentStarter.getStartedLatch().await(1, TimeUnit.SECONDS);
       notStartedCount = moduleZkComponentStarter.getStartedLatch().getCount();
     } while (notStartedCount > 0);
 
-    log.info("---------- All components started: {}", compIdList);
-    if(MainJetty.DEBUG) log.info("Tree after all components started: {}", ZkConnector.treeToString(cf, startupPath));
+    log.info("ZK: ---------- All components started: {}", compIdList);
+    if(MainJetty.DEBUG) log.info("ZK: Tree after all components started: {}", ZkConnector.treeToString(cf, startupPath));
 
     long compsStillRunning = moduleZkComponentStarter.getCompletedLatch().getCount();
     do {
-      log.info("Waiting for components to end: {}", compsStillRunning);
+      log.info("ZK: Waiting for components to end: {}", compsStillRunning);
       moduleZkComponentStarter.getCompletedLatch().await(1, TimeUnit.MINUTES);
       compsStillRunning = moduleZkComponentStarter.getCompletedLatch().getCount();
     } while (compsStillRunning > 0);
 
-    if(MainJetty.DEBUG) log.info("---------- Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
+    if(MainJetty.DEBUG) log.info("ZK: Tree after components stopped: {}", ZkConnector.treeToString(cf, startupPath));
     shutdown();
-    return compIdList;
+    log.info("ZK: ---------- Components ended: {}", compIdList);
+    isDone.complete(true);
   }
 
 }

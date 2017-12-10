@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.slf4j.Logger;
 import com.tinkerpop.blueprints.Direction;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
@@ -21,6 +21,7 @@ import dataengine.api.Session;
 import dataengine.sessions.frames.SessionFrame;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.utils.ConsoleLogging;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -49,7 +50,7 @@ public final class SessionDB_SessionHelper {
   private static int sessionCounter = 0;
 
   public void addSessionNode(Session session, String baseDir) {
-    log.debug("addSessionNode: {}", session.getId(), baseDir);
+    SessionDB.clog.info("SESS: addSessionNode: {} ({}) at baseDir={}", session.getLabel(), session.getId(), baseDir);
     tryAndCloseTxn(graph, graph -> {
       String id = session.getId();
       SessionFrame sf = graph.getVertex(id, SessionFrame.class);
@@ -82,7 +83,7 @@ public final class SessionDB_SessionHelper {
   }
 
   public void modifySessionNode(String sId, Map<String, Object> props) {
-    log.debug("modifySessionNode: {}", sId, props);
+    log.info("SESS: modifySessionNode: {}", sId, props);
     tryAndCloseTxn(graph, graph -> {
       String id = sId;
       SessionFrame qs = graph.getVertex(id, SessionFrame.class);

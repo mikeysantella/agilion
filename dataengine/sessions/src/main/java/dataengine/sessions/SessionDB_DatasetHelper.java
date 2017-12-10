@@ -37,7 +37,7 @@ public final class SessionDB_DatasetHelper {
   static int datasetCounter = 0;
   
   public void addDatasetNode(Dataset ds, String jobId, IO io) {
-    log.debug("addJobNode: {}", ds.getId());
+    SessionDB.clog.info("SESS: addDatasetNode: '{}' id={} as "+io.name()+" for jobId={}", ds.getLabel(), ds.getId(), jobId);
     tryAndCloseTxn(graph, graph -> {
       JobFrame jf = graph.getVertex(jobId, JobFrame.class);
       String dsId = ds.getId();

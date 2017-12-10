@@ -1,15 +1,19 @@
 package dataengine.main;
 
 import java.util.Scanner;
-import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 
-@RequiredArgsConstructor
-@Slf4j
 public class ConsolePrompter {
+  @Setter
+  Logger log;
   
-  final String prefix;
+  @Setter
+  String prefix;
+
+  public ConsolePrompter(String prefix) {
+    this.prefix=prefix;
+  }
 
   static Scanner scanner = new Scanner(System.in);
 
@@ -19,7 +23,7 @@ public class ConsolePrompter {
     int counter=0;
     int maxPrompts=10;
     
-    void reset(String msg, long sleepTime, int maxPrompts) {
+    void reinit(String msg, long sleepTime, int maxPrompts) {
       this.prompt = msg;
       this.sleepTime = sleepTime;
       this.maxPrompts=maxPrompts;
@@ -29,10 +33,16 @@ public class ConsolePrompter {
       if (prompt == null)
         return false;
       ++counter;
-      System.err.println(prefix+prompt);
+      if(log==null)
+        System.err.println(prefix+prompt);
+      else
+        log.info(prefix+prompt);
       if(maxPrompts>0 && counter>maxPrompts)
         prompt=null;
       return true;
+    }
+    boolean isDone() {
+      return prompt == null;
     }
     void pause() throws InterruptedException {
       Thread.sleep(sleepTime);
@@ -44,7 +54,7 @@ public class ConsolePrompter {
   }
 
   @Setter
-  boolean skipPrompt=false;
+  boolean skipUserInput=false;
   
   Thread prompterThread;
   PromptMessage promptMsg = new PromptMessage();
@@ -55,8 +65,9 @@ public class ConsolePrompter {
     return getUserInput(msg, sleepTime, -1);
   }
   public String getUserInput(String msg, long sleepTime, int maxPrompts) {
-    if (skipPrompt) {
-      System.err.println("Skipping prompt: "+prefix+msg);
+    promptMsg.reinit(msg, sleepTime, maxPrompts);
+    if (skipUserInput) {
+      promptMsg.showPrompt();
       return "";
     }
     if (prompterThread == null) {
@@ -64,7 +75,8 @@ public class ConsolePrompter {
         while (stayAlive) {
           try {
             promptMsg.pause();
-            if (!promptMsg.showPrompt())
+            promptMsg.showPrompt();
+            if (promptMsg.isDone())
               synchronized (prompterThread) {
                 prompterThread.wait();
               }
@@ -78,7 +90,7 @@ public class ConsolePrompter {
       prompterThread.start();
     }
 
-    promptMsg.reset(msg, sleepTime, maxPrompts);
+    promptMsg.showPrompt();
     synchronized (prompterThread) {
       prompterThread.notify();
     }

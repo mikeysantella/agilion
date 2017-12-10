@@ -41,25 +41,24 @@ public class TaskerComponent implements ComponentI {
   @Override
   public void start(Properties configMap) {
     config = new TaskerConfig(configMap);
-
-    log.info("Starting {}", this);
     try {
       dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.zkStartupPath, config.brokerUrl, config.jobCreators, config.dispatcherComponentType);
     } catch (JMSException | ConfigurationException e) {
       throw new IllegalStateException("While starting "+this, e);
     }
     running = true;
+    log.info("COMP: Started {}", config.getComponentId());
   }
 
   @Override
   public boolean reinit(Properties configMap) {
-    log.error("Reinitializing component '{}' with: {}", getComponentId(), configMap);
+    log.error("COMP: Reinitializing component '{}' with: {}", getComponentId(), configMap);
     return false;
   }
 
   @Override
   public void stop() {
-    log.info("Stopping component: {}", getComponentId());
+    log.info("COMP: Stopping component: {}", getComponentId());
     dataengine.tasker.TaskerMain.shutdown();
     running = false;
   }

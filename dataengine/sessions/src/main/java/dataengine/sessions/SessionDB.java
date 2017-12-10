@@ -2,9 +2,9 @@ package dataengine.sessions;
 
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
 import static net.deelam.graph.GrafTxn.tryFAndCloseTxn;
-
+import java.io.Closeable;
 import java.util.NoSuchElementException;
-
+import org.slf4j.Logger;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
@@ -17,9 +17,11 @@ import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.graph.FramedGrafSupplier;
 import net.deelam.graph.GrafTxn;
+import net.deelam.utils.ConsoleLogging;
 
 @Slf4j
-public class SessionDB {
+public class SessionDB implements Closeable{
+  static final Logger clog=ConsoleLogging.createSlf4jLogger("console.Session");
 
   private final FramedGrafSupplier fgProvider;
   @Getter
@@ -48,6 +50,7 @@ public class SessionDB {
   static final String ROOT_NODE = "ROOT";
 
   SessionDB(IdGraph<?> tgraph) {
+    log.info("SESS: Creating SessionDB with {}", tgraph);
     Vertex root = tgraph.getVertex(ROOT_NODE);
     if (root == null) {
       tryAndCloseTxn(tgraph, () -> tgraph.addVertex(ROOT_NODE));
@@ -65,8 +68,8 @@ public class SessionDB {
     log.info("-- Ready: {}", this);
   }
 
-  synchronized public void close() {
-    log.info("Shutting down " + graph + " " + GrafTxn.isInTransaction());
+  public synchronized void close() {
+    log.info("SESS: Shutting down " + graph + " " + GrafTxn.isInTransaction());
     graph.shutdown();
     log.info("Shut down " + graph);
   };

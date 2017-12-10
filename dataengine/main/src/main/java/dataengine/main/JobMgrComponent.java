@@ -41,25 +41,24 @@ public class JobMgrComponent implements ComponentI {
   @Override
   public void start(Properties configMap) {
     config = new DataEngineConfig(configMap);
-
-    log.info("Starting {}", this);
     try {
       dataengine.jobmgr.JobManagerMain.main(config.brokerUrl, configMap, config.dispatcherRpcAddr, config.jobBoardRpcAddr, config.newJobAvailableTopic);
     } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }
     running = true;
+    log.info("COMP: Started {}", config.getComponentId());
   }
 
   @Override
   public boolean reinit(Properties configMap) {
-    log.error("Reinitializing component '{}' with: {}", getComponentId(), configMap);
+    log.error("COMP: Reinitializing component '{}' with: {}", getComponentId(), configMap);
     return false;
   }
 
   @Override
   public void stop() {
-    log.info("Stopping component: {}", getComponentId());
+    log.info("COMP: Stopping component: {}", getComponentId());
     dataengine.jobmgr.JobManagerMain.shutdown();
     running = false;
   }

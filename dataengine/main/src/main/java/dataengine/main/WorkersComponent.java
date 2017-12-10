@@ -40,25 +40,24 @@ public class WorkersComponent implements ComponentI {
   @Override
   public void start(Properties configMap) {
     config = new WorkersConfig(configMap);
-
-    log.info("Starting {}", this);
     try {
       dataengine.workers.WorkerMain.main(config.brokerUrl, config.newJobAvailableTopic, config.dispatcherRpcAddr, config.jobBoardRpcAddr);
     } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }
     running = true;
+    log.info("COMP: Started {}", config.getComponentId());
   }
 
   @Override
   public boolean reinit(Properties configMap) {
-    log.error("Reinitializing component '{}' with: {}", getComponentId(), configMap);
+    log.error("COMP: Reinitializing component '{}' with: {}", getComponentId(), configMap);
     return false;
   }
 
   @Override
   public void stop() {
-    log.info("Stopping component: {}", getComponentId());
+    log.info("COMP: Stopping component: {}", getComponentId());
     dataengine.workers.WorkerMain.shutdown();
     running = false;
   }

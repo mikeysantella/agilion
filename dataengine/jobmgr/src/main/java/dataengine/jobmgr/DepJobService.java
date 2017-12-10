@@ -159,7 +159,7 @@ public class DepJobService implements DepJobService_I {
   
   public synchronized CompletableFuture<Boolean> addJob(boolean addToQueue, JobDTO job, String... inJobIds) {
     String jobId = job.getId();
-    log.info("DISPATCHER: addJob: {}", jobId);
+    log.info("DISPATCHER: addJob: {} with depJobs=inJobIds", jobId, inJobIds);
     job.setDispatcherRpcAddr(dispatcherRpcAddr);
     // add to graph
     GrafTxn.tryOn(graph, () -> {

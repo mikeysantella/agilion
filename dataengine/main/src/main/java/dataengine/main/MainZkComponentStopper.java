@@ -49,7 +49,7 @@ public class MainZkComponentStopper {
     try {
       PropertiesUtil.loadProperties(propFile, properties);
     } catch (IOException e) {
-      log.warn("Couldn't load property file={}", propFile, e);
+      log.warn("ZK: Couldn't load property file={}", propFile, e);
     }
     return properties;
   }
@@ -61,11 +61,11 @@ public class MainZkComponentStopper {
     ZkComponentStopper stopper = injector.getInstance(ZkComponentStopper.class);
     
     String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    if(MainJetty.DEBUG) log.info("---------- Tree before stopping: {}",
+    if(MainJetty.DEBUG) log.info("ZK: ---------- Tree before stopping: {}",
         ZkConnector.treeToString(cf, zkStartupPathHome));
 
     List<String> compIds = stopper.listRunningComponents();
-    log.info("compIds to stop: {}", compIds);
+    log.info("ZK: Components to stop: {}", compIds);
     compIds.forEach(compId -> {
       try {
         stopper.stop(compId);
@@ -76,7 +76,7 @@ public class MainZkComponentStopper {
 
     try {
       Thread.sleep(2*MainJetty.SLEEPTIME); // allow time for modifications to take effect
-      log.info("---------- Tree after stopping all components: {}",
+      log.info("ZK: Tree after stopping all components: {}",
           ZkConnector.treeToString(cf, zkStartupPathHome));
     } catch (InterruptedException e) {
       e.printStackTrace();
@@ -85,7 +85,7 @@ public class MainZkComponentStopper {
     if (cleanUp) {
       while (true)
         try {
-          log.info("cleanup: {}", zkStartupPathHome);
+          log.info("ZK: cleanup: {}", zkStartupPathHome);
           stopper.cleanup();
           break;
         } catch (Exception e) {
@@ -94,6 +94,7 @@ public class MainZkComponentStopper {
     }
 
     shutdown();
+    log.info("ZK: ---------- Done stopping components: {}", compIds);
   }
 
 }
