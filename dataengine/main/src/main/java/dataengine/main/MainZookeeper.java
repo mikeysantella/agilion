@@ -9,6 +9,11 @@ import net.deelam.zkbasedinit.EmbeddedZookeeper;
 public class MainZookeeper {
   public static void main(String[] args) {
     String configFile=(args.length>0)?args[0]:"zoo.cfg";
+    new MainZookeeper().startAndWaitUntilStopped(configFile);
+  }
+
+  CompletableFuture<String> zookeeperConnectF = new CompletableFuture<>();
+  public void startAndWaitUntilStopped(String configFile) {
     try {
       log.info("ZK: Starting Zookeeper");
       zookeeper = new EmbeddedZookeeper(configFile);
@@ -24,13 +29,9 @@ public class MainZookeeper {
     }
   }
 
-  static EmbeddedZookeeper zookeeper;
+  EmbeddedZookeeper zookeeper;
 
-  static boolean isRunning() {
-    return zookeeper != null;
-  }
-
-  static void shutdown() {
+  void shutdown() {
     if (zookeeper != null) {
       log.info("ZK: Stopping Zookeeper");
       zookeeper.stop();
@@ -38,6 +39,4 @@ public class MainZookeeper {
     }
   }
   
-  static CompletableFuture<String> zookeeperConnectF = new CompletableFuture<>();
-
 }

@@ -20,21 +20,24 @@ public class MainZkComponentStopper {
 
   public static void main(String[] args) {
     String propsFile = (args.length > 0) ? args[0] : "startup.props";
+    new MainZkComponentStopper().stopComponents(propsFile);
+  }
+
+  public void stopComponents(String propsFile) {
     try {
       boolean keepPrevConfig = Boolean.parseBoolean(System.getProperty("KEEP_PREV_ZKCONFIG"));
       stopZookeeperComponents(propsFile, !keepPrevConfig);
     } catch (Exception e) {
       throw new IllegalStateException("While running MainZkComponentStopper", e);
     }
-    shutdown();
   }
 
   @Getter
-  static CompletableFuture<String> componentIdsF = new CompletableFuture<>();
+  CompletableFuture<String> componentIdsF = new CompletableFuture<>();
 
-  static CuratorFramework cf;
+  CuratorFramework cf;
 
-  static void shutdown() {
+  void shutdown() {
     if(cf!=null) {
       cf.close();
       cf=null;
@@ -42,9 +45,9 @@ public class MainZkComponentStopper {
   }
 
   @Getter(lazy=true)
-  private static final Properties properties = privateGetProperties();
-  static String propFile;
-  private static Properties privateGetProperties() {
+  private final Properties properties = privateGetProperties();
+  String propFile;
+  private Properties privateGetProperties() {
     Properties properties = new Properties();
     try {
       PropertiesUtil.loadProperties(propFile, properties);
@@ -54,7 +57,7 @@ public class MainZkComponentStopper {
     return properties;
   }
   
-  static void stopZookeeperComponents(String propertyFile, boolean cleanUp)
+  void stopZookeeperComponents(String propertyFile, boolean cleanUp)
       throws Exception {
     propFile = propertyFile;
     Injector injector = Guice.createInjector(new GModuleZooKeeper(() -> getProperties()));

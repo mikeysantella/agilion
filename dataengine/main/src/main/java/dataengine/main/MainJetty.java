@@ -37,11 +37,11 @@ import net.deelam.zkbasedinit.ConstantsZk;
  */
 @Slf4j
 public class MainJetty {
-  static boolean DEBUG = false;
-  static int SLEEPTIME = 0;
+  static final boolean DEBUG=true;
+  static int SLEEPTIME=0;
   
-  static final Logger clog=ConsoleLogging.createSlf4jLogger(MainJetty.class);
-  static ConsolePrompter prompter=new ConsolePrompter(">>>>> Press Enter to ");
+  static final Logger clog = ConsoleLogging.createSlf4jLogger(MainJetty.class);
+  static ConsolePrompter prompter = new ConsolePrompter(">>>>> Press Enter to ");
   static Stopwatch timer = Stopwatch.createStarted();
   
   public static void main(String[] args) throws Exception {
@@ -55,12 +55,13 @@ public class MainJetty {
     
     boolean runInSingleJVM = !Boolean.parseBoolean(System.getProperty("ONLY_RUN_SERVER"));
 
+    MainJetty main=new MainJetty();
     //log.info("System.setProperty: {}={}", "org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     if (runInSingleJVM) {
       log.info("({}) ======== Running all required DataEngine services in same JVM", timer);
       try {
-        startAllInSameJvm();
+        main.startAllInSameJvm();
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -75,7 +76,7 @@ public class MainJetty {
     int port=9090;
     int sslPort = 9093;
     prompter.getUserInput("start webserver on port="+port+" at RESTURLPATH="+contextPath, 2000);
-    MainJetty main = new MainJetty();
+    
     Server jettyServer = main.startServer(port, sslPort, contextPath,
         null, null, false); // TODO: 4: enable SSL
     
@@ -85,7 +86,7 @@ public class MainJetty {
       
       // TODO: Create AMQ-based listener/querier to check state of and list components 
       clog.info("======== Ready!  Startup time="+timer);
-      startPromptToShutdownThread(jettyServer);
+      main.startPromptToShutdownThread(jettyServer);
       jettyServer.join();
     } finally {
       if(!jettyServer.isStopping()) {
@@ -118,18 +119,26 @@ public class MainJetty {
    * @param dataenginePropsFile 
    *  
    */
-  public static void startAllInSameJvm() throws Exception {
+  static MainZookeeper zookeeper;
+  static final MainZkConfigPopulator configPopulator=new MainZkConfigPopulator();
+  static final MainZkComponentStarter componentStarter = new MainZkComponentStarter();
+
+  private static final String DATAENGINE_PROPS = "dataengine.props";
+  private static final String STARTUP_PROPS = "startup.props";
+  
+  public void startAllInSameJvm() throws Exception {
     File zkConfFile = new File("zoo.cfg");
     if (zkConfFile.exists()) {
       SLEEPTIME=1000;
       prompter.getUserInput("start MainZookeeper using " + zkConfFile, 3000);
-      new Thread(() -> MainZookeeper.main(new String[] {zkConfFile.getAbsolutePath()}),
+      zookeeper = new MainZookeeper();
+      new Thread(() -> zookeeper.startAndWaitUntilStopped(zkConfFile.getAbsolutePath()),
           "myEmbeddedZookeeperThread").start();
       log.info("Waiting for Zookeeper to start...");
-      MainZookeeper.zookeeperConnectF.get();
+      zookeeper.zookeeperConnectF.get();
       // need to wait for Zookeeper to start
       clog.info("  (Waiting a few seconds for Zookeeper to start)");
-      Thread.sleep(8*MainJetty.SLEEPTIME);
+      Thread.sleep(8*SLEEPTIME);
     }
     
     String zkStartupPath = "/test/fromEclipse/startup";
@@ -137,36 +146,36 @@ public class MainJetty {
     System.setProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
     prompter.getUserInput("start MainZkConfigPopulator with ZOOKEEPER_STARTUPPATH=" + zkStartupPath, 3000);
     new Thread(() -> {
-      String dataenginePropsFile=System.getProperty("PROPFILE");
-      if(dataenginePropsFile==null || dataenginePropsFile.length()==0)
-        dataenginePropsFile="dataengine.props";
-      MainZkConfigPopulator.main(new String[] {dataenginePropsFile});
+      String configsPropsFile=System.getProperty("PROPFILE");
+      if(configsPropsFile==null || configsPropsFile.length()==0)
+        configsPropsFile=DATAENGINE_PROPS;
+      configPopulator.startAndWaitUntilPopulated(configsPropsFile);
       log.info("({}) ======== Components configured", timer);
     }, "myZkConfigPopulator").start();
 
     String componentIds = System.getProperty(MainZkComponentStarter.COMPONENT_IDS);
     if(componentIds==null || componentIds.length()==0) {
       // start all componentIds configured by MainZkConfigPopulator
-      componentIds = MainZkConfigPopulator.componentIdsF.get();
+      componentIds = configPopulator.getComponentIdsF().get();
       log.info("System.setProperty: {}={}", MainZkComponentStarter.COMPONENT_IDS, componentIds);
       System.setProperty(MainZkComponentStarter.COMPONENT_IDS, componentIds);
     }
     prompter.getUserInput("start MainZkComponentStarter for: " + componentIds, 3000);
     new Thread(() -> {
-      MainZkComponentStarter.main(new String[] {});
+      componentStarter.startAndWaitUntilStopped(STARTUP_PROPS);
       log.info("({}) ======== All started components have ended", timer);
     }, "myZkComponentStarter").start();
 
   }
 
   private static final String TERMINATION_CHARS="0LlQq"; 
-  private static void startPromptToShutdownThread(Server jettyServer) {
+  private void startPromptToShutdownThread(Server jettyServer) {
     Thread stopperThread = new Thread(()->{
       prompter.setSkipUserInput(false);
       prompter.setPrefix(">>>>> ");
       String input="";
       while(input==null || input.length()==0 || !TERMINATION_CHARS.contains(input)) {
-        input = prompter.getUserInput("Enter '0', 'Q', or 'L' to terminate application.", 60000);
+        input = prompter.getUserInput("Enter '0', 'Q', or 'L' to terminate application.", 1800_000);
       }
       
       timer.reset();
@@ -182,21 +191,20 @@ public class MainJetty {
       }
 
       clog.info("({}) ======== Triggering shutdown", timer);
-      MainZkComponentStopper.main(new String[0]);
-      MainZkComponentStopper.shutdown();
+      new MainZkComponentStopper().stopComponents(STARTUP_PROPS);
       
       clog.info("({}) ======== Shutting down components", timer);
-      MainZkConfigPopulator.blockUntilDone();
-      MainZkComponentStarter.blockUntilDone();
+      configPopulator.shutdown();
+      componentStarter.shutdown();
       
-      if(MainZookeeper.isRunning()){
+      if(zookeeper!=null){
         try {
           clog.info("({})   (Waiting a few seconds to allow Zookeeper clients to shutdown before Zookeeper terminates)", timer);
-          Thread.sleep(5*MainJetty.SLEEPTIME); // Allowing components to shutdown before Zookeeper
+          Thread.sleep(5*SLEEPTIME); // Allowing components to shutdown before Zookeeper
         } catch (Exception e) {
         }
         clog.info("({}) ======== Shutting down Zookeeper (an InterruptedException is normal)", timer);
-        MainZookeeper.shutdown();
+        zookeeper.shutdown();
       }
       
       if(DEBUG) checkRemainingThreads();
@@ -206,7 +214,7 @@ public class MainJetty {
     stopperThread.start();
   }
 
-  static void checkRemainingThreads() {
+  void checkRemainingThreads() {
     int nonDaemonThreads;
     do{
       try {

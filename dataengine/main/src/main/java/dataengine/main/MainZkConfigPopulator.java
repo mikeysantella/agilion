@@ -20,6 +20,10 @@ public class MainZkConfigPopulator {
   
   public static void main(String[] args) {
     String propsFile=(args.length>0)?args[0]:"dataengine.props";
+    new MainZkConfigPopulator().startAndWaitUntilPopulated(propsFile);
+  }
+  
+  public void startAndWaitUntilPopulated(String propsFile){
     try {
       // must run in Thread to allow ZkComponentStarter to start required components before
       // ZkConfigs are fully populated
@@ -28,30 +32,29 @@ public class MainZkConfigPopulator {
     } catch (Exception e) {
       throw new IllegalStateException("While running MainZkConfigPopulator", e);
     }
-    shutdown();
   }
 
   @Getter
-  static CompletableFuture<String> componentIdsF = new CompletableFuture<>();
+  CompletableFuture<String> componentIdsF = new CompletableFuture<>();
 
-  static CuratorFramework cf;
-  static void shutdown() {
+  private CuratorFramework cf;
+  void shutdown() {
     if(cf!=null) {
       cf.close();
       cf=null;
     }
   }
   
-  static CompletableFuture<Boolean> isDone=new CompletableFuture<>(); 
-  static void blockUntilDone() {
+  CompletableFuture<Boolean> isDone=new CompletableFuture<>(); 
+  void blockUntilDone() {
     isDone.join();
   }
   
   @Getter(lazy=true)
-  private static final Properties properties = privateGetProperties();
+  private final Properties properties = privateGetProperties();
 
-  static String propFile;
-  private static Properties privateGetProperties() {
+  String propFile;
+  private Properties privateGetProperties() {
     Properties properties = new Properties();
     try {
       PropertiesUtil.loadProperties(propFile, properties);
@@ -61,7 +64,7 @@ public class MainZkConfigPopulator {
     return properties;
   }
   
-  static void startZookeeperConfigPopulator(String propertyFile, boolean startFresh)
+  void startZookeeperConfigPopulator(String propertyFile, boolean startFresh)
       throws Exception {
     propFile = propertyFile;
 

@@ -38,7 +38,7 @@ public class Bootstrap extends HttpServlet {
     if (true) {
       System.out.println("======== Running all required DataEngine services in same JVM");
       try {
-        MainJetty.startAllInSameJvm();
+        new MainJetty().startAllInSameJvm();
       } catch (Exception e) {
         e.printStackTrace();
         throw new RuntimeException(e);
