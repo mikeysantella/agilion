@@ -115,7 +115,6 @@ public final class DeServerGuiceInjector {
       injector = Guice.createInjector(
           new RpcClients4ServerModule(connection),
           new RestServiceModule());
-      connection.start();
       log.info("Created DeServerGuiceInjector");
     } catch (JMSException e) {
       throw new IllegalArgumentException(e);

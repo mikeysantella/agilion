@@ -48,7 +48,6 @@ public class TaskerMain {
     opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector);
     dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+"/"+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH); //FIXME
-    connection.start();
   }
 
   private static OperationsRegistry opsRegistry;

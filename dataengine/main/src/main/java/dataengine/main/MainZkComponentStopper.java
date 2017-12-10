@@ -73,7 +73,7 @@ public class MainZkComponentStopper {
 
     if (cleanUp) {
       log.info("cleanup: {}", zkStartupPathHome);
-      ZkConnector.deletePath(cf, zkStartupPathHome);
+      stopper.cleanup();
     }
 
     shutdown();

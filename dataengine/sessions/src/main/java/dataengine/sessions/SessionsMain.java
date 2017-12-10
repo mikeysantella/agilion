@@ -32,7 +32,6 @@ public class SessionsMain {
     connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, properties);
     TinkerGraphSessionsDbModule.deploySessionDb(injector);
-    connection.start();
   }
   
   private static Connection connection;
