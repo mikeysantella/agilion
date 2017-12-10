@@ -34,7 +34,6 @@ public class JobManagerMain {
     Injector injector = createInjector(connection, jobBoardRpcAddr, newJobAvailableTopic);
     JobBoardModule.deployJobBoardVerticles(injector);
     JobBoardModule.deployDepJobService(injector, dispatcherRpcAddr);
-    connection.start();
   }
   
   private static Connection connection;

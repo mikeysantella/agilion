@@ -62,7 +62,6 @@ public class WorkerMain {
       OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, connection, worker);
       jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
     }
-    connection.start();
   }
   
   private static List<JobConsumer> jConsumers;

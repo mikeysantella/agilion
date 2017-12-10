@@ -58,8 +58,7 @@ public class MainZkConfigPopulator {
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);
 
     if (startFresh) {
-      log.info("cleanup: {}", zkStartupPathHome);
-      ZkConnector.deletePath(cf, zkStartupPathHome);
+      cp.cleanup();
       Thread.sleep(3000);
     }
 
