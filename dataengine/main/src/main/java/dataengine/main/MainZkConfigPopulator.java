@@ -36,12 +36,15 @@ public class MainZkConfigPopulator {
 
   static CuratorFramework cf;
   static void shutdown() {
-    if(cf!=null)
+    if(cf!=null) {
       cf.close();
+      cf=null;
+    }
   }
   
   @Getter(lazy=true)
   private static final Properties properties = privateGetProperties();
+
   static String propFile;
   private static Properties privateGetProperties() {
     Properties properties = new Properties();
@@ -59,10 +62,7 @@ public class MainZkConfigPopulator {
 
     String componentIds = System.getProperty(ZkConfigPopulator.COMPONENT_IDS);
     if(componentIds==null || componentIds.length()==0)
-      componentIds=getProperties().getProperty(ZkConfigPopulator.COMPONENT_IDS, "");    
-//    List<String> compIdList =
-//        Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
-//    log.info("---------- componentIds for configuration: {}", compIdList);
+      componentIds=getProperties().getProperty(ZkConfigPopulator.COMPONENT_IDS, "");
 
     Injector injector = Guice.createInjector(new GModuleZooKeeper(() -> getProperties()));
     cf = injector.getInstance(CuratorFramework.class);
@@ -70,16 +70,16 @@ public class MainZkConfigPopulator {
 
     if (startFresh) {
       cp.cleanup();
-      Thread.sleep(3000);
+      Thread.sleep(2*MainJetty.SLEEPTIME);
     }
 
     componentIdsF.complete(componentIds);
     
     List<String> compIdList=cp.populateConfigurations(propFile); //blocks until all required components started
     String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    log.info("---------- Tree after config: {}",
-        ZkConnector.treeToString(cf, zkStartupPathHome));
+    if(MainJetty.DEBUG) log.info("---------- Tree after config: {}", ZkConnector.treeToString(cf, zkStartupPathHome));
 
+    shutdown();
     return compIdList;
   }
 

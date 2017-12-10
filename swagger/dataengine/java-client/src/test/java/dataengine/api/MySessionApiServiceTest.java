@@ -20,11 +20,11 @@ public class MySessionApiServiceTest {
   static Logger log=Logger.getLogger("MySessionApiServiceTest");
   
   public static void main(String[] args) throws ApiException, InterruptedException {
-    String baseUri = "http://localhost:8080/main/";
+    String baseUri = "http://localhost:9090/main/";
     if(args.length>0)
       baseUri=args[0];
     if(!baseUri.startsWith("http")){
-      baseUri = "http://"+baseUri+":8080/main/";
+      baseUri = "http://"+baseUri+":9090/main/";
     }
     if(!baseUri.contains("DataEngine"))
       baseUri += "DataEngine/0.0.3";

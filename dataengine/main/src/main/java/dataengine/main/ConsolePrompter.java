@@ -56,7 +56,7 @@ public class ConsolePrompter {
   }
   public String getUserInput(String msg, long sleepTime, int maxPrompts) {
     if (skipPrompt) {
-      System.err.println("Skipping prompt: "+msg);
+      System.err.println("Skipping prompt: "+prefix+msg);
       return "";
     }
     if (prompterThread == null) {

@@ -36,6 +36,8 @@ import net.deelam.zkbasedinit.ConstantsZk;
 @Slf4j
 public class MainJetty {
 
+  static boolean DEBUG = false;
+  static int SLEEPTIME = 0;
   static ConsolePrompter prompter=new ConsolePrompter(">>>>>> ");
   static Stopwatch timer = Stopwatch.createStarted();
   public static void main(String[] args) throws Exception {
@@ -62,12 +64,13 @@ public class MainJetty {
       contextPath="/main" // gretty uses the project name
           + "/DataEngine/0.0.3"; // matches the path in web.xml
     }
-    Server jettyServer = main.startServer(8080, 8083, contextPath,
+    Server jettyServer = main.startServer(9090, 9093, contextPath,
         null, null, false); // TODO: 4: enable SSL
     
     try {
       jettyServer.start();
       log.info("======== Data Engine REST server ready: startup time={}", timer);
+      System.err.println("======== Ready: startup time="+timer);
       startPromptToShutdownThread(jettyServer);
       jettyServer.join();
     } finally {
@@ -105,15 +108,16 @@ public class MainJetty {
       log.info("{} ======== Shutting down Zookeeper-related components", timer);
       MainZkConfigPopulator.shutdown();
       MainZkComponentStarter.shutdown();
+      
       try {
         log.info("-- Sleeping to allow components to shutdown before Zookeeper");
-        Thread.sleep(3000); // Allowing components to shutdown before Zookeeper
+        Thread.sleep(8*MainJetty.SLEEPTIME); // Allowing components to shutdown before Zookeeper
       } catch (Exception e) {
       }
       log.info("{} ======== Shutting down Zookeeper", timer);
       MainZookeeper.shutdown();
       
-      //checkRemainingThreads();
+      if(DEBUG) checkRemainingThreads();
       System.err.println("Done.");
     }, "myConsoleUiThread");
     stopperThread.setDaemon(true);
@@ -168,6 +172,7 @@ public class MainJetty {
   public static void startAllInSameJvm() throws Exception {
     File zkConfFile = new File("zoo.cfg");
     if (zkConfFile.exists()) {
+      SLEEPTIME=1000;
       prompter.getUserInput("Press Enter to start MainZookeeper: " + zkConfFile, 3000);
       new Thread(() -> MainZookeeper.main(new String[] {zkConfFile.getAbsolutePath()}),
           "myEmbeddedZookeeperThread").start();
@@ -175,7 +180,7 @@ public class MainJetty {
       MainZookeeper.zookeeperConnectF.get();
       // need to wait for Zookeeper to start
       log.info("-- Sleeping to wait for Zookeeper to start");
-      Thread.sleep(4000);
+      Thread.sleep(8*MainJetty.SLEEPTIME);
     }
     
     String zkStartupPath = "/test/fromEclipse/startup";
@@ -188,10 +193,6 @@ public class MainJetty {
       MainZkConfigPopulator.main(new String[] {dataenginePropsFile});
       log.info("{} ======== Components configured", timer);
     }, "myZkConfigPopulator").start();
-
-    // need to wait for MainZkConfigPopulator to get further along
-    log.info("-- Sleeping to wait for MainZkConfigPopulator to get further along");
-    Thread.sleep(7000);
 
     String componentIds = System.getProperty(MainZkComponentStarter.COMPONENT_IDS);
     if(componentIds==null || componentIds.length()==0) {
