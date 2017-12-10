@@ -1,5 +1,6 @@
 package dataengine.main;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -38,18 +39,26 @@ public class MainZkComponentStopper {
       cf.close();
   }
 
-  static void stopZookeeperComponents(String propFile, boolean cleanUp)
-      throws Exception {
+  @Getter(lazy=true)
+  private static final Properties properties = privateGetProperties();
+  static String propFile;
+  private static Properties privateGetProperties() {
     Properties properties = new Properties();
-    PropertiesUtil.loadProperties(propFile, properties);
-
-    String zkConnectionString = properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
-    String zkStartupPathHome = properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-
-    Injector injector =
-        Guice.createInjector(new GModuleZooKeeper(zkConnectionString, zkStartupPathHome));
-
+    try {
+      PropertiesUtil.loadProperties(propFile, properties);
+    } catch (IOException e) {
+      log.warn("Couldn't load property file={}", propFile, e);
+    }
+    return properties;
+  }
+  
+  static void stopZookeeperComponents(String propertyFile, boolean cleanUp)
+      throws Exception {
+    propFile = propertyFile;
+    Injector injector = Guice.createInjector(new GModuleZooKeeper(() -> getProperties()));
     ZkComponentStopper stopper = injector.getInstance(ZkComponentStopper.class);
+    
+    String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
     log.info("---------- Tree before stopping: {}",
         ZkConnector.treeToString(cf, zkStartupPathHome));
 
