@@ -193,11 +193,15 @@ public class MainJetty {
     log.info("-- Sleeping to wait for MainZkConfigPopulator to get further along");
     Thread.sleep(7000);
 
-    // start all componentIds configured by MainZkConfigPopulator
-    String componentIds = MainZkConfigPopulator.componentIdsF.get();
+    String componentIds = System.getProperty(MainZkComponentStarter.COMPONENT_IDS);
+    if(componentIds==null || componentIds.length()==0) {
+      // start all componentIds configured by MainZkConfigPopulator
+      componentIds = MainZkConfigPopulator.componentIdsF.get();
+      System.setProperty(MainZkComponentStarter.COMPONENT_IDS, componentIds);
+    }
     prompter.getUserInput("Press Enter to start MainZkComponentStarter: " + componentIds, 3000);
     new Thread(() -> {
-      MainZkComponentStarter.main(new String[] {componentIds});
+      MainZkComponentStarter.main(new String[] {});
       log.info("{} ======== All started components have ended", timer);
     }, "myZkComponentStarter").start();
 

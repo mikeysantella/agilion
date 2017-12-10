@@ -1,5 +1,6 @@
 package dataengine.main;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -39,21 +40,31 @@ public class MainZkConfigPopulator {
       cf.close();
   }
   
-  static List<String> startZookeeperConfigPopulator(String propFile, boolean startFresh)
+  @Getter(lazy=true)
+  private static final Properties properties = privateGetProperties();
+  static String propFile;
+  private static Properties privateGetProperties() {
+    Properties properties = new Properties();
+    try {
+      PropertiesUtil.loadProperties(propFile, properties);
+    } catch (IOException e) {
+      log.warn("Couldn't load property file={}", propFile, e);
+    }
+    return properties;
+  }
+  
+  static List<String> startZookeeperConfigPopulator(String propertyFile, boolean startFresh)
       throws Exception {
-    Properties properties=new Properties();
-    PropertiesUtil.loadProperties(propFile, properties);
+    propFile = propertyFile;
 
     String componentIds = System.getProperty(ZkConfigPopulator.COMPONENT_IDS);
     if(componentIds==null || componentIds.length()==0)
-      componentIds=properties.getProperty(ZkConfigPopulator.COMPONENT_IDS, "");    
+      componentIds=getProperties().getProperty(ZkConfigPopulator.COMPONENT_IDS, "");    
 //    List<String> compIdList =
 //        Arrays.stream(componentIds.split(",")).map(String::trim).collect(Collectors.toList());
 //    log.info("---------- componentIds for configuration: {}", compIdList);
 
-    String zkConnectionString=properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
-    String zkStartupPathHome=properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    Injector injector = Guice.createInjector(new GModuleZooKeeper(zkConnectionString, zkStartupPathHome));
+    Injector injector = Guice.createInjector(new GModuleZooKeeper(() -> getProperties()));
     cf = injector.getInstance(CuratorFramework.class);
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);
 
@@ -65,6 +76,7 @@ public class MainZkConfigPopulator {
     componentIdsF.complete(componentIds);
     
     List<String> compIdList=cp.populateConfigurations(propFile); //blocks until all required components started
+    String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
     log.info("---------- Tree after config: {}",
         ZkConnector.treeToString(cf, zkStartupPathHome));
 
