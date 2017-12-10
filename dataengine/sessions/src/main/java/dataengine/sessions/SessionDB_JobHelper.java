@@ -46,7 +46,7 @@ public final class SessionDB_JobHelper {
 
   @SuppressWarnings("unchecked")
   public void addJobNode(Job job, String[] inputJobIds) {
-    log.debug("addJobNode: {}", job.getId());
+    log.info("SESS: addJobNode: id={} '{}'", job.getId(), job.getLabel());
     tryAndCloseTxn(graph, graph -> {
       String reqId = job.getRequestId();
       RequestFrame rf = reqHelper.getRequestFrame(reqId);
@@ -94,12 +94,12 @@ public final class SessionDB_JobHelper {
   }
   
   public void setJobParam(String jobId, String key, Object value){
+    log.info("setJobParam: {} {}={}", jobId, key, value);
     JobFrame existingJf = graph.getVertex(jobId, JobFrame.class);
     SessionDB_FrameHelper.setVertexProperty(existingJf.asVertex(), JOB_PARAMS_PROPPREFIX, key, value);
   }
 
   public void addJobDependency(String jobId, String inputJobId) {
-    log.debug("addJobDependency: {} {}", jobId, inputJobId);
     tryCAndCloseTxn(graph, graph -> {
       JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
       addJobDependency(jf, inputJobId);
@@ -107,6 +107,7 @@ public final class SessionDB_JobHelper {
   }
   
   private void addJobDependency(JobFrame jf, String inputJobId) {
+    log.info("addJobDependency: {} {}", jf.getNodeId(), inputJobId);
     tryOn(graph, graph -> {
       JobFrame inputJF = frameHelper.getVertexFrame(inputJobId, JobFrame.class);
       jf.addInputJob(inputJF);
@@ -114,7 +115,7 @@ public final class SessionDB_JobHelper {
   }
   
   public List<JobFrame> getInputJobs(String jobId) {
-    log.debug("getInputJobs: {}", jobId);
+    log.info("getInputJobs: {}", jobId);
     return tryFAndCloseTxn(graph, graph -> {
       JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
       return stream( jf.getInputJobs().spliterator(),false)
@@ -123,7 +124,7 @@ public final class SessionDB_JobHelper {
   }
   
   public List<JobFrame> getOutputJobs(String jobId) {
-    log.debug("getOutputJobs: {}", jobId);
+    log.info("getOutputJobs: {}", jobId);
     return tryFAndCloseTxn(graph, graph -> {
       JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
       return stream( jf.getOutputJobs().spliterator(),false)
@@ -161,6 +162,7 @@ public final class SessionDB_JobHelper {
   ///
 
   public void updateJobState(String jobId, State state) {
+    log.info("SESS: updateJobState: {} state={}", jobId, state);
     tryCAndCloseTxn(graph, graph -> {
       JobFrame jf = getJobFrame(jobId);
       if(jf.getState().equals(state))
@@ -220,6 +222,7 @@ public final class SessionDB_JobHelper {
   }
 
   public void updateJobProgress(String jobId, Progress progress) {
+    log.debug("updateJobProgress: {} percent={}", jobId, progress.getPercent());
     tryCAndCloseTxn(graph, graph -> {
       JobFrame jf = getJobFrame(jobId);
       // check percent is monotonically increasing in case msg received out of order

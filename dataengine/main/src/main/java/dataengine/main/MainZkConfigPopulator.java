@@ -42,6 +42,11 @@ public class MainZkConfigPopulator {
     }
   }
   
+  static CompletableFuture<Boolean> isDone=new CompletableFuture<>(); 
+  static void blockUntilDone() {
+    isDone.join();
+  }
+  
   @Getter(lazy=true)
   private static final Properties properties = privateGetProperties();
 
@@ -51,24 +56,26 @@ public class MainZkConfigPopulator {
     try {
       PropertiesUtil.loadProperties(propFile, properties);
     } catch (IOException e) {
-      log.warn("Couldn't load property file={}", propFile, e);
+      log.warn("ZK: Couldn't load property file={}", propFile, e);
     }
     return properties;
   }
   
-  static List<String> startZookeeperConfigPopulator(String propertyFile, boolean startFresh)
+  static void startZookeeperConfigPopulator(String propertyFile, boolean startFresh)
       throws Exception {
     propFile = propertyFile;
 
     String componentIds = System.getProperty(ZkConfigPopulator.COMPONENT_IDS);
     if(componentIds==null || componentIds.length()==0)
       componentIds=getProperties().getProperty(ZkConfigPopulator.COMPONENT_IDS, "");
-
+    log.info("ZK: Components to set configuration: {}", componentIds);
+    
     Injector injector = Guice.createInjector(new GModuleZooKeeper(() -> getProperties()));
     cf = injector.getInstance(CuratorFramework.class);
     ZkConfigPopulator cp = injector.getInstance(ZkConfigPopulator.class);
 
-    if (startFresh) {
+    String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
+    if (startFresh && ZkConnector.existsPath(cf, zkStartupPathHome)) {
       cp.cleanup();
       Thread.sleep(2*MainJetty.SLEEPTIME);
     }
@@ -76,11 +83,11 @@ public class MainZkConfigPopulator {
     componentIdsF.complete(componentIds);
     
     List<String> compIdList=cp.populateConfigurations(propFile); //blocks until all required components started
-    String zkStartupPathHome=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    if(MainJetty.DEBUG) log.info("---------- Tree after config: {}", ZkConnector.treeToString(cf, zkStartupPathHome));
+    if(MainJetty.DEBUG) log.info("ZK: Tree after config: {}", ZkConnector.treeToString(cf, zkStartupPathHome));
+    log.info("ZK: Done populating configuration for: {}", compIdList);
 
     shutdown();
-    return compIdList;
+    isDone.complete(true);
   }
 
 }

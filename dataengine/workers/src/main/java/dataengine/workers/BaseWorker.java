@@ -1,10 +1,9 @@
 package dataengine.workers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import org.slf4j.Logger;
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.apis.JobDTO;
@@ -18,6 +17,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.utils.ConsoleLogging;
 
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @Accessors(fluent = true)
@@ -58,6 +58,7 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
     return true;
   }
   
+  static final Logger clog=ConsoleLogging.createSlf4jLogger("console.Worker");
   @Override
   public void accept(JobDTO jobDto) {
     state.starting(jobDto.getId(), jobDto);
@@ -67,12 +68,12 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
     try {
       opParamsMap.checkForRequiredParams(job.getId(), job.getParams());
       // within doWork(), remember to call Future.get() to wait for work to finish or throw exception
-      log.info("WORKER: doWork: {} on {}", this, job);
+      clog.info("WORKER: {} start jobId={}", name, job.getId());
       if (doWork(job)) 
         state.done(jobDto);
       else
         state.failed("doWork() returned false for job=" + job);
-      log.info("WORKER: done: {}", job.getId());
+      clog.info("WORKER: {}  done jobId={}", name, job.getId());
     } catch (RuntimeException e) {
       state.failed(e);
       throw e;
@@ -83,7 +84,7 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
   }
 
   protected boolean doWork(T job) throws Exception {
-    log.error("WORKER: TODO: implement doWork(): {}", job);
+    clog.error("WORKER: TODO: implement doWork(): {}", job);
     AtomicInteger metricInt=new AtomicInteger();
     state.getMetrics().put("DUMMY_METRIC", metricInt);
     int numSeconds = 5;

@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @ToString
 public class JobConsumer {
+
   private final String jobType;
   
   final RpcClientProvider<JobBoardOutput_I> jobBoard;
@@ -54,8 +55,8 @@ public class JobConsumer {
     
     jobRunner = new Thread(() -> {
       while(stayAlive) {
-        log.info("Picking a job: {}", workerAddr);
         try {
+          log.info("JOBCONS: {} picking a job", workerAddr);
           CompletableFuture<JobListDTO> jobsF = jobBoard.rpc().findJobs(searchParams);
           JobListDTO jobList = jobsF.get();
           JobDTO pickedJob = jobPicker.apply(jobList);
@@ -66,16 +67,23 @@ public class JobConsumer {
             if(pickedJob==null) {
               // stay idle
             } else {
+              log.info("JOBCONS: worker={} starting on job={}", workerAddr, pickedJob.getId());
               if (doJob(pickedJob)) {
                 jobBoard.rpc().jobDone(workerAddr, pickedJob.getId());
               } else {
                 jobBoard.rpc().jobFailed(workerAddr, pickedJob.getId());
               }
+              if(newJobs.isEmpty())
+                newJobs.add("ready for next job"); 
             }
           } else { // retry
-            newJobs.add("get new jobList"); 
+            log.info("JOBCONS: get updated job list"); 
+            if(newJobs.isEmpty())
+              newJobs.add("get updated job list"); 
           }
           try {
+            if(newJobs.isEmpty())
+              log.info("JOBCONS: {} waiting for next job", workerAddr);
             newJobs.take();
             newJobs.clear();
           } catch (InterruptedException e) {
@@ -104,6 +112,7 @@ public class JobConsumer {
   @Setter
   private JobWorker worker;
   
+  private static final boolean DEBUG = false;
   @Setter
   private Function<JobListDTO, JobDTO> jobPicker = dtoList -> {
     log.debug("jobs={}", dtoList);
@@ -116,9 +125,11 @@ public class JobConsumer {
         }
       }
     }
-    StringBuilder jobsSb = new StringBuilder();
-    dtoList.getJobs().forEach(j -> jobsSb.append(" " + j.getId()));
-    log.info("pickedJob={} from jobs={}", picked, jobsSb);
+    if(DEBUG) {
+      StringBuilder jobsSb = new StringBuilder();
+      dtoList.getJobs().forEach(j -> jobsSb.append(" " + j.getId()));
+      log.info("pickedJob={} from jobs={}", picked, jobsSb);
+    }
     return picked;
   };
 

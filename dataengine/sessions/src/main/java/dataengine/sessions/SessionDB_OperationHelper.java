@@ -26,7 +26,7 @@ public class SessionDB_OperationHelper {
   static final String OPERATION_PARAMS_PROPPREFIX = "params.";
 
   OperationSelectionFrame addOperationNode(String opSelId, OperationSelection op) {
-    log.debug("addOperationNode: {}", opSelId);
+    log.info("SESS: addOperationNode: '{}' id={}", opSelId, op.getId());
     checkNotNull(opSelId);
     return tryOn(graph, graph -> {
       OperationSelectionFrame of = graph.getVertex(opSelId, OperationSelectionFrame.class);

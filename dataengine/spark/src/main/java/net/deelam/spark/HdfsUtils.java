@@ -117,6 +117,7 @@ public final class HdfsUtils {
   }
 
   public static void main(String[] args) throws Exception {
+    log.info("System.setProperty: {}={}", "HADOOP_USER_NAME", "hdfs");
     System.setProperty("HADOOP_USER_NAME", "hdfs");
 //    HadoopTitanConfigs htConfigs = new HadoopTitanConfigs(null, null);
 //    HdfsUtils hdfs = htConfigs.getHdfsUtils();

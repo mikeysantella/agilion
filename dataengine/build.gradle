@@ -79,6 +79,11 @@ configure(subprojects) {
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
   }
 
+  configurations {
+    compile.exclude group:'ch.qos.logback'
+    runtime.exclude group:'ch.qos.logback'
+  }
+
   eclipse {
     classpath.file {
       whenMerged { classpath ->

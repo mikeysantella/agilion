@@ -41,7 +41,7 @@ public final class SessionDB_RequestHelper {
   static int requestCounter = 0;
 
   public void addRequestNode(Request request) {
-    log.debug("addRequestNode: {}", request.getId());
+    SessionDB.clog.info("SESS: addRequestNode: '{}' id={}", request.getLabel(), request.getId());
     tryAndCloseTxn(graph, graph -> {
       String sessId = request.getSessionId();
       SessionFrame sf = sessHelper.getSessionFrame(sessId);
@@ -89,7 +89,7 @@ public final class SessionDB_RequestHelper {
   }
   
   public void connectRequestToOutputDataset(String requestId, String datasetId){
-    log.debug("connectRequestToOutputDataset: reqId={} dsId={}", requestId, datasetId);
+    log.debug("SESS: connectRequestToOutputDataset: reqId={} dsId={}", requestId, datasetId);
     tryAndCloseTxn(graph, graph -> {
       RequestFrame rf = frameHelper.getVertexFrame(requestId, RequestFrame.class);
       DatasetFrame df = frameHelper.getVertexFrame(datasetId, DatasetFrame.class);
@@ -136,10 +136,12 @@ public final class SessionDB_RequestHelper {
   }
 
   public void updateRequestState(String reqId, State state) {
+    log.info("SESS: updateRequestState: {} state={}", reqId, state);
     tryCAndCloseTxn(graph, graph -> {
       RequestFrame rf = getRequestFrame(reqId);
       if(rf.getState().equals(state))
         return;
+      SessionDB.clog.info("SESS: {} request='{}' id={}", state.name(), rf.getLabel(), rf.getNodeId());
       // check state transition is valid in case msg received out of order
       switch(state){
         case CREATED:

@@ -9,13 +9,11 @@ import java.util.Collection;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.function.Supplier;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.utils.PropertiesUtil;
@@ -163,7 +161,7 @@ public final class HadoopConfigurationHelper {
       // use hadoopUserName for connecting to the remote Hadoop cluster
       if(sysHadoopUsername!=null && !sysHadoopUsername.equals(hadoopUserName))
         log.warn("Overriding existing System variable={}", sysHadoopUsername);
-      log.info("Setting System variable HADOOP_USER_NAME={}", hadoopUserName);
+      log.info("System.setProperty: {}={}", "HADOOP_USER_NAME", hadoopUserName);
       System.setProperty("HADOOP_USER_NAME", hadoopUserName);
       //checkState(hadoopUserName.equals(System.getenv().get("HADOOP_USER_NAME")));
       //log.info("env: "+System.getenv());
