@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.utils.PropertiesUtil;
 import net.deelam.zkbasedinit.ConstantsZk;
@@ -15,12 +17,18 @@ import net.deelam.zkbasedinit.GModuleZooKeeper;
 import net.deelam.zkbasedinit.ZkConfigPopulator;
 import net.deelam.zkbasedinit.ZkConnector;
 
+@RequiredArgsConstructor
 @Slf4j
 public class MainZkConfigPopulator {
   
+  private final Consumer<Exception> exceptionHandler;
+  
   public static void main(String[] args) {
     String propsFile=(args.length>0)?args[0]:"dataengine.props";
-    new MainZkConfigPopulator().startAndWaitUntilPopulated(propsFile);
+    new MainZkConfigPopulator((e) -> {
+      e.printStackTrace();
+      System.exit(1);
+    }).startAndWaitUntilPopulated(propsFile);
   }
   
   public void startAndWaitUntilPopulated(String propsFile){
@@ -30,6 +38,8 @@ public class MainZkConfigPopulator {
       boolean keepPrevConfig=Boolean.parseBoolean(System.getProperty("KEEP_PREV_ZKCONFIG"));
       startZookeeperConfigPopulator(propsFile, !keepPrevConfig);
     } catch (Exception e) {
+      if(exceptionHandler!=null)
+        exceptionHandler.accept(e);
       throw new IllegalStateException("While running MainZkConfigPopulator", e);
     }
   }
@@ -60,6 +70,8 @@ public class MainZkConfigPopulator {
       PropertiesUtil.loadProperties(propFile, properties);
     } catch (IOException e) {
       log.warn("ZK: Couldn't load property file={}", propFile, e);
+      if(exceptionHandler!=null)
+        exceptionHandler.accept(e);
     }
     return properties;
   }
@@ -85,7 +97,7 @@ public class MainZkConfigPopulator {
 
     componentIdsF.complete(componentIds);
     
-    List<String> compIdList=cp.populateConfigurations(propFile); //blocks until all required components started
+    List<String> compIdList=cp.populateConfigurations(propFile, exceptionHandler); //blocks until all required components started
     if(MainJetty.DEBUG) log.info("ZK: Tree after config: {}", ZkConnector.treeToString(cf, zkStartupPathHome));
     log.info("ZK: Done populating configuration for: {}", compIdList);
 

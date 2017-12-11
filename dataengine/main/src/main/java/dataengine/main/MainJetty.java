@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -39,7 +42,7 @@ import net.deelam.zkbasedinit.ConstantsZk;
  */
 @Slf4j
 public class MainJetty {
-  static final boolean DEBUG=true;
+  static final boolean DEBUG=false;
   static int SLEEPTIME=0;
   
   static final Logger clog = ConsoleLogging.createSlf4jLogger(MainJetty.class);
@@ -55,7 +58,7 @@ public class MainJetty {
     }
   }
   
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     prompter.setLog(ConsoleLogging.createSlf4jLogger("console.prompt"));
 
     boolean promptUser=Boolean.parseBoolean(System.getProperty("PROMPT"));
@@ -87,7 +90,7 @@ public class MainJetty {
         throw new RuntimeException(e);
       }
     }
-
+    
     String contextPath=System.getProperty("RESTURLPATH");
     if(contextPath==null || contextPath.length()==0) {
       // this contextPath mimics gretty's default behavior
@@ -96,23 +99,75 @@ public class MainJetty {
     }
     prompter.getUserInput("start webserver on port="+port+" at RESTURLPATH="+contextPath, 2000);
     
-    Server jettyServer = main.startServer(port, sslPort, contextPath,
-        null, null, false); // TODO: 4: enable SSL
-    
+    Server jettyServer=null;
     try {
-      jettyServer.start();
-      log.info("======== Data Engine REST server ready: startup time={}", timer);
-      
-      // TODO: Create AMQ-based listener/querier to check state of and list components 
-      clog.info("======== Ready!  Startup time="+timer);
-      main.startPromptToShutdownThread(jettyServer);
-      jettyServer.join();
-    } finally {
-      if(!jettyServer.isStopping()) {
-        jettyServer.stop();
-        jettyServer.destroy();
+      // TODO: 4: enable SSL
+      jettyServer = main.startServer(port, sslPort, contextPath, null, null, false);
+      try {
+        try {
+          jettyServer.start();
+          log.info("======== Data Engine REST server ready: startup time={}", timer);
+          if (!hasExceptionSoFar())
+            main.startPromptToShutdownThread(jettyServer);
+          
+          // TODO: Create AMQ-based listener/querier to check state of and list components
+          exitIfException(jettyServer);
+          
+          try {
+            // wait for server to end
+            jettyServer.join();
+          } catch (InterruptedException e) {
+            log.error("While waiting for REST server to send", e);
+          }
+        } catch (Exception e) {
+          log.error("While starting up REST server", e);
+          startupExceptionF.complete(e);
+        }
+      } finally {
+        if (!jettyServer.isStopping()) {
+          try {
+            jettyServer.stop();
+          } catch (Exception e) {
+            log.error("While stopping REST server", e);
+          }
+          jettyServer.destroy();
+        }
+        log.info("Uptime={} ======== REST server is shutdown", timer);
       }
-      log.info("Uptime={} ======== REST server is shutdown", timer);
+    } catch (FileNotFoundException e1) {
+      log.error("While initializing REST server", e1);
+      startupExceptionF.complete(e1);
+    }
+
+  }
+  
+  private static boolean hasExceptionSoFar() {
+    if (startupExceptionF.isDone()) {
+      return (startupExceptionF.join() != null);
+    } else
+      return false;
+  }
+  
+  private static void exitIfException(Server jettyServer) {
+    try {
+      // FIXME: once all components registered via AMQ, startupExceptionF.complete(null)
+      // for now, just do a timed get()
+      Exception ex = startupExceptionF.get(30, TimeUnit.SECONDS);
+      if(ex!=null)
+        throw ex;
+    } catch (TimeoutException e) {
+      log.info("No startup exceptions so far");
+    } catch (Exception e) {
+      clog.info("###################################################################");
+      clog.info("############### Problem starting up Data Engine! ##################", e);
+      try {
+        // Allow other threads time to throw exception
+        Thread.sleep(2000);
+      } catch (InterruptedException e1) {
+        e1.printStackTrace();
+      }
+      shutdownAll(jettyServer);
+      System.exit(100);
     }
   }
 
@@ -138,9 +193,12 @@ public class MainJetty {
    * @param dataenginePropsFile 
    *  
    */
+  
+  static CompletableFuture<Exception> startupExceptionF=new CompletableFuture<>(); 
+  
   static MainZookeeper zookeeper;
-  static final MainZkConfigPopulator configPopulator=new MainZkConfigPopulator();
-  static final MainZkComponentStarter componentStarter = new MainZkComponentStarter();
+  static final MainZkConfigPopulator configPopulator=new MainZkConfigPopulator(startupExceptionF::complete);
+  static final MainZkComponentStarter componentStarter = new MainZkComponentStarter(startupExceptionF::complete, startupExceptionF::complete);
 
   private static final String DATAENGINE_PROPS = "dataengine.props";
   private static final String STARTUP_PROPS = "startup.props";
@@ -187,20 +245,27 @@ public class MainJetty {
 
   }
 
-  private static final String TERMINATION_CHARS="0LlQq"; 
+  private static final String TERMINATION_CHARS = "0LlQq";
+
   private void startPromptToShutdownThread(Server jettyServer) {
-    Thread stopperThread = new Thread(()->{
+    Thread stopperThread = new Thread(() -> {
       prompter.setSkipUserInput(false);
       prompter.setPrefix(">>>>> ");
-      String input="";
-      while(input==null || input.length()==0 || !TERMINATION_CHARS.contains(input)) {
+      String input = "";
+      while (input == null || input.length() == 0 || !TERMINATION_CHARS.contains(input)) {
         input = prompter.getUserInput("Enter '0', 'Q', or 'L' to terminate application.", 1800_000);
       }
-      
-      timer.reset();
-      timer.start();
-      clog.info("### Terminating: {} active threads", Thread.activeCount());
-      prompter.shutdown();
+      shutdownAll(jettyServer);
+    }, "myConsoleUiThread");
+    stopperThread.setDaemon(true);
+    stopperThread.start();
+  }
+
+  private static void shutdownAll(Server jettyServer) {
+    Stopwatch timer = Stopwatch.createStarted();
+    clog.info("### Terminating: {} active threads", Thread.activeCount());
+    prompter.shutdown();
+    if (jettyServer != null)
       try {
         clog.info("(  0.0 s) ======== Stopping REST service");
         jettyServer.stop();
@@ -209,31 +274,31 @@ public class MainJetty {
         log.warn("While shutting down webserver", e);
       }
 
-      clog.info("({}) ======== Triggering shutdown", timer);
-      new MainZkComponentStopper().stopComponents(STARTUP_PROPS);
-      
-      clog.info("({}) ======== Shutting down components", timer);
-      configPopulator.shutdown();
-      componentStarter.shutdown();
-      
-      if(zookeeper!=null){
-        try {
-          clog.info("({})   (Waiting a few seconds to allow Zookeeper clients to shutdown before Zookeeper terminates)", timer);
-          Thread.sleep(5*SLEEPTIME); // Allowing components to shutdown before Zookeeper
-        } catch (Exception e) {
-        }
-        clog.info("({}) ======== Shutting down Zookeeper (an InterruptedException is normal)", timer);
-        zookeeper.shutdown();
+    clog.info("({}) ======== Triggering shutdown", timer);
+    new MainZkComponentStopper().stopComponents(STARTUP_PROPS);
+
+    clog.info("({}) ======== Shutting down components", timer);
+    configPopulator.shutdown();
+    componentStarter.shutdown();
+
+    if (zookeeper != null) {
+      try {
+        clog.info(
+            "({})   (Waiting a few seconds to allow Zookeeper clients to shutdown before Zookeeper terminates)",
+            timer);
+        Thread.sleep(5 * SLEEPTIME); // Allowing components to shutdown before Zookeeper
+      } catch (Exception e) {
       }
-      
-      if(DEBUG) checkRemainingThreads();
-      clog.info("({}) ======== Done.", timer);
-    }, "myConsoleUiThread");
-    stopperThread.setDaemon(true);
-    stopperThread.start();
+      clog.info("({}) ======== Shutting down Zookeeper (an InterruptedException is normal)", timer);
+      zookeeper.shutdown();
+    }
+
+    if (DEBUG)
+      checkRemainingThreads();
+    clog.info("({}) ======== Done.", timer);
   }
 
-  void checkRemainingThreads() {
+  static void checkRemainingThreads() {
     int nonDaemonThreads;
     do{
       try {
