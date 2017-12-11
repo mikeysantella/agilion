@@ -2,6 +2,8 @@ package dataengine.main;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,6 +45,15 @@ public class MainJetty {
   static final Logger clog = ConsoleLogging.createSlf4jLogger(MainJetty.class);
   static ConsolePrompter prompter = new ConsolePrompter(">>>>> Press Enter to ");
   static Stopwatch timer = Stopwatch.createStarted();
+
+  private static boolean isPortInUse(int port) {
+    try {
+      new ServerSocket(port).close();
+      return false;
+    } catch (IOException e) {
+      return true;
+    }
+  }
   
   public static void main(String[] args) throws Exception {
     prompter.setLog(ConsoleLogging.createSlf4jLogger("console.prompt"));
@@ -55,6 +66,16 @@ public class MainJetty {
     
     boolean runInSingleJVM = !Boolean.parseBoolean(System.getProperty("ONLY_RUN_SERVER"));
 
+    int port=9090;
+    int sslPort = 9093;
+    if(isPortInUse(port)) {
+      clog.error("Port {} is already in use!", port);
+      System.exit(1);
+    } else if(isPortInUse(sslPort)) {
+      clog.error("Port {} is already in use!", port);
+      System.exit(1);
+    }
+    
     MainJetty main=new MainJetty();
     //log.info("System.setProperty: {}={}", "org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
     //System.setProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", "dataengine.api");
@@ -73,8 +94,6 @@ public class MainJetty {
       contextPath="/main" // gretty uses the project name
           + "/DataEngine/0.0.3"; // matches the path in web.xml
     }
-    int port=9090;
-    int sslPort = 9093;
     prompter.getUserInput("start webserver on port="+port+" at RESTURLPATH="+contextPath, 2000);
     
     Server jettyServer = main.startServer(port, sslPort, contextPath,
