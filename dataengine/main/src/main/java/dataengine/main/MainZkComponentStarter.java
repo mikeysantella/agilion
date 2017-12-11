@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.Guice;
@@ -13,6 +14,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.utils.PropertiesUtil;
 import net.deelam.zkbasedinit.ConstantsZk;
@@ -21,8 +23,13 @@ import net.deelam.zkbasedinit.GModuleZooKeeper;
 import net.deelam.zkbasedinit.ZkComponentStarter;
 import net.deelam.zkbasedinit.ZkConnector;
 
+@RequiredArgsConstructor
 @Slf4j
 public class MainZkComponentStarter {
+  
+  private final Consumer<Exception> exceptionWhileStartingHandler;
+  private final Consumer<Exception> exceptionHandler;
+
   public static final String COMPONENT_IDS = "componentIds";
 
   public static void main(String[] args) {
@@ -31,13 +38,18 @@ public class MainZkComponentStarter {
       System.setProperty(COMPONENT_IDS, args[0]);
     }
     
-    new MainZkComponentStarter().startAndWaitUntilStopped("startup.props");
+    Consumer<Exception> eHandler = (e) -> {
+      throw new RuntimeException(e);
+    };
+    new MainZkComponentStarter(eHandler,eHandler).startAndWaitUntilStopped("startup.props");
   }
   
   public void startAndWaitUntilStopped(String propertyFile){
     try {
       startZkComponentStarter(propertyFile);
     } catch (Exception e) {
+      if(exceptionHandler!=null)
+        exceptionHandler.accept(e);
       throw new IllegalStateException("While running myZkComponentStarterThread", e);
     }
   }
@@ -64,6 +76,8 @@ public class MainZkComponentStarter {
       PropertiesUtil.loadProperties(propFile, properties);
     } catch (IOException e) {
       log.warn("ZK: Couldn't load property file={}", propFile, e);
+      if(exceptionHandler!=null)
+        exceptionHandler.accept(e);
     }
     return properties;
   }
@@ -93,7 +107,7 @@ public class MainZkComponentStarter {
     // starts components given an compId and ComponentI subclass
     for (String compId : compIdList) {
       log.info("ZK: ---------- Starting {}", compId);
-      ZkComponentStarter.startComponent(injector, compId);
+      ZkComponentStarter.startComponent(injector, compId, exceptionHandler, exceptionWhileStartingHandler);
       if(MainJetty.DEBUG) log.info("ZK: Tree after starting {}: {}", compId, ZkConnector.treeToString(cf, startupPath));
     }
 
