@@ -10,6 +10,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 import net.deelam.utils.PropertiesUtil;
 import net.deelam.zkbasedinit.ConstantsZk;
 import net.deelam.zkbasedinit.GModuleZooKeeper;
@@ -47,7 +48,7 @@ public class TaskerMain {
     
     opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector);
-    dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+"/"+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH); //FIXME
+    dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+"/"+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH);
   }
 
   private static OperationsRegistry opsRegistry;

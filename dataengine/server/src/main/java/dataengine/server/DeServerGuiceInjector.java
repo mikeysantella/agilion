@@ -27,6 +27,7 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.ConstantsAmq;
 import net.deelam.activemq.MQClient;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 import net.deelam.utils.PropertiesUtil;
 
 @Accessors(fluent = true)
@@ -116,6 +117,7 @@ public final class DeServerGuiceInjector {
           new RpcClients4ServerModule(connection),
           new RestServiceModule());
       log.info("Created DeServerGuiceInjector");
+      new AmqComponentSubscriber(connection, "RESTService");
     } catch (JMSException e) {
       throw new IllegalArgumentException(e);
     }

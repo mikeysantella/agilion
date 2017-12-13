@@ -20,24 +20,21 @@ import net.deelam.activemq.rpc.KryoSerDe;
 
 @Slf4j
 public class OperationsSubscriber implements Closeable {
-  private final Connection connection;
   private Session session;
   private MessageConsumer consumer;
   private MessageProducer producer;
   private final Worker_I[] workers;
 
-  public OperationsSubscriber(Connection connection, Worker_I... workers) {
-    this.connection = connection;
+  public OperationsSubscriber(Connection connection, Worker_I... workers) throws JMSException {
     this.workers = workers;
+    session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    producer = MQClient.createGenericMsgResponder(session, DeliveryMode.NON_PERSISTENT);
     listen(CommunicationConsts.OPSREGISTRY_SUBSCRIBER_TOPIC);
   }
 
   private void listen(String topicName) {
+    KryoSerDe serde = new KryoSerDe(session);
     try {
-      session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      KryoSerDe serde = new KryoSerDe(session);
-      producer = MQClient.createGenericMsgResponder(session, DeliveryMode.NON_PERSISTENT);
-      
       MQClient.createTopicConsumer(session, topicName, message -> {
           String command = message.getStringProperty(OperationsRegistry_I.COMMAND_PARAM);
           switch (OPERATIONS_REG_API.valueOf(command)) {

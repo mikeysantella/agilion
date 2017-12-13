@@ -1,5 +1,6 @@
 package dataengine.jobmgr;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import javax.jms.Connection;
@@ -8,6 +9,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 import net.deelam.activemq.rpc.KryoSerDe;
 import net.deelam.graph.GrafUri;
 import net.deelam.graph.IdGrafFactoryNeo4j;
@@ -62,7 +65,7 @@ public class JobBoardModule extends AbstractModule {
     }
   }
 
-  static void deployJobBoardVerticles(Injector injector) {
+  static void deployJobBoard(Injector injector) throws JMSException {
     JobBoard jobBoard = injector.getInstance(JobBoard.class);
     if(DEBUG){
       jobBoard.periodicLogs(10_000, 20);
@@ -71,9 +74,13 @@ public class JobBoardModule extends AbstractModule {
     log.info("AMQ: TASKER: Deploying JobBoard: {} ", jobBoard); 
     injector.getInstance(ActiveMqRpcServer.class).start(jobBoard.getJobBoardRpcAddr(), jobBoard, true);
     
+    Connection connection=injector.getInstance(Connection.class);
+    new AmqComponentSubscriber(connection, "JobBoard", 
+        CommunicationConsts.RPC_ADDR, jobBoard.getJobBoardRpcAddr(), 
+        CommunicationConsts.COMPONENT_TYPE, "JobBoard");
   }
 
-  static void deployDepJobService(Injector injector, String dispatcherRpcAddr) {
+  static void deployDepJobService(Injector injector, String dispatcherRpcAddr) throws JMSException {
     GrafUri depJobGrafUri;
     
     if(false){
@@ -93,6 +100,11 @@ public class JobBoardModule extends AbstractModule {
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
     injector.getInstance(ActiveMqRpcServer.class).start(depJobMgr.getDispatcherRpcAddr(), depJobMgr, true);
     
+    Connection connection=injector.getInstance(Connection.class);
+    new AmqComponentSubscriber(connection, "Dispatcher", 
+        CommunicationConsts.RPC_ADDR, dispatcherRpcAddr, 
+        CommunicationConsts.COMPONENT_TYPE, "JobDispatcher");
+
 //    if(DEBUG){
 //      vertx.setPeriodic(10_000, t -> {
 //        if (depJobMgr.getWaitingJobs().size() > 0)
