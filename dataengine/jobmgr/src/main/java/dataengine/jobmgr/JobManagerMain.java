@@ -32,7 +32,7 @@ public class JobManagerMain {
     log.info("Starting {}", JobManagerMain.class);
     connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, jobBoardRpcAddr, newJobAvailableTopic);
-    JobBoardModule.deployJobBoardVerticles(injector);
+    JobBoardModule.deployJobBoard(injector);
     JobBoardModule.deployDepJobService(injector, dispatcherRpcAddr);
   }
   

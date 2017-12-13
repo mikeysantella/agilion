@@ -19,6 +19,7 @@ import lombok.Synchronized;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 
 @Slf4j
 @Accessors(chain = true)
@@ -39,7 +40,7 @@ public class JobConsumer {
   
   final Map<String, Object> searchParams=new HashMap<>();
   final LinkedBlockingQueue<String> newJobs=new LinkedBlockingQueue<>(1);
-  public void start(MessageConsumer messageConsumer){
+  public String start(MessageConsumer messageConsumer){
     final String workerAddr = "JobConsumer"+nextId();
     searchParams.put(JobBoardOutput_I.JOBTYPE_PARAM, jobType);
     try {
@@ -98,6 +99,8 @@ public class JobConsumer {
     }, "jobRunner-" + workerAddr);
     jobRunner.setDaemon(true);
     jobRunner.start();
+    
+    return workerAddr;
   }
   
   Thread jobRunner;

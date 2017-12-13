@@ -7,12 +7,14 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import com.google.inject.AbstractModule;
+import dataengine.apis.CommunicationConsts;
 import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.workers.ProgressMonitor.Factory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -49,7 +51,11 @@ public class BaseWorkerModule extends AbstractModule {
           doer.name(), doer.jobType());
       try {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        jConsumer.start(MQClient.createTopicConsumer(session, newJobAvailableTopic, null));
+        String workerAddr=jConsumer.start(MQClient.createTopicConsumer(session, newJobAvailableTopic, null));
+
+        new AmqComponentSubscriber(connection, workerAddr, 
+            CommunicationConsts.COMPONENT_TYPE, "JobConsumer", 
+            "jobType", doer.jobType());
         return jConsumer;
       } catch (JMSException e) {
         throw new IllegalStateException("When creating newJobs topic listener", e);

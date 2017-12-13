@@ -7,6 +7,7 @@ import java.util.Properties;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import org.apache.curator.framework.CuratorFramework;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -22,6 +23,7 @@ import dataengine.tasker.jobcreators.AddSourceDataset;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
@@ -74,12 +76,17 @@ final class TaskerModule extends AbstractModule {
     return jobCreators;
   }
 
-  static void deployTasker(Injector injector) {
+  static void deployTasker(Injector injector) throws JMSException {
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
     
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
     taskerSvc.setTaskerRpcAddr(CommunicationConsts.TASKER_RPCADDR);
     injector.getInstance(ActiveMqRpcServer.class).start(taskerSvc.getTaskerRpcAddr(), taskerSvc, true);
+    
+    Connection connection=injector.getInstance(Connection.class);
+    new AmqComponentSubscriber(connection, "Tasker", 
+        CommunicationConsts.RPC_ADDR, taskerSvc.getTaskerRpcAddr(),
+        CommunicationConsts.COMPONENT_TYPE, "Tasker");
   }
   
   static DispatcherComponentListener deployDispatcherListener(Injector injector, String dispatcherTypeZkPath) {

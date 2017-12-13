@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.CombinedResponse;
 import net.deelam.activemq.TopicUtils;
+import net.deelam.activemq.rpc.AmqComponentSubscriber;
 
 /**
  * Used by OperationsSubscriber allow themselves to be queried by this class.
