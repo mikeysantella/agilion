@@ -13,6 +13,6 @@ public class HomeController
     @RequestMapping
     public String initHome()
     {
-        return "login/home";
+        return "home";
     }
 }

@@ -24,13 +24,24 @@ body
     top: 20%;
 }
 
+.btn-block + .btn-block {
+    margin-top: 15px;
+}
+
+
 .page-header
 {
-    font-size: 30px;
     margin-top: 0px;
     padding: 0px;
     margin-bottom: 15px;
+}
 
+.page-title
+{
+    font-size: 24;
+    margin-top: 0px;
+    padding: 0px;
+    margin-bottom: 15px;
 }
 
 .thin-form-group

@@ -21,8 +21,8 @@ import java.util.*;
  * Created by Alex_Lappy_486 on 2/5/17.
  */
 @Controller
-@RequestMapping("/session")
-public class NewSessionController
+@RequestMapping("/project")
+public class NewProjectController
 {
     @Autowired
     DataEngineClient dataEngineClient;
@@ -30,35 +30,7 @@ public class NewSessionController
     @RequestMapping("/new")
     public String initSessionHistoryPage(Model model)
     {
-        // TODO: Load user defined defaults for a session (if they exist).
-        NewSessionForm form = new NewSessionForm();
-
-        //Initialize a dummy data job
-        NewDataEngineIngestJobForm dataJob = new NewDataEngineIngestJobForm();
-        dataJob.setDataSourceName("Wikipedia");
-        dataJob.setExecuteForSteps(Lists.newArrayList(1, 2, 3));
-        dataJob.setIngestJobType(DataIngestJobType.QUERY);
-        dataJob.getParams().put("testParam", true);
-        dataJob.getParams().put("testParam2", false);
-        form.setDataIngestJobs(Lists.newArrayList(dataJob));
-
-        //Initialize a dummy data engine job
-        NewDataEngineJobForm engineJob = new NewDataEngineJobForm();
-        engineJob.setJobName("Clean Network");
-        engineJob.setJobType(DataEngineJobType.TRANSFORM);
-        engineJob.setExecutionConfig(new ExecutionConfig(ExecutionOrder.AFTER, 1));
-        engineJob.getParams().put("Ignore Unknown", true);
-
-        NewDataEngineJobForm engineJob2 = new NewDataEngineJobForm();
-        engineJob2.setJobName("Clean Network");
-        engineJob2.setJobType(DataEngineJobType.TRANSFORM);
-        engineJob2.setExecutionConfig(new ExecutionConfig(ExecutionOrder.AFTER, 2));
-        form.setDataEngineJobs(Lists.newArrayList(engineJob, engineJob2));
-        engineJob.getParams().put("Ignore Unknown", true);
-
-        form.setStepsToExecute(3);
-        model.addAttribute("newSessionForm", form);
-        return "session/newSession";
+        return "project/newProject";
     }
 
     @RequestMapping("/initDataJobForm")

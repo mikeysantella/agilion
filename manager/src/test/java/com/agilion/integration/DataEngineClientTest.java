@@ -32,14 +32,12 @@ public class DataEngineClientTest
     @Autowired
     private RequestsApi requestApi;
 
-    @Ignore
     @Test
     public void testSessionApi() throws ApiException
     {
         System.out.println("Request API Operation List: \n"+requestApi.listOperations());
     }
 
-    @Ignore
     @Test
     public void testRequestApi() throws ApiException
     {
@@ -59,7 +57,7 @@ public class DataEngineClientTest
         }
     }
 
-    /*
+
     @Test
     public void testRequestsApi() throws ApiException, InterruptedException {
         List<Operation> ops = requestApi.listOperations();
@@ -93,7 +91,7 @@ public class DataEngineClientTest
             String reqId = req2.getId();
         }
     }
-*/
+
     public NewSessionForm createDummyNewSessionUIForm()
     {
         NewSessionForm form = new NewSessionForm();
