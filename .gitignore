@@ -14,3 +14,4 @@ gradle-3.0
 .settings
 workspace/
 .idea/
+manager/out/
