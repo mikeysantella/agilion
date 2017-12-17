@@ -13,16 +13,15 @@ import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.JobDTO;
 import dataengine.apis.JobListDTO;
 import dataengine.apis.RpcClientProvider;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.Synchronized;
 import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import net.deelam.activemq.rpc.AmqComponentSubscriber;
 
 @Slf4j
-@Accessors(chain = true)
+@Accessors(chain = true, fluent=true)
 @RequiredArgsConstructor
 @ToString
 public class JobConsumer {
@@ -32,16 +31,9 @@ public class JobConsumer {
   final RpcClientProvider<JobBoardOutput_I> jobBoard;
   final Connection connection;
 
-  private static int privateIdCounter=0;
-  @Synchronized
-  static int nextId() {
-    return ++privateIdCounter;
-  }
-  
   final Map<String, Object> searchParams=new HashMap<>();
   final LinkedBlockingQueue<String> newJobs=new LinkedBlockingQueue<>(1);
-  public String start(MessageConsumer messageConsumer){
-    final String workerAddr = "JobConsumer"+nextId();
+  public String start(final String workerAddr, MessageConsumer messageConsumer){
     searchParams.put(JobBoardOutput_I.JOBTYPE_PARAM, jobType);
     try {
       log.info("Listening for new jobs: {}", messageConsumer);
@@ -112,8 +104,8 @@ public class JobConsumer {
     }
   }
 
-  @Setter
-  private JobWorker worker;
+  @Getter
+  private final JobWorker worker;
   
   private static final boolean DEBUG = false;
   @Setter
@@ -122,7 +114,7 @@ public class JobConsumer {
     JobDTO picked = null;
     if (dtoList.getJobs().size() > 0) {
       for(JobDTO j:dtoList.getJobs()){
-        if((worker.canDo(j))){
+        if((worker().canDo(j))){
           picked = j; //dto.jobs.get(0);
           break;
         }

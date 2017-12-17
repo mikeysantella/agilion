@@ -32,7 +32,7 @@ public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
   @Inject
   public PythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection)
       throws JMSException {
-    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "stompworker.pex", "query");
+    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "stompworker.pex");
   }
 
   @Override

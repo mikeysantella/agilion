@@ -15,6 +15,7 @@ import dataengine.apis.SessionsDB_I;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Synchronized;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.utils.ConsoleLogging;
@@ -25,6 +26,13 @@ import net.deelam.utils.ConsoleLogging;
 @Slf4j
 abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
 
+  private static int privateIdCounter = 0;
+
+  @Synchronized
+  static int nextId() {
+    return ++privateIdCounter;
+  }
+  
   final RpcClientProvider<SessionsDB_I> sessDb;
 
   private final String jobType;
@@ -40,7 +48,7 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
   protected BaseWorker(String jobType, RpcClientProvider<SessionsDB_I> sessDb) {
     this.jobType = jobType;
     this.sessDb=sessDb;
-    name = this.getClass().getSimpleName() + "-" + System.currentTimeMillis();
+    name = this.getClass().getSimpleName() + nextId() + "-" + System.currentTimeMillis();
     opParamsMap=new OperationWrapper(initOperation());
   }
 

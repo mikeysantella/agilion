@@ -18,9 +18,9 @@ public abstract class AbstractMultiPythonWrapperWorker extends AbstractPythonWra
 
   @Inject
   public AbstractMultiPythonWrapperWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection,
-      String jobType, String pythonExecFile, String pythonQueueName)
+      String jobType, String pythonExecFile)
       throws JMSException {
-    super(sessDb, connection, jobType, pythonExecFile, pythonQueueName);
+    super(sessDb, connection, jobType, pythonExecFile);
   }
 
   @RequiredArgsConstructor

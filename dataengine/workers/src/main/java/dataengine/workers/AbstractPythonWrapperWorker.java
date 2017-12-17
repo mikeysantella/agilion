@@ -28,30 +28,23 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
   protected final MessageProducer producer;
   protected final Queue replyQueue;
 
-  private static int privateIdCounter = 0;
-
-  @Synchronized
-  static int nextId() {
-    return ++privateIdCounter;
-  }
-
   final String pythonExecFile;
   final String pythonQueueName;
   final Destination pythonDestQ;
 
   public AbstractPythonWrapperWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection,
-      String jobType, String pythonExecFile, String pythonQueueName) throws JMSException {
+      String jobType, String pythonExecFile) throws JMSException {
     super(jobType, sessDb);
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     this.pythonExecFile = pythonExecFile;
-    pythonDestQ = session.createQueue(pythonQueueName);
 
     if (!new File(pythonExecFile).exists()) {
       throw new IllegalArgumentException("Python file doesn't exist: " + pythonExecFile);
     }
 
-    replyQueue = session.createQueue(this.getClass().getSimpleName()+"."+pythonExecFile + ".pythonStatusQ" + nextId());
-    this.pythonQueueName = pythonQueueName; // FIXME: make this settable
+    replyQueue = session.createQueue(name()+".pythonStatusQ");
+    this.pythonQueueName = name()+".pythonCommandQ";
+    pythonDestQ = session.createQueue(pythonQueueName);
     MQClient.createQueueConsumer(session, replyQueue.getQueueName(), m -> {
       try {
         if (END.equals(m.getStringProperty("id")))
@@ -97,7 +90,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
       p = startPythonWorkerProcess();
     }
 
-    if (pythonCompleteF.isDone()) {
+    if (pythonCompleteF.isDone() && !pythonCompleteF.get()) {
       log.error("Not submitting subjobs since python worker did not run");
       return false;
     } else {
@@ -132,7 +125,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
     Process p = null;
     try {
       // -u option so that output is unbuffered
-      p = RuntimeUtils.exec(pythonExecFile, pythonExecutable, "-u", pythonExecFile);
+      p = RuntimeUtils.exec(pythonExecFile, genPythonCmdAndArgs());
       Thread.sleep(1000); // allow some time for python to crash
       if (!p.isAlive()) {
         log.error("Python worker died");
@@ -147,6 +140,10 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
     // if (!pythonCompleteF.isDone())
     // Thread.sleep(2000); // allow some more time for python to crash before continuing
     return p;
+  }
+
+  private String[] genPythonCmdAndArgs() {
+    return new String[] {pythonExecutable, "-u", pythonExecFile, pythonQueueName};
   }
 
   protected abstract Message createCommandMsg() throws JMSException;

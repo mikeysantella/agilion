@@ -55,11 +55,11 @@ public class WorkerMain {
     };
     
     jConsumers=new ArrayList<>(hiddenWorkers.length+workers.length);
-    for(BaseWorker<?> worker:hiddenWorkers)    {
+    for (BaseWorker<?> worker : hiddenWorkers) {
       jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
-    }    
-    for(BaseWorker<?> worker:workers)    {
-      OperationsSubscriberModule.deployOperationsSubscriberVerticle(injector, connection, worker);
+    }
+    for (BaseWorker<?> worker : workers) {
+      OperationsSubscriberModule.deployOperationsSubscriber(connection, worker);
       jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
     }
   }

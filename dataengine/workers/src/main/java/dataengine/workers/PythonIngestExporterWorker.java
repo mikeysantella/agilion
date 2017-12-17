@@ -34,8 +34,7 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
   @Inject
   public PythonIngestExporterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection)
       throws JMSException {
-    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "stompworker.pex", "query");
-    // TODO Auto-generated constructor stub
+    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "stompworker.pex");
   }
 
   @Override
