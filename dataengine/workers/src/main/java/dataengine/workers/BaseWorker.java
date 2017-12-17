@@ -69,6 +69,7 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
       opParamsMap.checkForRequiredParams(job.getId(), job.getParams());
       // within doWork(), remember to call Future.get() to wait for work to finish or throw exception
       clog.info("WORKER: {} start jobId={}", name, job.getId());
+      state.getMetrics().put("job.id", job.getId());
       if (doWork(job)) 
         state.done(jobDto);
       else

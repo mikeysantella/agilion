@@ -3,10 +3,12 @@ package dataengine.sessions;
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
 import static net.deelam.graph.GrafTxn.tryFAndCloseTxn;
 import java.io.Closeable;
+import java.io.IOException;
 import java.util.NoSuchElementException;
 import org.slf4j.Logger;
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.util.io.graphml.GraphMLWriter;
 import com.tinkerpop.blueprints.util.wrappers.id.IdGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
 
@@ -15,6 +17,7 @@ import dataengine.sessions.frames.SessionFramesRegistry;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.graph.BpGrafDebug;
 import net.deelam.graph.FramedGrafSupplier;
 import net.deelam.graph.GrafTxn;
 import net.deelam.utils.ConsoleLogging;
@@ -68,8 +71,20 @@ public class SessionDB implements Closeable{
     log.info("-- Ready: {}", this);
   }
 
+  private static final boolean DEBUG = true;
+
   public synchronized void close() {
     log.info("SESS: Shutting down " + graph + " " + GrafTxn.isInTransaction());
+    if(DEBUG) {
+      log.info("Session graph: {}", BpGrafDebug.toString(graph));
+      try {
+        GraphMLWriter writer=new GraphMLWriter(graph);
+        writer.setNormalize(true);
+        writer.outputGraph("sessionDb.graphml");
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
     graph.shutdown();
     log.info("Shut down " + graph);
   };
