@@ -77,15 +77,6 @@ body
     margin-bottom: 0px;
 }
 
-.form-section
-{
-}
-
-.form-section-body
-{
-
-}
-
 .table
 {
     margin-bottom: 5px;
@@ -111,4 +102,9 @@ body
 .formButtonContainer
 {
     text-align: right;
+}
+
+.sub-label
+{
+    font-weight: normal
 }

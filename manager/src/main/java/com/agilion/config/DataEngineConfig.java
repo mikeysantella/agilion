@@ -1,5 +1,7 @@
 package com.agilion.config;
 
+import com.agilion.domain.DemoDataEngineClient;
+import com.agilion.services.DataEngineClient;
 import dataengine.ApiClient;
 import dataengine.Pair;
 import dataengine.api.DatasetsApi;
@@ -57,5 +59,11 @@ public class DataEngineConfig
     {
         RequestsApi requestsApi = new RequestsApi(apiClient());
         return requestsApi;
+    }
+
+    @Bean
+    public DataEngineClient client()
+    {
+        return new DemoDataEngineClient();
     }
 }

@@ -4,7 +4,9 @@
         <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/font-awesome.min.css}">
         <script th:src="@{/webjars/jquery/jquery.js}"></script>
         <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-        <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
+        <script th:src="@{/webjars/bootstrap-datepicker/js/bootstrap-datepicker.min.js}"></script>
+        <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" />
+        <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap-datepicker/css/bootstrap-datepicker.min.css}" />
         <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
         <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
         <script th:inline="javascript"> var contextRoot = /*[[@{/}]]*/ ''; </script>
@@ -22,29 +24,44 @@
                 </div>
                 <div class="form-group">
                     <label for="projectName">Enter Target Deck</label>
-                    <div class="row" v-for="targetDeckEntry in form.targetDeck">
-                        <div class="col-xs-4 ">
-                            <label>Project Name</label>
-                            <input class="form-control" v-model="targetDeckEntry.selectorList" />
+                    <div class="row form-group" v-for="targetDeckEntry in form.targetDeck">
+                        <div class="col-xs-4">
+                            <label class="control-label sub-label">Selector List</label>
+                            <div class="input-group">
+                                <span class="input-group-addon btn" @click="removeTargetDeck(targetDeckEntry)">Delete</span>
+                                <input class="form-control" v-model="targetDeckEntry.selectorList" />
+                            </div>
                         </div>
-                        <div class="col-xs-4 ">
-                            <label >Project Name</label>
-                            <input class="form-control" v-model="targetDeckEntry.selectorType" />
+                        <div class="col-xs-3">
+                            <label class="control-label sub-label">Selector Type</label>
+                            <select class="form-control" v-model="targetDeckEntry.selectorType">
+                                <option disabled value="">Please Select one</option>
+                                <option v-for="type in serverData.selectorTypes" value="{{type}}" v-text="type"></option>
+                            </select>
                         </div>
-                        <div class="col-xs-4 ">
-                            <label >Project Name</label>
+                        <div class="col-xs-1">
+                            <label class="control-label sub-label">or</label>
+                        </div>
+                        <div style="overflow-x: hidden;" class="col-xs-3">
+                            <label class="control-label sub-label">Selector File</label>
                             <input type="file" v-model="targetDeckEntry.uploadedSelectorFile" />
                         </div>
                     </div>
-                    <div class="col-xs-12">
-                        <button class="btn btn-primary" @click="addTargetDeck">+ Add Selector List</button>
+                    <button class="btn btn-primary btn-sm" @click="addTargetDeck">+ Add Selector List</button>
+                </div>
+                <div class="form-group">
+                    <label for="projectName">Target Date Range</label>
+                    <div class="input-group">
+                        <input type="text" data-provide="datepicker" class="form-control" placeholder="Start Date"/>
+                        <span class="btn input-group-addon"><i class="fa fa-exchange" aria-hidden="true"></i></span>
+                        <input type="text" data-provide="datepicker" class="form-control" placeholder="End Date"/>
                     </div>
                 </div>
             </div>
         </div>
 
         <!--/* Initialize vue and the data model here */-->
-        <script type="text/javascript">
+        <script th:inline="javascript" type="text/javascript">
           var app = new Vue({
             el: '#app',
             data: {
@@ -54,7 +71,12 @@
                         selectorList: null,
                         selectorType: null,
                         uploadedSelectorFile: null
-                  }]
+                  }],
+                  fromDate: null,
+                  toDate: null
+              },
+              serverData: {
+                  selectorTypes: /*[[ ${selectorTypes} ]]*/
               }
             },
 
@@ -70,7 +92,7 @@
                 removeTargetDeck: function(row)
                 {
                     var index = this.form.targetDeck.indexOf(row);
-                    this.targetDeck.splice(index, 1);
+                    this.form.targetDeck.splice(index, 1);
                 }
             }
           });
