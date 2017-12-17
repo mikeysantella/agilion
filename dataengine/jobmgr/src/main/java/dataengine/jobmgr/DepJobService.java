@@ -40,11 +40,6 @@ public class DepJobService implements DepJobService_I {
   
   final RpcClientProvider<JobBoardInput_I> jbInput;
   
-  @Deprecated
-  boolean removeOnCompletion = false;
-  @Deprecated
-  boolean removeOnFailure = false;
-  
   public DepJobService(IdGraph<?> dependencyGraph, RpcClientProvider<JobBoardInput_I> jbInput) {
     Class<?>[] typedClasses = {DepJobFrame.class};
     FramedGrafSupplier provider = new FramedGrafSupplier(typedClasses);
@@ -55,8 +50,6 @@ public class DepJobService implements DepJobService_I {
   @Override
   public void handleJobCompleted(String jobId) {
     log.info("DISPATCHER: Job complete: {}", jobId);
-    if (removeOnCompletion)
-      jbInput.rpc().removeJob(jobId);
     DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
     //log.debug("all jobs: {}", this);
     jobDone(jobV);
@@ -67,8 +60,6 @@ public class DepJobService implements DepJobService_I {
   @Override
   public void handleJobFailed(String jobId) {
     log.info("DISPATCHER: Job failed: {}", jobId);
-    if (removeOnFailure)
-      jbInput.rpc().removeJob(jobId);
     cancelJobsDependentOn(jobId, null);
     DepJobFrame jobV = graph.getVertex(jobId, DepJobFrame.class);
     //log.debug("all jobs: {}", this);
