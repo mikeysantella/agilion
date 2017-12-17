@@ -32,26 +32,27 @@ public class BaseWorkerModule extends AbstractModule {
 
   public static class DeployedJobConsumerFactory {
     final ProgressMonitor.Factory pmFactory;
-    final RpcClientProvider<JobBoardOutput_I> jobBoard;
+    final RpcClientProvider<JobBoardOutput_I> jobBoardRpc;
     final Connection connection;
 
     @Inject
     DeployedJobConsumerFactory(Factory pmFactory, RpcClientProvider<JobBoardOutput_I> jobBoard, Connection connection) {
       this.pmFactory = pmFactory;
-      this.jobBoard=jobBoard;
-      this.connection=connection;
+      this.jobBoardRpc = jobBoard;
+      this.connection = connection;
     }
 
     public JobConsumer create(ProgressingDoer doer, String newJobAvailableTopic) {
-      ReportingWorker rw = new ReportingWorker(doer, (job) -> doer.canDo(job), () -> doer.state())
+      ReportingWorker rw = new ReportingWorker(doer, doer::canDo, doer::state)
           .setProgressMonitorFactory(pmFactory);
       
-      JobConsumer jConsumer = new JobConsumer(doer.jobType(), jobBoard, connection).setWorker(rw);
+      JobConsumer jConsumer = new JobConsumer(doer.jobType(), jobBoardRpc, connection, rw);
       log.info("AMQ: WORKER: Deploying JobConsumer with ReportingWorker for: {} type={}", 
           doer.name(), doer.jobType());
       try {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        String workerAddr=jConsumer.start(MQClient.createTopicConsumer(session, newJobAvailableTopic, null));
+        String workerAddr=jConsumer.start("JobConsumer-"+doer.name(), 
+            MQClient.createTopicConsumer(session, newJobAvailableTopic, null));
 
         new AmqComponentSubscriber(connection, workerAddr, 
             CommunicationConsts.COMPONENT_TYPE, "JobConsumer", 
