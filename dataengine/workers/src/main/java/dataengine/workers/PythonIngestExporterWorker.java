@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import dataengine.api.Dataset;
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
@@ -34,7 +35,7 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
   @Inject
   public PythonIngestExporterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection)
       throws JMSException {
-    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "stompworker.pex");
+    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
   }
 
   @Override
@@ -54,7 +55,7 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
     return MY_DATA_FORMAT.equals(job.getParams().get(OperationConsts.DATA_FORMAT));
   }
 
-  protected SubjobCommandMsg createCommandMsg(int cmdIndex) throws JMSException {
+  protected SubjobCommandMsg createCommandMsg(int cmdIndex, Dataset inDS, Dataset outDS) throws JMSException {
     switch(cmdIndex) {
       case 0:
         // TODO: get params from Job
@@ -100,6 +101,18 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
     message.setStringProperty("host", host);
     message.setStringProperty("tablename", tablename);
     return message;
+  }
+
+  @Override
+  protected Dataset createOutputDataset(Job job, Dataset inDS) throws Exception {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  protected Dataset createInputDataset(Job job) throws Exception {
+    // TODO Auto-generated method stub
+    return null;
   }
 
   

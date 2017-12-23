@@ -12,6 +12,7 @@ include 'jobmgr'
 include 'server'
 
 include 'workers'
+include 'workersNeo4j'
 include 'sparkjobs'
 
 include 'main'

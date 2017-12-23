@@ -24,7 +24,7 @@ import net.deelam.utils.ConsoleLogging;
 @Accessors(fluent = true)
 @Getter
 @Slf4j
-abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
+public abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
 
   private static int privateIdCounter = 0;
 
@@ -33,23 +33,26 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
     return ++privateIdCounter;
   }
   
-  final RpcClientProvider<SessionsDB_I> sessDb;
+  protected final RpcClientProvider<SessionsDB_I> sessDb;
 
-  private final String jobType;
+  protected final String jobType;
 
-  private final String name;
+  protected final String name;
 
-  protected OperationWrapper opParamsMap;
-
+  @Getter(lazy=true)
+  private final OperationWrapper opParamsMap=privateCreateOperationWrapper();
+  private OperationWrapper privateCreateOperationWrapper(){
+    return new OperationWrapper(initOperation());
+  }
+  
   public Operation operation(){
-    return opParamsMap.getOperation();
-  };
+    return opParamsMap().getOperation();
+  }
   
   protected BaseWorker(String jobType, RpcClientProvider<SessionsDB_I> sessDb) {
     this.jobType = jobType;
     this.sessDb=sessDb;
     name = this.getClass().getSimpleName() + nextId() + "-" + System.currentTimeMillis();
-    opParamsMap=new OperationWrapper(initOperation());
   }
 
   abstract protected Operation initOperation();
@@ -74,7 +77,7 @@ abstract class BaseWorker<T extends Job> implements Worker_I, ProgressingDoer {
     @SuppressWarnings("unchecked")
     T job = (T) jobDto.getRequest();
     try {
-      opParamsMap.checkForRequiredParams(job.getId(), job.getParams());
+      opParamsMap().checkForRequiredParams(job.getId(), job.getParams());
       // within doWork(), remember to call Future.get() to wait for work to finish or throw exception
       clog.info("WORKER: {} start jobId={}", name, job.getId());
       state.getMetrics().put("job.id", job.getId());

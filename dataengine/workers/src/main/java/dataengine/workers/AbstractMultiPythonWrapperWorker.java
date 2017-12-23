@@ -7,6 +7,8 @@ import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import dataengine.api.Dataset;
+import dataengine.api.Job;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import lombok.AllArgsConstructor;
@@ -52,12 +54,12 @@ public abstract class AbstractMultiPythonWrapperWorker extends AbstractPythonWra
   }
 
   @Override
-  protected void sendCommandsToPython() throws Exception {
+  protected void sendCommandsToPython(Job job, Dataset inDS, Dataset outDS) throws Exception {
     subjobsProgress.clear();
     int i=0;
     SubjobCommandMsg cmdMsg;
     int totalPercentAllocated=0;
-    while((cmdMsg=createCommandMsg(i++)) != null) {
+    while((cmdMsg=createCommandMsg(i++, inDS, outDS)) != null) {
       String subjobId = cmdMsg.msg.getStringProperty("id");
       subjobsProgress.put(subjobId, cmdMsg.subjobProgress);
       totalPercentAllocated+=cmdMsg.subjobProgress.portion;
@@ -78,10 +80,10 @@ public abstract class AbstractMultiPythonWrapperWorker extends AbstractPythonWra
     final Message msg;
   }
   
-  protected abstract SubjobCommandMsg createCommandMsg(int cmdIndex) throws JMSException;
+  protected abstract SubjobCommandMsg createCommandMsg(int cmdIndex, Dataset inDS, Dataset outDS) throws JMSException;
   
   @Override
-  protected final Message createCommandMsg() throws JMSException {
+  protected final Message createCommandMsg(Job job, Dataset inDS, Dataset outDS) throws Exception {
     throw new IllegalStateException("Should never be called");
   }
   

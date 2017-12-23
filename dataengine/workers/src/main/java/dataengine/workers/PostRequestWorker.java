@@ -27,7 +27,7 @@ public class PostRequestWorker extends BaseWorker<Job> {
   @Override
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
-    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_POSTINGEST);
+    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_POSTREQUEST);
     return new Operation().level(1).id(jobType())
         .description("connect request to dataset")
         .info(info)

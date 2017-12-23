@@ -10,6 +10,7 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+import dataengine.api.Dataset;
 import dataengine.api.Job;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -97,7 +98,10 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
       if (p != null)
         state.setPercent(2).setMessage("Started python worker");
       try {
-        sendCommandsToPython();
+        Dataset inDS = createInputDataset(job);
+        Dataset outDS = createOutputDataset(job, inDS);
+        sendCommandsToPython(job, inDS, outDS);
+        state.setMessage("Done ingesting to " + outDS.getUri());
       } catch (Exception e) {
         log.error("When sending command message to python worker", e);
         pythonCompleteF.complete(false);
@@ -116,8 +120,11 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
     return pythonCompleteF.get().booleanValue();
   }
 
-  protected void sendCommandsToPython() throws Exception {
-    producer.send(pythonDestQ, createCommandMsg());
+  protected abstract Dataset createOutputDataset(Job job, Dataset inDS) throws Exception;
+  protected abstract Dataset createInputDataset(Job job) throws Exception;
+
+  protected void sendCommandsToPython(Job job, Dataset inDS, Dataset outDS) throws Exception {
+    producer.send(pythonDestQ, createCommandMsg(job, inDS, outDS));
   }
 
   private Process startPythonWorkerProcess() {
@@ -146,7 +153,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
     return new String[] {pythonExecutable, "-u", pythonExecFile, pythonQueueName};
   }
 
-  protected abstract Message createCommandMsg() throws JMSException;
+  protected abstract Message createCommandMsg(Job job, Dataset inDS, Dataset outDS) throws Exception;
 
   Message createEndPythonMsg() throws JMSException {
     log.info("createEndPythonMsg for python worker: {}", pythonExecFile);

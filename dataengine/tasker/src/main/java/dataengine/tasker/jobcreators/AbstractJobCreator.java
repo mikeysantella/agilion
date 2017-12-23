@@ -27,7 +27,7 @@ public abstract class AbstractJobCreator implements JobsCreator_I {
   
   public Operation getOperation(){
     return opW.getOperation();
-  };
+  }
   
   protected Operation initOperation() {
     log.warn("TASKER: JobsCreator.operation not initialized: {}", this);

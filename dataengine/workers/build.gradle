@@ -11,6 +11,4 @@ dependencies {
   compile dep.activemq_rpc
   compile dep.commons_io
     
-  testCompile dep.vertx_unittest
-  
 }

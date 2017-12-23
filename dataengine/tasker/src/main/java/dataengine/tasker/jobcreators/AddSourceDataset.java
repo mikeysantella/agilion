@@ -76,25 +76,25 @@ public class AddSourceDataset extends AbstractJobCreator {
 
   @SuppressWarnings("unchecked")
   @Override
-  public List<JobEntry> createFrom(Request req, List<String> priorJobIds) {
+  public List<JobEntry> createFrom(final Request req, List<String> priorJobIds) {
     OperationSelection selection = req.getOperation();
     checkArgument(opW.getOperation().getId().equals(selection.getId()), "Operation.id does not match!");
     opW.convertParamValues(selection);
-
     
-    Job job0 = new Job().id(req.getId() + "-" + req.getLabel() + ".job0-preRequest")
+    final String jobPrefix = getJobIdPrefix(req); //req.getId() + "-" + req.getLabel();
+    Job job0 = new Job().id(jobPrefix + ".job0-preRequest")
         .type(OperationConsts.TYPE_PREREQUEST)
         .requestId(req.getId())
         .label("Post-request " + req.getId() + ":" + req.getLabel());
-    Job job1 = new Job().id(getJobIdPrefix(req) + ".job1-ingest")
+    Job job1 = new Job().id(jobPrefix + ".job1-ingest")
         .type(OperationConsts.TYPE_INGESTER)
         .requestId(req.getId())
         .label("Ingest " + selection.getParams().get(OperationConsts.INPUT_URI));
-    Job job2 = new Job().id(req.getId() + "-" + req.getLabel() + ".job2-postIngest")
+    Job job2 = new Job().id(jobPrefix + ".job2-postIngest")
         .type(OperationConsts.TYPE_POSTINGEST)
         .requestId(req.getId())
         .label("Post-ingest " + selection.getParams().get(OperationConsts.INPUT_URI));
-    Job job3 = new Job().id(req.getId() + "-" + req.getLabel() + ".job3-postRequest")
+    Job job3 = new Job().id(jobPrefix + ".job3-postRequest")
         .type(OperationConsts.TYPE_POSTREQUEST)
         .requestId(req.getId())
         .label("Post-request " + req.getId() + ":" + req.getLabel());

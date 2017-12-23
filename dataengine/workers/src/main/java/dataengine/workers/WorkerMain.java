@@ -51,7 +51,9 @@ public class WorkerMain {
     BaseWorker<?>[] workers = {
         injector.getInstance(IngestTelephoneDummyWorker.class),
         injector.getInstance(IngestPeopleDummyWorker.class),
-        injector.getInstance(IndexDatasetDummyWorker.class)
+        injector.getInstance(IndexDatasetDummyWorker.class),
+        injector.getInstance(PythonIngesterWorker.class),
+        injector.getInstance(PythonIngestExporterWorker.class)
     };
     
     jConsumers=new ArrayList<>(hiddenWorkers.length+workers.length);

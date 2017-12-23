@@ -13,7 +13,7 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 
 /// provides verticle clients used by Worker service
 @Slf4j
-class RpcClients4WorkerModule extends RpcClientsModule {
+public class RpcClients4WorkerModule extends RpcClientsModule {
   private final String depJobMgrBroadcastAddr;
   private final String jobBoardBroadcastAddr;
 
