@@ -16,8 +16,19 @@ public class TargetDeckEntry
      */
     private SelectorType selectorType;
 
-    /**
-     * A file containing selectors
-     */
-    private MultipartFile uploadedSelectorFile;
+    public String getSelectorList() {
+        return selectorList;
+    }
+
+    public void setSelectorList(String selectorList) {
+        this.selectorList = selectorList;
+    }
+
+    public SelectorType getSelectorType() {
+        return selectorType;
+    }
+
+    public void setSelectorType(SelectorType selectorType) {
+        this.selectorType = selectorType;
+    }
 }

@@ -108,3 +108,40 @@ body
 {
     font-weight: normal
 }
+
+.checkbox
+{
+    margin-top: 0px;
+}
+
+.block
+{
+    display: block;
+}
+
+.required-label::after
+{
+    color: red;
+    content: " *";
+}
+
+.nudge-right
+{
+    padding-left: 15px;
+}
+
+.middle-button-addon-container
+{
+    height: 100%;
+}
+
+.targetdeck-row
+{
+    padding-bottom: 7.5px;
+}
+
+.middle-btn-addon
+{
+    border-radius: 0px;
+    height: 100%;
+}

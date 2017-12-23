@@ -11,4 +11,8 @@ public class DemoDataEngineClient implements DataEngineClient
     {
         return Lists.newArrayList("MSISDN", "IMSI", "Social Media Handle");
     }
+
+    public List<String> getDataSources(){
+        return Lists.newArrayList("Facebook", "DeviantArt", "Reddit", "MeleeItOnMe.com");
+    }
 }
