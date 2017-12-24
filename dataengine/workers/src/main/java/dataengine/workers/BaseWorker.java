@@ -29,8 +29,8 @@ public abstract class BaseWorker<T extends Job> implements Worker_I, Progressing
   private static int privateIdCounter = 0;
 
   @Synchronized
-  static int nextId() {
-    return ++privateIdCounter;
+  static String nextId() {
+    return ++privateIdCounter + "-" + System.currentTimeMillis();
   }
   
   protected final RpcClientProvider<SessionsDB_I> sessDb;
@@ -52,7 +52,7 @@ public abstract class BaseWorker<T extends Job> implements Worker_I, Progressing
   protected BaseWorker(String jobType, RpcClientProvider<SessionsDB_I> sessDb) {
     this.jobType = jobType;
     this.sessDb=sessDb;
-    name = this.getClass().getSimpleName() + nextId() + "-" + System.currentTimeMillis();
+    name = this.getClass().getSimpleName() + nextId();
   }
 
   abstract protected Operation initOperation();

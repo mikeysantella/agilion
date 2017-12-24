@@ -1,6 +1,5 @@
 package dataengine.workers.neo4j;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +10,6 @@ import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import dataengine.apis.RpcClientProvider;
-import dataengine.apis.SessionsDB_I;
 import dataengine.workers.BaseWorker;
 import dataengine.workers.BaseWorkerModule;
 import dataengine.workers.BaseWorkerModule.DeployedJobConsumerFactory;
@@ -45,11 +42,12 @@ public class NeoWorkersMain {
         properties.getProperty("newJobAvailableTopic", "newJobAvailableTopic");
     String dispatcherRpcAddr = properties.getProperty("dispatcherRpcAddr", "depJobMgrBroadcastAMQ");
     String jobBoardRpcAddr = properties.getProperty("jobBoardRpcAddr", "jobBoardBroadcastAMQ");
-    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr);
+    Properties domainProps = PropertiesUtil.loadProperties("tide.props");
+    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, domainProps);
   }
 
   public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr,
-      String jobBoardRpcAddr) throws JMSException, IOException {
+      String jobBoardRpcAddr, Properties domainProps) throws JMSException {
     connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr);
     DeployedJobConsumerFactory jcFactory =
@@ -57,7 +55,7 @@ public class NeoWorkersMain {
 
     Factory csv2NeoWorkerFactory=injector.getInstance(CsvToNeoWorker.Factory.class);
     BaseWorker<?>[] hiddenWorkers = {
-        csv2NeoWorkerFactory.create(PropertiesUtil.loadProperties("tide.props"))
+        csv2NeoWorkerFactory.create(domainProps)
     };
 
     BaseWorker<?>[] workers = {

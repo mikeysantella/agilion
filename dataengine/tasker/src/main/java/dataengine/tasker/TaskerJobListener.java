@@ -28,8 +28,8 @@ public class TaskerJobListener implements JobListener_I {
   final String eventBusAddress;
   private static int privateTaskerJobListenerIdCounter=0;
   @Synchronized
-  private static int nextId() {
-    return ++privateTaskerJobListenerIdCounter;
+  private static String nextId() {
+    return ++privateTaskerJobListenerIdCounter + "-" + System.currentTimeMillis();
   }
   
   final Session session;

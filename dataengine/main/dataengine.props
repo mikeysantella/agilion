@@ -1,4 +1,5 @@
-componentIds=amq, sessions, tasker, jobMgrType, workers
+componentIds=amq, sessions, tasker, jobMgrType, workers, neoWorkers
+componentIdsToStart=amq, sessions, tasker, jobMgrType, workers
 
 
 include=startup.props
@@ -21,14 +22,15 @@ tasker.dispatcherComponentType=jobMgrType
 
 jobMgrType.classname=dataengine.main.JobMgrComponent
 jobMgrType.include=needsAmq
+// TODO: have workers discover msgT.newJobAvailable by asking jobDto.jobBoardRpcAddr
 jobMgrType.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
 jobMgrType.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
 jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
 
 workers.classname=dataengine.main.WorkersComponent
-workers.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
-// TODO: remove; use jobDto instead
-workers.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
-workers.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
-workers.include=needsAmq, 
+// TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
+workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
+
+neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
+neoWorkers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 

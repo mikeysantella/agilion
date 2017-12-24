@@ -36,8 +36,13 @@ import net.deelam.activemq.ConstantsAmq;
 import net.deelam.activemq.MQClient;
 import net.deelam.activemq.rpc.AmqComponentRegistry;
 import net.deelam.utils.ConsoleLogging;
+import net.deelam.utils.ConsolePrompter;
 import net.deelam.utils.PropertiesUtil;
 import net.deelam.zkbasedinit.ConstantsZk;
+import net.deelam.zkbasedinit.MainZkComponentStarter;
+import net.deelam.zkbasedinit.MainZkComponentStopper;
+import net.deelam.zkbasedinit.MainZkConfigPopulator;
+import net.deelam.zkbasedinit.MainZookeeper;
 
 /**
  * 
@@ -53,7 +58,7 @@ import net.deelam.zkbasedinit.ConstantsZk;
 @Slf4j
 public class MainJetty {
   static final boolean DEBUG=false;
-  static int SLEEPTIME=0;
+  static int SLEEPTIME=500;
   
   static final Logger clog = ConsoleLogging.createSlf4jLogger(MainJetty.class);
   static ConsolePrompter prompter = new ConsolePrompter(">>>>> Press Enter to ");
@@ -234,47 +239,53 @@ public class MainJetty {
       new Thread(() -> zookeeper.startAndWaitUntilStopped(zkConfFile.getAbsolutePath()),
           "myEmbeddedZookeeperThread").start();
       log.info("Waiting for Zookeeper to start...");
-      zookeeper.zookeeperConnectF.get();
+      zookeeper.getZookeeperConnectF().get();
       // need to wait for Zookeeper to start
       clog.info("  (Waiting a few seconds for Zookeeper to start)");
       Thread.sleep(8*SLEEPTIME);
     }
     
-    String zkStartupPath = "/test/fromEclipse/startup";
-    log.info("System.setProperty: {}={}", ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
-    System.setProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
-    prompter.getUserInput("start MainZkConfigPopulator with ZOOKEEPER_STARTUPPATH=" + zkStartupPath, 3000);
+//    String zkStartupPath = "/test/fromEclipse/startup";
+//    log.info("System.setProperty: {}={}", ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
+//    System.setProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH, zkStartupPath);
+    prompter.getUserInput("start MainZkConfigPopulator with ZOOKEEPER_STARTUPPATH", 3000);
     
     String configsPropsFilename=System.getProperty("PROPFILE");
     if(configsPropsFilename==null || configsPropsFilename.length()==0)
       configsPropsFilename=DATAENGINE_PROPS;
     final String configsPropsFile=configsPropsFilename;
     new Thread(() -> {
+      configPopulator.SLEEPTIME=SLEEPTIME;
+      configPopulator.DEBUG=true;
       configPopulator.startAndWaitUntilPopulated(configsPropsFile);
       log.info("({}) ======== Components configured", timer);
     }, "myZkConfigPopulator").start();
 
-    String componentIds = System.getProperty(MainZkComponentStarter.COMPONENT_IDS);
-    if(componentIds==null || componentIds.length()==0) {
-      // start all componentIds configured by MainZkConfigPopulator
-      componentIds = configPopulator.getComponentIdsF().get();
-      log.info("System.setProperty: {}={}", MainZkComponentStarter.COMPONENT_IDS, componentIds);
-      System.setProperty(MainZkComponentStarter.COMPONENT_IDS, componentIds);
+    Properties properties = PropertiesUtil.loadProperties(configsPropsFile);
+    String componentIdsToStart = System.getProperty(MainZkComponentStarter.COMPONENT_IDS_TO_START);
+    if(componentIdsToStart==null || componentIdsToStart.trim().length()==0) {
+      clog.info("Populated configurations for components: {}", configPopulator.getComponentIdsF().get());
+      if(true) {
+        componentIdsToStart = properties.getProperty(MainZkComponentStarter.COMPONENT_IDS_TO_START);
+      }else {
+        // start all componentIds configured by MainZkConfigPopulator
+        componentIdsToStart = configPopulator.getComponentIdsF().get();
+      }
+      log.info("System.setProperty: {}={}", MainZkComponentStarter.COMPONENT_IDS_TO_START, componentIdsToStart);
+      System.setProperty(MainZkComponentStarter.COMPONENT_IDS_TO_START, componentIdsToStart);
     }
-    prompter.getUserInput("start MainZkComponentStarter for: " + componentIds, 3000);
+    prompter.getUserInput("start MainZkComponentStarter for: " + componentIdsToStart, 3000);
     new Thread(() -> {
       componentStarter.startAndWaitUntilStopped(STARTUP_PROPS);
       log.info("({}) ======== All started components have ended", timer);
     }, "myZkComponentStarter").start();
 
     prompter.getUserInput("start AmqComponentRegistry using " + configsPropsFile, 3000);
-    startComponentRegistry(configsPropsFile);
+    startComponentRegistry(properties);
   }
 
   Connection connection;
-  private void startComponentRegistry(String configsPropsFile) throws FileNotFoundException, IOException, JMSException {
-    Properties properties = new Properties();
-    PropertiesUtil.loadProperties(configsPropsFile, properties);
+  private void startComponentRegistry(Properties properties) throws FileNotFoundException, IOException, JMSException {
     String brokerUrl = ConstantsAmq.getTcpBrokerUrl(properties.getProperty("amq.brokerUrls"));
     
     Thread t = new Thread(() -> {
@@ -327,7 +338,9 @@ public class MainJetty {
       log.warn("While shutting down AmqComponentRegistry", e);
     }
     clog.info("({}) ======== Shutting down components", timer);
-    new MainZkComponentStopper().stopComponents(STARTUP_PROPS);
+    MainZkComponentStopper stopper = new MainZkComponentStopper();
+    stopper.SLEEPTIME=SLEEPTIME;
+    stopper.stopComponents(STARTUP_PROPS);
     configPopulator.shutdown();
     componentStarter.shutdown();
 

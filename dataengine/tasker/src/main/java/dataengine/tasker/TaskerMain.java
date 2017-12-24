@@ -48,7 +48,7 @@ public class TaskerMain {
     
     opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector);
     TaskerModule.deployTasker(injector);
-    dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+"/"+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH);
+    dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH);
   }
 
   private static OperationsRegistry opsRegistry;
