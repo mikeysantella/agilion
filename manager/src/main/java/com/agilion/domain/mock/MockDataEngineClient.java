@@ -1,11 +1,11 @@
-package com.agilion.domain;
+package com.agilion.domain.mock;
 
 import com.agilion.services.DataEngineClient;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 import java.util.List;
 
-public class DemoDataEngineClient implements DataEngineClient
+public class MockDataEngineClient implements DataEngineClient
 {
     public List<String> getSelectorTypes()
     {
@@ -13,6 +13,6 @@ public class DemoDataEngineClient implements DataEngineClient
     }
 
     public List<String> getDataSources(){
-        return Lists.newArrayList("Facebook", "DeviantArt", "Reddit", "MeleeItOnMe.com");
+        return Lists.newArrayList("Facebook", "DeviantArt", "Reddit", "MeleeItOnMe");
     }
 }

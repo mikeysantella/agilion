@@ -94,21 +94,6 @@ public class DataEngineClientTest
 
     public NewSessionForm createDummyNewSessionUIForm()
     {
-        NewSessionForm form = new NewSessionForm();
-        form.setSessionName("New Session");
-        form.setStepsToExecute(3);
 
-        List<NewDataEngineIngestJobForm> dataJobs = new ArrayList<>();
-        for (int i = 0; i < 2; i++)
-        {
-            NewDataEngineIngestJobForm dataJob = new NewDataEngineIngestJobForm();
-            dataJob.setIngestJobType(DataIngestJobType.FILE_UPLOAD);
-            dataJob.setExecuteForSteps(Lists.newArrayList(1, 2));
-            dataJob.setDataSourceName("TELEPHONE.CSV");
-            dataJob.setParams(Maps.newHashMap("testParam", "its true, my guy"));
-            dataJobs.add(dataJob);
-        }
-        form.setDataIngestJobs(dataJobs);
-        return form;
     }
 }

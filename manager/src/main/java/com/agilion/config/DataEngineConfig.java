@@ -1,9 +1,8 @@
 package com.agilion.config;
 
-import com.agilion.domain.DemoDataEngineClient;
+import com.agilion.domain.mock.MockDataEngineClient;
 import com.agilion.services.DataEngineClient;
 import dataengine.ApiClient;
-import dataengine.Pair;
 import dataengine.api.DatasetsApi;
 import dataengine.api.JobsApi;
 import dataengine.api.RequestsApi;
@@ -64,6 +63,6 @@ public class DataEngineConfig
     @Bean
     public DataEngineClient client()
     {
-        return new DemoDataEngineClient();
+        return new MockDataEngineClient();
     }
 }

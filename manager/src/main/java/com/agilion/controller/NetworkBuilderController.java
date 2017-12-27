@@ -47,6 +47,7 @@ public class NetworkBuilderController
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
     public String attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult)
     {
+        networkBuilderForm.getDataFiles().get(0).
         return "null";
     }
 }
