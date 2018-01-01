@@ -3,7 +3,7 @@ package com.agilion.utils;
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
 import com.agilion.domain.networkbuilder.TargetDeckEntry;
 import com.agilion.services.files.FileStore;
-import com.agilion.services.jobmanager.JobRequest;
+import com.agilion.services.jobmanager.NetworkBuildingRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class NetworkFormToJobRequestConverter
         this.fileStore = store;
     }
 
-    public JobRequest convertNetworkFormToJobRequest(NetworkBuilderForm form) throws Exception
+    public NetworkBuildingRequest convertNetworkFormToJobRequest(NetworkBuilderForm form) throws Exception
     {
         // First store the files. We'll take the paths and include them in the JobRequest
         List<String> dataFiles = new LinkedList<>();
@@ -44,12 +44,12 @@ public class NetworkFormToJobRequestConverter
 
         if (form.getTargetDeck().getTargetDeckEntryList().size() < 1)
         {
-            return new JobRequest(form.getProjectName(), selectorFiles, dataFiles, form.getDataSources(), params);
+            return new NetworkBuildingRequest(form.getProjectName(), selectorFiles, dataFiles, form.getDataSources(), params);
         }
         else
         {
             Map<String, List<String>> selectorMap = buildSelectorMap(form);
-            return new JobRequest(form.getProjectName(), selectorMap, dataFiles, form.getDataSources(), params);
+            return new NetworkBuildingRequest(form.getProjectName(), selectorMap, dataFiles, form.getDataSources(), params);
         }
     }
 

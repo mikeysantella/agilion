@@ -1,19 +1,13 @@
 package com.agilion.controller;
 
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
-import com.agilion.services.DataEngineClient;
+import com.agilion.services.dataengine.DataEngineClient;
 import com.google.gson.Gson;
-import dataengine.ApiException;
-import dataengine.api.Request;
-import dataengine.api.Session;
-import jersey.repackaged.com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.validation.Valid;
 import java.util.*;

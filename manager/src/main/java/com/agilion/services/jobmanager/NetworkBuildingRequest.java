@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class JobRequest
+public class NetworkBuildingRequest
 {
     private String jobName;
 
@@ -26,7 +26,7 @@ public class JobRequest
 
     private Map<String, Object> requestParams;
 
-    public JobRequest(String jobName, List<String> selectorFilePaths, List<String> dataFilePaths,
+    public NetworkBuildingRequest(String jobName, List<String> selectorFilePaths, List<String> dataFilePaths,
                              List<String> dataSources, Map<String, Object> requestParams)
     {
         this.jobName = jobName;
@@ -36,7 +36,7 @@ public class JobRequest
         this.requestParams = requestParams;
     }
 
-    public JobRequest(String jobName, Map<String, List<String>> selectorSet, List<String> dataFilePaths,
+    public NetworkBuildingRequest(String jobName, Map<String, List<String>> selectorSet, List<String> dataFilePaths,
                              List<String> dataSources, Map<String, Object> requestParams)
     {
         this.jobName = jobName;

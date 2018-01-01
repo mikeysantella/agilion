@@ -11,25 +11,20 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
-public interface JobManagerClient
+public interface JobManager
 {
     /**
      * Submits a job, returns an ID corresponding to that job. Use the returned ID for the other methods in this class
      * @param request
      * @return
      */
-    public String submitJob(JobRequest request);
+    public String submitJob(NetworkBuildingRequest request);
 
     /**
      * Returns the state of the job
      * @param jobID
      * @return
      */
-    public JobState getJobState(String jobID);
-
-    /**
-     * Returns a detailed message that indicates the status of the job
-     */
-    public String getJobStatus(String jobID);
+    public NetworkBuildingJob getJob(String jobID);
 
 }
