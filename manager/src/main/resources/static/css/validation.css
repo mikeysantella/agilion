@@ -1,3 +1,9 @@
+.required-label::after
+{
+    color: red;
+    content: " *";
+}
+
 .invalid
 {
     color:  #cc0000;

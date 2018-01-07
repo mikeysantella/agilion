@@ -7,5 +7,6 @@ import org.omg.PortableInterceptor.USER_EXCEPTION;
  */
 public enum Role {
     ADMIN,
-    USER
+    NORMAL_USER,
+    BROWSE,
 }

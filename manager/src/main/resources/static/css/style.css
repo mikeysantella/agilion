@@ -119,12 +119,6 @@ body
     display: block;
 }
 
-.required-label::after
-{
-    color: red;
-    content: " *";
-}
-
 .nudge-right
 {
     padding-left: 15px;
@@ -144,4 +138,9 @@ body
 {
     border-radius: 0px;
     height: 100%;
+}
+
+.form-feedback
+{
+    color: #a94442;
 }
