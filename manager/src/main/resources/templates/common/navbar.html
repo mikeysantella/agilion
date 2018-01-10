@@ -26,9 +26,9 @@
                     <!--/* Start of navbar that is only viewable to logged in users */-->
                     <th:block sec:authorize="isFullyAuthenticated()">
                         <li th:classappend="${active.equals('dataEngine')} ? 'active'">
-                            <a th:href="@{/session/new}">Network Builder</a>
+                            <a th:href="@{/project/new}">Network Builder</a>
                         </li>
-                        <li><a href="#">History</a></li>
+                        <li><a th:href="@{/project/history}">History</a></li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                                 Tools <span class="caret"></span>
@@ -55,7 +55,7 @@
                         <li>
                             <a href="#">
                                 <i style="color: white" class="fa fa-user-circle-o"></i>
-                                 Alex Campbell
+                                <span th:text ="${#authentication.getPrincipal().getUsername()}"></span>
                             </a>
                         </li>
                     </ul>

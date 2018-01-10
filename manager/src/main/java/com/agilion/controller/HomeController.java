@@ -1,5 +1,8 @@
 package com.agilion.controller;
 
+import com.agilion.domain.app.User;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -13,6 +16,8 @@ public class HomeController
     @RequestMapping
     public String initHome()
     {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(user.getSubmittedNetworkBuildJobIds());
         return "home";
     }
 }

@@ -1,4 +1,4 @@
-package com.agilion.domain.mock;
+package com.agilion.mock;
 
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.files.FileStore;
@@ -6,6 +6,7 @@ import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.JobState;
 import com.agilion.services.jobmanager.NetworkBuildingJob;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
+import org.springframework.security.access.method.P;
 
 import java.io.InputStream;
 import java.util.*;
@@ -38,6 +39,16 @@ public class MockJobManager implements JobManager
     @Override
     public NetworkBuildingJob getJob(String jobID) {
         return this.jobs.get(jobID).networkBuildingJob;
+    }
+
+    @Override
+    public List<NetworkBuildingJob> getJobs(List<String> jobIDs) {
+        List<NetworkBuildingJob> jobs = new LinkedList<>();
+        for (String id : jobIDs){
+            jobs.add(this.getJob(id));
+        }
+
+        return jobs;
     }
 
     /**
@@ -91,6 +102,7 @@ public class MockJobManager implements JobManager
         {
             this.request = request;
             this.networkBuildingJob = new NetworkBuildingJob();
+            this.networkBuildingJob.setName(request.getJobName());
         }
 
         @Override

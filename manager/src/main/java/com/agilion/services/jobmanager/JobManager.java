@@ -21,10 +21,19 @@ public interface JobManager
     public String submitJob(NetworkBuildingRequest request);
 
     /**
-     * Returns the state of the job
+     * Returns a job
      * @param jobID
      * @return
      */
     public NetworkBuildingJob getJob(String jobID);
+
+    /**
+     * Returns one or more jobs
+     * @param jobIDs
+     * @return
+     */
+    public List<NetworkBuildingJob> getJobs(List<String> jobIDs);
+
+
 
 }

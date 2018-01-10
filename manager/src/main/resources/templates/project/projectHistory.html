@@ -1,0 +1,48 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/font-awesome.min.css}">
+    <script th:src="@{/webjars/jquery/jquery.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
+    <link media="all" rel="stylesheet" th:href="@{/css/buttons.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/panels.css}" />
+    <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
+
+</head>
+
+<body>
+<div th:replace="common/navbar::navbarContainer ('home')"></div>
+<div class="container page-content">
+    <div class="page-header">
+        <h1 style="text-align: center">
+            Project History
+        </h1>
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-xs-12">
+                <table class="table">
+                    <thead>
+                        <th>Project Name</th>
+                        <th>Start Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </thead>
+                    <tbody>
+                        <tr th:each="job : ${jobs}">
+                            <td th:text="${job.name}"></td>
+                            <td th:text="${job.startDate}"></td>
+                            <td th:text="${job.status}"></td>
+                            <td>
+                                <button>Do Something</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

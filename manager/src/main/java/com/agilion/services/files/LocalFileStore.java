@@ -1,5 +1,6 @@
 package com.agilion.services.files;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -17,6 +18,8 @@ public class LocalFileStore implements FileStore
     public LocalFileStore(String rootDirectory)
     {
         this.rootDir = rootDirectory;
+
+        new File(this.rootDir).mkdirs();
     }
 
     @Override

@@ -1,6 +1,13 @@
 package com.agilion.config;
 
 import com.agilion.domain.app.config.UIDateFormat;
+import com.agilion.mock.MockJobManager;
+import com.agilion.services.dataengine.DataEngineClient;
+import com.agilion.services.files.FileStore;
+import com.agilion.services.files.LocalFileStore;
+import com.agilion.services.jobmanager.JobManager;
+import com.agilion.utils.NetworkFormToJobRequestConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +21,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 public class WebAppConfig extends WebMvcConfigurerAdapter
 {
     public static final String DATE_STRING_FORMAT = "MM/dd/yyyy";
+
+    @Autowired
+    DataEngineClient dataEngineClient;
 
     @Bean
     public UIDateFormat getUIDateFormat()
@@ -37,4 +47,22 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
         return bean;
     }
 
+    @Bean
+    public FileStore fileStore()
+    {
+        // TODO LocalFileStore is NOT the long-term solution. Hadoop/hdfs/S3 is.
+        return new LocalFileStore(System.getProperty("user.dir")+"/AgilionLocalFileStore/");
+    }
+
+    @Bean
+    public JobManager jobManager()
+    {
+        return new MockJobManager(fileStore(), dataEngineClient);
+    }
+
+    @Bean
+    public NetworkFormToJobRequestConverter networkFormToJobRequestConverter()
+    {
+        return new NetworkFormToJobRequestConverter(fileStore());
+    }
 }

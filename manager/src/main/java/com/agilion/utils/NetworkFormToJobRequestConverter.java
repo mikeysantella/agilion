@@ -28,15 +28,21 @@ public class NetworkFormToJobRequestConverter
         List<String> dataFiles = new LinkedList<>();
         List<String> selectorFiles = new LinkedList<>();
 
-        for (MultipartFile multipartFile : form.getDataFiles())
+        if (form.getDataFiles() != null)
         {
-            dataFiles.add(fileStore.storeFile(multipartFile.getInputStream(), UUID.randomUUID().toString()));
-        }
-        for (MultipartFile multipartFile : form.getTargetDeck().getSelectorFiles())
-        {
-            selectorFiles.add(fileStore.storeFile(multipartFile.getInputStream(), UUID.randomUUID().toString()));
+            for (MultipartFile multipartFile : form.getDataFiles())
+            {
+                dataFiles.add(fileStore.storeFile(multipartFile.getInputStream(), UUID.randomUUID().toString()));
+            }
         }
 
+        if (form.getTargetDeck().getSelectorFiles() != null)
+        {
+            for (MultipartFile multipartFile : form.getTargetDeck().getSelectorFiles())
+            {
+                selectorFiles.add(fileStore.storeFile(multipartFile.getInputStream(), UUID.randomUUID().toString()));
+            }
+        }
         // Set the dates as parameters
         Map<String, Object> params = new HashMap<>();
         params.put("fromDate", form.getFromDate());

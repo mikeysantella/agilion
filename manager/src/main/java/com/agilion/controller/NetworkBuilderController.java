@@ -1,9 +1,18 @@
 package com.agilion.controller;
 
+import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
+import com.agilion.services.app.UserService;
 import com.agilion.services.dataengine.DataEngineClient;
+import com.agilion.services.jobmanager.JobManager;
+import com.agilion.services.jobmanager.NetworkBuildingJob;
+import com.agilion.services.jobmanager.NetworkBuildingRequest;
+import com.agilion.services.security.LoggedInUserGetter;
+import com.agilion.utils.NetworkFormToJobRequestConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -22,6 +31,18 @@ public class NetworkBuilderController
     @Autowired
     DataEngineClient client;
 
+    @Autowired
+    JobManager jobManager;
+
+    @Autowired
+    NetworkFormToJobRequestConverter networkFormConverter;
+
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    LoggedInUserGetter loggedInUserGetter;
+
     private static Gson gson = new Gson();
 
     @RequestMapping("/new")
@@ -39,9 +60,27 @@ public class NetworkBuilderController
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
-    public String attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult)
-    {
-        networkBuilderForm.getDataFiles().get(0);
+    public String attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult) throws Exception {
+        //TODO VALIDATION!
+
+        // Take the submitted form and send it to the job manager.
+        NetworkBuildingRequest networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm);
+        String newNetworkJobID = this.jobManager.submitJob(networkBuildingRequest);
+
+        // Take the resulting job ID and attach it to the user so that we can get the status/results of the job
+        User user = loggedInUserGetter.getCurrentlyLoggedInUser();
+        user.getSubmittedNetworkBuildJobIds().add(newNetworkJobID);
+        this.userService.saveUser(user);
+
         return "null";
+    }
+
+    @RequestMapping(value = "/history", method = RequestMethod.GET)
+    public String initProjectHistoryPage(Model model) throws Exception {
+        List<String> networkJobIDs = loggedInUserGetter.getCurrentlyLoggedInUser().getSubmittedNetworkBuildJobIds();
+        List<NetworkBuildingJob> jobs = this.jobManager.getJobs(networkJobIDs);
+        model.addAttribute("jobs", jobs);
+        return "project/projectHistory";
+
     }
 }

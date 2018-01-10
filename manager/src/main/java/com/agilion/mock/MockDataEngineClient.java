@@ -1,4 +1,4 @@
-package com.agilion.domain.mock;
+package com.agilion.mock;
 
 import com.agilion.services.dataengine.DataEngineClient;
 import dataengine.ApiException;

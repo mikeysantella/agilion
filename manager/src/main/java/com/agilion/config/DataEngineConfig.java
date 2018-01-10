@@ -1,6 +1,6 @@
 package com.agilion.config;
 
-import com.agilion.domain.mock.MockDataEngineClient;
+import com.agilion.mock.MockDataEngineClient;
 import com.agilion.services.dataengine.DataEngineClient;
 import dataengine.ApiClient;
 import dataengine.api.DatasetsApi;

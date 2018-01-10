@@ -1,5 +1,8 @@
 package com.agilion.config;
 
+import com.agilion.domain.app.Role;
+import com.agilion.services.security.LoggedInUserGetter;
+import com.agilion.services.security.SpringSecurityUserGetter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +13,12 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+/**
+ * TODO: SOME THINGS THAT NEED TO BE ANSWERED!
+ * 1. Where are the UsernamePasswordAuthentication tokens stored? in memory? Can we store them somewhere else? Should we?
+ * 2. Should we store the ENTIRE user object in memory? Or maybe just the ID/username? Maybe we should create a separate
+ *    userDetails object?
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -19,6 +28,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public LoggedInUserGetter loggedInUserGetter()
+    {
+        return new SpringSecurityUserGetter();
     }
 
     @Override
