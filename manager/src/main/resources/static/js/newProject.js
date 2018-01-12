@@ -72,7 +72,7 @@ var app = new Vue({
             this.submitted = true;
             if (this.validProjectName && this.validTargetDeck)
             {
-                btn.button('loading');
+                btn.button('Working...');
                 $.ajax({
                     url: contextRoot+"project/submit",
                     method: 'POST',
@@ -82,6 +82,7 @@ var app = new Vue({
                     success: function()
                     {
                         btn.button('reset')
+                        window.location.href="/project/history";
                     },
                     error: function()
                     {

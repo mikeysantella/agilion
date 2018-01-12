@@ -1,14 +1,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/font-awesome.min.css}">
-    <script th:src="@{/webjars/jquery/jquery.js}"></script>
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
-    <link media="all" rel="stylesheet" th:href="@{/css/buttons.css}" />
-    <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
-    <link media="all" rel="stylesheet" th:href="@{/css/panels.css}" />
-    <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
-
+    <th:block th:replace="common/common::include"></th:block>
 </head>
 
 <body>

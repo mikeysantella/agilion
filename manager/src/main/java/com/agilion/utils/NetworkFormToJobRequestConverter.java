@@ -22,7 +22,7 @@ public class NetworkFormToJobRequestConverter
         this.fileStore = store;
     }
 
-    public NetworkBuildingRequest convertNetworkFormToJobRequest(NetworkBuilderForm form) throws Exception
+    public NetworkBuildingRequest convertNetworkFormToJobRequest(NetworkBuilderForm form, String user) throws Exception
     {
         // First store the files. We'll take the paths and include them in the JobRequest
         List<String> dataFiles = new LinkedList<>();
@@ -50,12 +50,12 @@ public class NetworkFormToJobRequestConverter
 
         if (form.getTargetDeck().getTargetDeckEntryList().size() < 1)
         {
-            return new NetworkBuildingRequest(form.getProjectName(), selectorFiles, dataFiles, form.getDataSources(), params);
+            return new NetworkBuildingRequest(form.getProjectName(), selectorFiles, dataFiles, form.getDataSources(), params, user);
         }
         else
         {
             Map<String, List<String>> selectorMap = buildSelectorMap(form);
-            return new NetworkBuildingRequest(form.getProjectName(), selectorMap, dataFiles, form.getDataSources(), params);
+            return new NetworkBuildingRequest(form.getProjectName(), selectorMap, dataFiles, form.getDataSources(), params, user);
         }
     }
 

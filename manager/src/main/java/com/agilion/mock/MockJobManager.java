@@ -6,6 +6,7 @@ import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.JobState;
 import com.agilion.services.jobmanager.NetworkBuildingJob;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
+import dataengine.ApiException;
 import org.springframework.security.access.method.P;
 
 import java.io.InputStream;
@@ -28,11 +29,14 @@ public class MockJobManager implements JobManager
     public String submitJob(NetworkBuildingRequest request)
     {
         String newJobID = UUID.randomUUID().toString();
-        MockJobRunner mockJob = new MockJobRunner(request);
+        NetworkBuildingJob networkBuildingJob = new NetworkBuildingJob(newJobID);
+        networkBuildingJob.setName(request.getJobName());
+        MockJobRunner mockJob = new MockJobRunner(request, networkBuildingJob);
         jobs.put(newJobID, mockJob);
 
         // Start the mocked job on a new thread.
-        new Thread(mockJob).start();
+        Thread thread = new Thread(mockJob);
+        thread.start();
         return newJobID;
     }
 
@@ -93,16 +97,13 @@ public class MockJobManager implements JobManager
 
     private class MockJobRunner implements Runnable
     {
-        public NetworkBuildingRequest request;
-        public String status = "Waiting";
-        public JobState state = JobState.NEW;
-        public NetworkBuildingJob networkBuildingJob;
+        NetworkBuildingJob networkBuildingJob;
+        NetworkBuildingRequest networkBuildingRequest;
 
-        public MockJobRunner(NetworkBuildingRequest request)
+        MockJobRunner(NetworkBuildingRequest request, NetworkBuildingJob networkBuildingJob)
         {
-            this.request = request;
-            this.networkBuildingJob = new NetworkBuildingJob();
-            this.networkBuildingJob.setName(request.getJobName());
+            this.networkBuildingRequest = request;
+            this.networkBuildingJob = networkBuildingJob;
         }
 
         @Override
@@ -110,8 +111,31 @@ public class MockJobManager implements JobManager
         {
             try
             {
-                // First, get all of the selectors from the job request.
-                Map<String, List<String>> selectors = getSelectors(this.request);
+                networkBuildingJob.setStatus("Working");
+                networkBuildingJob.setState(JobState.IN_PROGRESS);
+                Thread.sleep(10 * 1000);
+
+                try {
+                    //TODO for now, we are not doing anything with the target deck. We are simply uploading data files to the data engine
+                    dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
+                            networkBuildingRequest.getRequestingUser(),
+                            networkBuildingRequest.getDataFilePaths(),
+                            null);
+                }
+                catch(ApiException e)
+                {
+                    networkBuildingJob.setState(JobState.ERROR);
+                    networkBuildingJob.setStatus("Failed -- "+e.getMessage());
+                }
+                catch(Exception e)
+                {
+                    e.printStackTrace();
+                    networkBuildingJob.setState(JobState.ERROR);
+                    networkBuildingJob.setStatus("Failed due to unexpected error. See error logs");
+                }
+
+
+
 
 
 

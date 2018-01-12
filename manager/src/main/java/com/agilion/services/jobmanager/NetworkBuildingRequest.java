@@ -26,24 +26,29 @@ public class NetworkBuildingRequest
 
     private Map<String, Object> requestParams;
 
+    private String requestingUser;
+
     public NetworkBuildingRequest(String jobName, List<String> selectorFilePaths, List<String> dataFilePaths,
-                             List<String> dataSources, Map<String, Object> requestParams)
+                             List<String> dataSources, Map<String, Object> requestParams, String requestingUser)
     {
         this.jobName = jobName;
         this.selectorFilePaths = selectorFilePaths;
         this.dataFilePaths = dataFilePaths;
         this.dataSources = dataSources;
         this.requestParams = requestParams;
+        this.requestingUser = requestingUser;
     }
 
     public NetworkBuildingRequest(String jobName, Map<String, List<String>> selectorSet, List<String> dataFilePaths,
-                             List<String> dataSources, Map<String, Object> requestParams)
+                                  List<String> dataSources, Map<String, Object> requestParams, String requestingUser)
     {
         this.jobName = jobName;
         this.selectorSet = selectorSet;
         this.dataFilePaths = dataFilePaths;
         this.dataSources = dataSources;
         this.requestParams = requestParams;
+        this.requestingUser = requestingUser;
+
     }
 
     public String getJobName() {
@@ -92,5 +97,13 @@ public class NetworkBuildingRequest
 
     public void setRequestParams(Map<String, Object> requestParams) {
         this.requestParams = requestParams;
+    }
+
+    public String getRequestingUser() {
+        return requestingUser;
+    }
+
+    public void setRequestingUser(String requestingUser) {
+        this.requestingUser = requestingUser;
     }
 }

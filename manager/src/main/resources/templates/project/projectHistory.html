@@ -1,14 +1,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <link rel="stylesheet" th:href="@{/webjars/font-awesome/css/font-awesome.min.css}">
-    <script th:src="@{/webjars/jquery/jquery.js}"></script>
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
-    <link media="all" rel="stylesheet" th:href="@{/css/buttons.css}" />
-    <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
-    <link media="all" rel="stylesheet" th:href="@{/css/panels.css}" />
-    <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
-
+    <th:block th:replace="common/common::include"></th:block>
+    <script th:src="@{/js/projectHistory.js}"></script>
 </head>
 
 <body>
@@ -21,21 +14,38 @@
     </div>
     <div>
         <div class="row">
+            <th:block th:if="${submittedNetwork}">
+                <div class="alert alert-success" role="alert">
+                    Your Network Building project was successfully submitted. You can find information about it's progress,
+                    as well as additional actions to perform, below.
+                </div>
+            </th:block>
             <div class="col-xs-12">
                 <table class="table">
                     <thead>
                         <th>Project Name</th>
                         <th>Start Date</th>
-                        <th>Status</th>
+                        <th>State</th>
+                        <th>Status Message</th>
                         <th>Actions</th>
                     </thead>
                     <tbody>
                         <tr th:each="job : ${jobs}">
                             <td th:text="${job.name}"></td>
                             <td th:text="${job.startDate}"></td>
+                            <td class="jobState" th:text="${job.state}"></td>
                             <td th:text="${job.status}"></td>
                             <td>
-                                <button>Do Something</button>
+                                <th:block th:if="${job.state == 'DONE'}">
+                                    <a class="btn btn-link" >
+                                        Perform Analysis
+                                    </a>
+                                </th:block>
+                                <th:block th:if="${job.state == 'ERROR'}">
+                                    <a class="btn btn-link" >
+                                        View Errors
+                                    </a>
+                                </th:block>
                             </td>
                         </tr>
                     </tbody>

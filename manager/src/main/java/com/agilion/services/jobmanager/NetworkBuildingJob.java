@@ -4,17 +4,19 @@ import java.util.Date;
 
 public class NetworkBuildingJob
 {
+    private String id;
     private String name;
     private Date startDate;
     private Date endDate;
     private String status;
     private JobState state;
 
-    public NetworkBuildingJob()
+    public NetworkBuildingJob(String id)
     {
         this.startDate = new Date();
         this.status = "Waiting";
         this.state = JobState.NEW;
+        this.id = id;
     }
 
     public Date getStartDate() {
@@ -55,5 +57,13 @@ public class NetworkBuildingJob
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }

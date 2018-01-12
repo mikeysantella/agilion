@@ -39,7 +39,7 @@ public class MockDataEngineClient implements DataEngineClient
         for (String filepath : dataFilePaths)
         {
            OperationSelection selection = createDataIngestOperation(filepath);
-           requests.add(createDataEngineRequest(session, selection));
+           requests.add(createDataEngineRequest(sessionID, selection));
         }
 
         // Finally, submit the requests to the data engine.
@@ -59,13 +59,13 @@ public class MockDataEngineClient implements DataEngineClient
         return session;
     }
 
-    private Request createDataEngineRequest(Session session, OperationSelection dataIngestOperation)
+    private Request createDataEngineRequest(String sessionID, OperationSelection dataIngestOperation)
     {
         Request request = new Request();
         String requestID = UUID.randomUUID().toString();
         request.setId(requestID);
         request.setCreatedTime(OffsetDateTime.now());
-        request.setSessionId(session.getId());
+        request.setSessionId(sessionID);
         request.setOperation(dataIngestOperation);
 
         return request;
@@ -76,7 +76,7 @@ public class MockDataEngineClient implements DataEngineClient
         // Build parameters of operation based on form values
         Map<String, Object> params = new HashMap<>();
         params.put("inputUri", filepath);
-        params.put("dataFormat", "HOW ARE WE DERIVING THE DATA SOURCE NAMES? IMPLICITLY OR EXPLICITLY?"); //TODO
+        params.put("dataFormat", "TELEPHONE.CSV"); //TODO
 
         // Build an ingester worker definition
         OperationSelectionMap suboperationSelections = new OperationSelectionMap();

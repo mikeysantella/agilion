@@ -8,6 +8,7 @@ import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.NetworkBuildingJob;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
 import com.agilion.services.security.LoggedInUserGetter;
+import com.agilion.services.validator.ValidationResult;
 import com.agilion.utils.NetworkFormToJobRequestConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,11 +61,12 @@ public class NetworkBuilderController
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
-    public String attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult) throws Exception {
+    public @ResponseBody ValidationResult attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult, Model model) throws Exception {
         //TODO VALIDATION!
 
         // Take the submitted form and send it to the job manager.
-        NetworkBuildingRequest networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm);
+        String username = this.loggedInUserGetter.getCurrentlyLoggedInUser().getUsername();
+        NetworkBuildingRequest networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm, username);
         String newNetworkJobID = this.jobManager.submitJob(networkBuildingRequest);
 
         // Take the resulting job ID and attach it to the user so that we can get the status/results of the job
@@ -72,7 +74,10 @@ public class NetworkBuilderController
         user.getSubmittedNetworkBuildJobIds().add(newNetworkJobID);
         this.userService.saveUser(user);
 
-        return "null";
+        ValidationResult result = new ValidationResult(bindingResult);
+        model.addAttribute("result", result);
+
+        return result;
     }
 
     @RequestMapping(value = "/history", method = RequestMethod.GET)
