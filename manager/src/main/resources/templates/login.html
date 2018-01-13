@@ -15,14 +15,10 @@
         </h1>
     </div>
     <th:block th:if="${createdUserAccount == true}">
-        <div class="alert alert-success" role="alert">
-            Your account has been successfully created. Please use your account credentials to log in.
-        </div>
+        <div th:replace="common/alerts::alert ('success', 'alerts.account.created.success')"></div>
     </th:block>
     <th:block th:if="${param.invalidCredentials}">
-        <div class="alert alert-danger" role="alert">
-            The account credentials you entered were not correct. Please try again.
-        </div>
+        <div th:replace="common/alerts::alert ('danger', 'alerts.account.invalid_credentials')"></div>
     </th:block>
 
     <form th:action="@{/login}" method="post">

@@ -15,10 +15,7 @@
     <div>
         <div class="row">
             <th:block th:if="${submittedNetwork}">
-                <div class="alert alert-success" role="alert">
-                    Your Network Building project was successfully submitted. You can find information about it's progress,
-                    as well as additional actions to perform, below.
-                </div>
+                <div th:replace="common/alerts::alert ('success', 'alerts.projectsubmit.success')"></div>
             </th:block>
             <div class="col-xs-12">
                 <table class="table">
