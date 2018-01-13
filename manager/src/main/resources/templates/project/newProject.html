@@ -5,6 +5,7 @@
         <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap-datepicker/css/bootstrap-datepicker.min.css}" />
         <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
         <link media="all" rel="stylesheet" th:href="@{/css/validation.css}" />
+        <script th:src="@{/js/form/bs_fileinput.js}"></script>
 
         <!--/*
           Any simple data objects from the server should be defined here. It's easier than performing a separate AJAX
@@ -90,11 +91,14 @@
                             </div>
                             <div class="col-xs-5">
                                 <label class="control-label sub-label">or Upload a file:</label>
-                                <div style="overflow-x: hidden;">
-                                    <button type="button" class="close pull-left" @click="removeSelectorFile()">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                    <input class="nudge-right" type="file" ref="selectorFile" @change="form.targetDeck.selectorFiles = $event.target.value" multiple/>
+                                <div class="input-group">
+                                    <label class="input-group-btn">
+                                        <span class="btn btn-default">Browse
+                                            <input style="display: none;" type="file" ref="selectorFile"
+                                                   @change="form.targetDeck.selectorFiles = $event.target.value" multiple/>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control" readonly="">
                                 </div>
                             </div>
                         </div>
@@ -106,11 +110,11 @@
                         </label>
                         <div class="input-group">
                             <input id="fromDate" v-model="form.fromDate" type="text" class="form-control" placeholder="Start Date"/>
-                            <div class="input-group-btn middle-button-addon-container">
+                            <span class="input-group-btn">
                                 <button type="button" class="btn btn-default middle-btn-addon" @click="swapDates()">
-                                    <i class="fa fa-exchange"></i>
+                                    &nbsp;<i class="fa fa-exchange"></i>&nbsp;
                                 </button>
-                            </div>
+                            </span>
                             <input id="toDate" v-model="form.toDate" type="text" class="form-control" placeholder="End Date"/>
                         </div>
                         <span class="invalid-feedback" v-bind:class="{ 'showFeedback' : !validDates }">
@@ -127,13 +131,18 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="projectName">Additional Datafiles</label>
+                        <label for="projectName">Datafiles</label>
                         <div class="row form-group" >
                             <div class="col-xs-12">
-                                <button type="button" class="close pull-left" @click="removeDataFile()">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                                <input class="nudge-right" id="dataFile" type="file" ref="dataFile" @change="form.dataFiles = $event.target.value" multiple/>
+                                <div class="input-group">
+                                    <label class="input-group-btn">
+                                        <span class="btn btn-default">Browse
+                                            <input id="dataFile" style="display: none;" type="file" ref="dataFile"
+                                                   @change="form.dataFiles = $event.target.value" multiple/>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control" readonly="">
+                                </div>
                             </div>
                         </div>
                         <div class="block">

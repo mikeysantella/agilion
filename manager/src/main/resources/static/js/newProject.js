@@ -53,18 +53,6 @@ var app = new Vue({
             this.form.toDate = temp;
         },
 
-        removeDataFile: function()
-        {
-            app.$refs.dataFile.value = null;
-            this.form.dataFiles = null
-        },
-
-        removeSelectorFile: function()
-        {
-            app.$refs.selectorFiles.value = null;
-            this.form.selectorFiles = null
-        },
-
         // This method submits the model to the server if validation succeeds
         submitNetworkBuild: function(form)
         {
@@ -128,6 +116,8 @@ var app = new Vue({
         $("#toDate").datepicker().on(
             "changeDate", () => {this.form.toDate = $('#toDate').val()}
         );
+
+        initBootstrapFilePickers();
     },
 });
 
