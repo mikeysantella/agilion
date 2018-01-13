@@ -1,11 +1,14 @@
-package com.agilion.mock;
+package com.agilion.services.dataengine;
 
 import com.agilion.services.dataengine.DataEngineClient;
+import com.agilion.services.dataengine.NetworkBuildReceipt;
 import dataengine.ApiException;
 import dataengine.api.*;
 import jersey.repackaged.com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.File;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -29,7 +32,7 @@ public class MockDataEngineClient implements DataEngineClient
     }
 
     @Override
-    public void startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws ApiException
+    public NetworkBuildReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws ApiException
     {
         // First, start the session
         Session session = startSession(sessionID, username);
@@ -47,9 +50,38 @@ public class MockDataEngineClient implements DataEngineClient
         {
             requestApi.submitRequest(request);
         }
+
+        return new NetworkBuildReceipt(requests);
     }
 
-    private Session startSession(String uniqueSessionID, String username) throws ApiException {
+    @Override
+    public boolean networkBuildIsDone(NetworkBuildReceipt receipt) {
+        boolean allFinished = true;
+        try
+        {
+
+            for (Request request : receipt.getRequestsInBuild())
+            {
+                Request updatedRequest = this.requestApi.getRequest(request.getId());
+                if (!requestIsStopped(updatedRequest))
+                {
+                    allFinished = false;
+                    break;
+                }
+            }
+        }
+        catch (ApiException e)
+        {
+            e.printStackTrace();
+            allFinished = false;
+        }
+        return allFinished;
+    }
+
+    private Session startSession(String uniqueSessionID, String username) throws ApiException
+    {
+        this.requestApi.listOperations();
+        this.requestApi.refreshOperations();
         Session session = new Session();
         session.setCreatedTime(OffsetDateTime.now());
         session.setId(uniqueSessionID);
@@ -75,7 +107,8 @@ public class MockDataEngineClient implements DataEngineClient
     {
         // Build parameters of operation based on form values
         Map<String, Object> params = new HashMap<>();
-        params.put("inputUri", filepath);
+        URI uri = new File(filepath).toURI();
+        params.put("inputUri", uri.toASCIIString());
         params.put("dataFormat", "TELEPHONE.CSV"); //TODO
 
         // Build an ingester worker definition
@@ -92,5 +125,14 @@ public class MockDataEngineClient implements DataEngineClient
         // Build the final operation representing the Data Ingest job
         return new OperationSelection().id("AddSourceDataset")
                 .params(params).subOperationSelections(suboperationSelections);
+    }
+
+    private boolean requestIsStopped(Request request)
+    {
+        State s = request.getState();
+        if (s == State.COMPLETED || s == State.FAILED || s == State.CANCELLED)
+            return true;
+        else
+            return false;
     }
 }

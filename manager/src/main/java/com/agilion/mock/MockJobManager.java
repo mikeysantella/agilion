@@ -1,12 +1,15 @@
 package com.agilion.mock;
 
 import com.agilion.services.dataengine.DataEngineClient;
+import com.agilion.services.dataengine.NetworkBuildReceipt;
 import com.agilion.services.files.FileStore;
 import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.JobState;
 import com.agilion.services.jobmanager.NetworkBuildingJob;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
 import dataengine.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.method.P;
 
 import java.io.InputStream;
@@ -14,6 +17,7 @@ import java.util.*;
 
 public class MockJobManager implements JobManager
 {
+    Logger log = LoggerFactory.getLogger(MockJobManager.class);
     private FileStore filestore;
     private DataEngineClient dataEngineClient;
     private Map<String, MockJobRunner> jobs;
@@ -113,14 +117,22 @@ public class MockJobManager implements JobManager
             {
                 networkBuildingJob.setStatus("Working");
                 networkBuildingJob.setState(JobState.IN_PROGRESS);
-                Thread.sleep(10 * 1000);
 
                 try {
                     //TODO for now, we are not doing anything with the target deck. We are simply uploading data files to the data engine
-                    dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
+                    NetworkBuildReceipt receipt = dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
                             networkBuildingRequest.getRequestingUser(),
                             networkBuildingRequest.getDataFilePaths(),
                             null);
+
+                    while (dataEngineClient.networkBuildIsDone(receipt))
+                    {
+                        Thread.sleep(5 * 1000);
+                        log.info("Still waiting on network build of sessionId "+this.networkBuildingJob.getId());
+                    }
+
+                    networkBuildingJob.setStatus("Finished");
+                    networkBuildingJob.setState(JobState.DONE);
                 }
                 catch(ApiException e)
                 {
@@ -133,12 +145,6 @@ public class MockJobManager implements JobManager
                     networkBuildingJob.setState(JobState.ERROR);
                     networkBuildingJob.setStatus("Failed due to unexpected error. See error logs");
                 }
-
-
-
-
-
-
             }
             catch (Exception e)
             {

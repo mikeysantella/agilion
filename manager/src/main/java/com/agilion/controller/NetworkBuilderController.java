@@ -81,10 +81,14 @@ public class NetworkBuilderController
     }
 
     @RequestMapping(value = "/history", method = RequestMethod.GET)
-    public String initProjectHistoryPage(Model model) throws Exception {
+    public String initProjectHistoryPage(Model model, @RequestParam(required = false) Boolean submittedNetwork) throws Exception
+    {
+        boolean submittedNetworkSuccess = submittedNetwork != null && submittedNetwork.booleanValue();
+
         List<String> networkJobIDs = loggedInUserGetter.getCurrentlyLoggedInUser().getSubmittedNetworkBuildJobIds();
         List<NetworkBuildingJob> jobs = this.jobManager.getJobs(networkJobIDs);
         model.addAttribute("jobs", jobs);
+        model.addAttribute("submittedNetwork", submittedNetworkSuccess);
         return "project/projectHistory";
 
     }

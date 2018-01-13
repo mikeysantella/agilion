@@ -82,7 +82,7 @@ var app = new Vue({
                     success: function()
                     {
                         btn.button('reset')
-                        window.location.href="/project/history";
+                        window.location.href="/project/history?submittedNetwork=true";
                     },
                     error: function()
                     {

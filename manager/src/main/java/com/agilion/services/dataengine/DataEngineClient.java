@@ -9,5 +9,8 @@ public interface DataEngineClient
 
     public List<String> getDataSources();
 
-    public void startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws Exception;
+    public NetworkBuildReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params)
+            throws Exception;
+
+    public boolean networkBuildIsDone(NetworkBuildReceipt receipt);
 }
