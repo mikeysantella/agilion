@@ -58,7 +58,7 @@ var app = new Vue({
         {
             var btn = $("#submitButton");
             this.submitted = true;
-            if (this.validProjectName && this.validTargetDeck)
+            if (this.validProjectName && this.validTargetDeck && this.validDates)
             {
                 btn.button('Working...');
                 $.ajax({
