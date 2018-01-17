@@ -58,7 +58,7 @@ public class UserController
 
             model.addAttribute("user", new User());
             model.addAttribute("createdUserAccount", true);
-            return "login";
+            return "redirect:/login";
         }
     }
 
