@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <table class="table" th:fragment="table (jobs)">
+        <thead>
+        <th>Project Name</th>
+        <th>Start Date</th>
+        <th>State</th>
+        <th>Status Message</th>
+        <th>Actions</th>
+        </thead>
+        <tbody>
+        <tr th:each="job : ${jobs}">
+            <td th:text="${job.name}"></td>
+            <td th:text="${job.startDate}"></td>
+            <td class="jobState" th:text="${job.state}"></td>
+            <td th:text="${job.status}"></td>
+            <td>
+                <th:block th:if="${job.state.name() == 'DONE'}">
+                    <a class="btn btn-link" >
+                        Perform Analysis
+                    </a>
+                </th:block>
+                <th:block th:if="${job.state.name() == 'ERROR'}">
+                    <a class="btn btn-link" >
+                        View Errors
+                    </a>
+                </th:block>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</body>
+</html>

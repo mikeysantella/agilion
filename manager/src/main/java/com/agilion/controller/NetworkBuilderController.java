@@ -8,6 +8,7 @@ import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.NetworkBuildingJob;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
 import com.agilion.services.security.LoggedInUserGetter;
+import com.agilion.services.security.NoLoggedInUserException;
 import com.agilion.services.validator.ValidationResult;
 import com.agilion.utils.NetworkFormToJobRequestConverter;
 import com.google.gson.Gson;
@@ -83,13 +84,22 @@ public class NetworkBuilderController
     @RequestMapping(value = "/history", method = RequestMethod.GET)
     public String initProjectHistoryPage(Model model, @RequestParam(required = false) Boolean submittedNetwork) throws Exception
     {
-        boolean submittedNetworkSuccess = submittedNetwork != null && submittedNetwork.booleanValue();
-
-        List<String> networkJobIDs = loggedInUserGetter.getCurrentlyLoggedInUser().getSubmittedNetworkBuildJobIds();
-        List<NetworkBuildingJob> jobs = this.jobManager.getJobs(networkJobIDs);
-        model.addAttribute("jobs", jobs);
+        boolean submittedNetworkSuccess = submittedNetwork != null && submittedNetwork;
+        model.addAttribute("jobs", getNetworkBuildingJobs());
         model.addAttribute("submittedNetwork", submittedNetworkSuccess);
         return "project/projectHistory";
+    }
 
+    @RequestMapping(value = "/reloadHistory")
+    public String reloadProjectHistory(Model model) throws NoLoggedInUserException {
+        model.addAttribute("jobs", getNetworkBuildingJobs());
+        return "project/_projectHistoryTable::table";
+    }
+
+    private List<NetworkBuildingJob> getNetworkBuildingJobs() throws NoLoggedInUserException
+    {
+        List<String> networkJobIDs = loggedInUserGetter.getCurrentlyLoggedInUser().getSubmittedNetworkBuildJobIds();
+        List<NetworkBuildingJob> jobs = this.jobManager.getJobs(networkJobIDs);
+        return jobs;
     }
 }

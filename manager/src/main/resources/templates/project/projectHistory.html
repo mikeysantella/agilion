@@ -12,41 +12,26 @@
             Project History
         </h1>
     </div>
-    <div>
-        <div class="row">
+    <div class="row">
+        <div class="col-xs-12">
             <th:block th:if="${submittedNetwork}">
                 <div th:replace="common/alerts::alert ('success', 'alerts.projectsubmit.success')"></div>
             </th:block>
-            <div class="col-xs-12">
-                <table class="table">
-                    <thead>
-                        <th>Project Name</th>
-                        <th>Start Date</th>
-                        <th>State</th>
-                        <th>Status Message</th>
-                        <th>Actions</th>
-                    </thead>
-                    <tbody>
-                        <tr th:each="job : ${jobs}">
-                            <td th:text="${job.name}"></td>
-                            <td th:text="${job.startDate}"></td>
-                            <td class="jobState" th:text="${job.state}"></td>
-                            <td th:text="${job.status}"></td>
-                            <td>
-                                <th:block th:if="${job.state.name() == 'DONE'}">
-                                    <a class="btn btn-link" >
-                                        Perform Analysis
-                                    </a>
-                                </th:block>
-                                <th:block th:if="${job.state.name() == 'ERROR'}">
-                                    <a class="btn btn-link" >
-                                        View Errors
-                                    </a>
-                                </th:block>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <button id="refreshButton" class="btn btn-primary pull-right" onclick="refreshProjectTable()">
+                <span id="spinningButtonIcon" class="hidden">
+                    <i class="fas fa-sync fa-spin"></i>
+                </span>
+                <span id="buttonIcon" >
+                    <i id="" class="fas fa-sync"></i>
+                </span>
+                 <span id="buttonText">Refresh</span>
+            </button>
+            <div id="tableContainer">
+                <table th:replace="project/_projectHistoryTable::table(${jobs})"></table>
             </div>
         </div>
     </div>
