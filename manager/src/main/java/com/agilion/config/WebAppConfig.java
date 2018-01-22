@@ -7,6 +7,7 @@ import com.agilion.services.files.FileStore;
 import com.agilion.services.files.LocalFileStore;
 import com.agilion.services.jobmanager.JobManager;
 import com.agilion.utils.NetworkFormToJobRequestConverter;
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -64,5 +65,11 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
     public NetworkFormToJobRequestConverter networkFormToJobRequestConverter()
     {
         return new NetworkFormToJobRequestConverter(fileStore());
+    }
+
+    @Bean
+    public Gson gson()
+    {
+        return new Gson();
     }
 }

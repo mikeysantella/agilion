@@ -32,6 +32,16 @@ public class MockDataEngineClient implements DataEngineClient
     }
 
     @Override
+    public List<Operation> listOperations() {
+        try {
+            return this.requestApi.listOperations();
+        } catch (ApiException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
     public NetworkBuildReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws ApiException
     {
         // First, start the session

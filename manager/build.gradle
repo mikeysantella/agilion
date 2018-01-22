@@ -52,7 +52,7 @@ dependencies {
 
 
 	compile group: 'org.webjars', name: 'bootstrap', version: '3.3.5'
-	compile group: 'org.webjars', name: 'vue', version: '2.5.3-1'
+	compile group: 'org.webjars', name: 'vue', version: '2.5.13'
 	compile group: 'org.webjars', name: 'webjars-locator', version: '0.32'
 	compile group: 'org.webjars', name: 'jquery', version: '2.1.4'
 	compile group: 'org.webjars', name: 'font-awesome', version: '5.0.2'

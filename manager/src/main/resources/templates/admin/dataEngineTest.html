@@ -1,0 +1,104 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="common/common::include"></th:block>
+    <script th:src="@{/js/form/bs_fileinput.js}"></script>
+
+    <script type="text/x-template" id="subop-template">
+
+    </script>
+</head>
+
+<body>
+    <div th:replace="common/navbar::navbarContainer ('home')"></div>
+    <div class="container page-content">
+        <div class="page-header">
+            <h1 style="text-align: center">
+                Data Engine Test
+            </h1>
+        </div>
+        <div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div id="app">
+                        <div id="listOperationsJson" class="hidden" th:text="${operations}"></div>
+                        <form>
+                            <!--/* First, the user has to select the operation type */-->
+                            <div class="form-group">
+                                <label>Operation Type</label>
+                                <select class="form-control" v-model="selected.operation" @change>
+                                    <option value="-1">Please Select one</option>
+                                    <option v-for="(operation, index) in datamodel" v-bind:value="index" v-text="operation.id"></option>
+                                </select>
+                            </div>
+
+                            <!--/* Once the user select the operation type, display that type's parameters one by one */-->
+                            <div v-if="selected.operation != -1">
+                                <div v-for="(param, index) in datamodel[selected.operation].params" class="form-group">
+                                    <label v-text="param.key"></label>
+
+                                    <!--/* If the parameter has more than 0 values, make it a select box */-->
+                                    <div v-if="param.possibleValues.length > 0">
+                                        <select class="form-control" v-model="selected.params[param.key]">
+                                            <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"></option>
+                                        </select>
+                                    </div>
+
+                                    <!--/* Otherwise, if it's type is URI, make it a regular input box */-->
+                                    <div v-if="param.valuetype == 'URI'">
+                                        <input class="form-control" v-model="selected.params[param.key]" type="text">
+                                    </div>
+                                    <span v-text="param.description"></span>
+                                </div>
+
+                                <!--/*
+                                    Finally, display the suboperations. A sub operation can have a sub operation, so it
+                                    can get a little complicated
+                                 */-->
+                                <h4>Sub Operations:</h4>
+                                <div v-for="(subOp, index) in selected.subOperations">
+                                    <div class="form-group">
+                                        <label>Sub Operation Key</label>
+                                        <select class="form-control" v-model="selected.subOperations[index].key">
+                                            <option value="null">Please Select one</option>
+                                            <option v-for="(operation, key) in datamodel[selected.operation].subOperations"
+                                                    v-bind:value="key" v-text="operation.id"></option>
+                                        </select>
+                                    </div>
+                                    <div v-if="selected.subOperations[index].key != null && selected.subOperations[index].key != null != 'null'">
+                                        <div v-for="(param, paramIndex) in datamodel[selected.operation].subOperations[selected.subOperations[index].key].params">
+                                            <div class="form-group">
+                                                <label v-text="param.key"></label>
+
+                                                <!--/* If the parameter has more than 0 values, make it a select box */-->
+                                                <div v-if="param.possibleValues.length > 0">
+                                                    <select class="form-control" v-model="selected.subOperations[index][param.key]">
+                                                        <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"></option>
+                                                    </select>
+                                                </div>
+
+                                                <!--/* Otherwise make it a regular input box */-->
+                                                <div v-if="param.possibleValues.length == 0">
+                                                    <input class="form-control" v-model="selected.subOperations[index][param.key]" :value="param.defaultValue" type="text">
+                                                </div>
+
+                                                <span v-text="param.description"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="button" @click="addSubOperation" class="btn btn-primary">+ Add Sub Operation</button>
+
+                            </div>
+                        </form>
+                        <hr/>
+                        <h3>Vue Data Model (now with live(tm) updates!)</h3>
+                        <pre>{{ $data.selected | json }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/js/admin/dataEngineTest.js}" type="text/javascript"></script>
+</body>
+</html>
