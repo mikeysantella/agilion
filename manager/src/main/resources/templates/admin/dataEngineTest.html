@@ -55,7 +55,6 @@
                                     Finally, display the suboperations. A sub operation can have a sub operation, so it
                                     can get a little complicated
                                  */-->
-
                                 <div class="form-group">
                                     <label>Sub Operations:</label>
                                     <select class="form-control" v-model="topLevelSubOpType">
@@ -64,22 +63,48 @@
                                                 v-bind:value="index" v-text="op.id"></option>
                                     </select>
 
-                                    <button type="button" @click="addSubOperationTopLevel" class="btn btn-primary">+ Add Selected Sub Operation</button>
+                                    <button type="button" @click="addSubOperation(null, topLevelSubOpType)" class="btn btn-primary">+ Add Selected Sub Operation</button>
                                 </div>
 
+                                <!--/*
+                                    For all suboperations, get an ordered, flattened list, and display each one. Display
+                                    top-most suboperations furthest to the left, display its children pushed to the right,
+                                    the children's children pushed further to the right, etc, etc
+                                */-->
                                 <div v-for="subOperation in getAllSubOperations()" :style="'margin-left: '+((subOperation.level+1) * 40)+'px;'">
-                                    <div class="form-group">
-                                        <label v-text="subOperation.key + ' parameters:'"></label>
-                                        <div v-for="param in datamodel[operation.index].subOperations[subOperation.key].params">
+                                    <label v-text="subOperation.key + ' parameters:'"></label>
+                                    <button type="button" class="btn btn-danger" @click="deleteOperation(null, subOperation.path)">Delete This Operation</button>
+                                    <div v-for="param in datamodel[operation.index].subOperations[subOperation.key].params">
+                                        <div class="form-group">
                                             <label v-text="param.key"></label>
-                                            <input class="form-control" v-model="subOperation[param.key]" type="text">
+
+                                            <!--/* If the parameter has more than 0 values, make it a select box */-->
+                                            <div v-if="param.possibleValues.length > 0">
+                                                <select class="form-control" v-model="subOperation[param.key]">
+                                                    <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"></option>
+                                                </select>
+                                            </div>
+
+                                            <!--/* Otherwise, make it an input box */-->
+                                            <div v-if="param.possibleValues.length == 0">
+                                                <input class="form-control" v-model="subOperation[param.key]" type="text">
+                                            </div>
                                             <span v-text="param.description"></span>
                                         </div>
+                                    </div>
+
+                                    <!--/*
+                                      Finally, display an input box that allows the user to add a sub-operation to
+                                      the current sub-operation.
+                                    */-->
+                                    <div class="form-group">
+                                        <label>Sub Operations:</label>
                                         <select class="form-control" v-model="subOperation.subOpLevelType">
                                             <option v-for="(op, index) in datamodel[operation.index].subOperations" v-bind:value="index" v-text="op.id"></option>
                                         </select>
 
-                                        <button type="button" @click="addSubOperation(subOperation)" class="btn btn-primary">+ Add Selected Sub Operation</button>
+                                        <button type="button" @click="addSubOperation(subOperation, subOperation.subOpLevelType)"
+                                                class="btn btn-primary">+ Add Selected Sub Operation</button>
                                     </div>
                                 </div>
                             </div>

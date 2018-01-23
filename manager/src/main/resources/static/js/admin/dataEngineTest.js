@@ -44,52 +44,44 @@ var app = new Vue({
             }
         },
 
-        // This method is invoked when the user adds a "top-level" sub operation (i.e. a sub-op that has no parents).
-        addSubOperationTopLevel: function()
+        // This method is called when a sub-operation is added to a parent operation.
+        addSubOperation: function(parentOperation, opType)
         {
-            if (this.operation.subOperations == null)
-                Vue.set(app.operation, "subOperations",  {});
+            // If this is true, then we are adding a "top-level" sub-operation. In other words, this sub-op has no parent.
+            if (parentOperation == null)
+            {
+                if (app.operation.subOperations == null)
+                    Vue.set(app.operation, "subOperations",  {});
 
+                parentOperation = this.operation;
+            }
+            else // Otherwise, we are adding a sub-operation to an existing sub-operation. My head....ow...
+            {
+                if (parentOperation.subOperations == null)
+                    Vue.set(subOperation, "subOperations",  {});
+            }
+
+            var path = (parentOperation.path != null) ? parentOperation.path + "."+opType : opType;
+
+            // Initialize the object that represents the new sub-operation
             var newSubOp = {
-                key: this.topLevelSubOpType,
+                key: opType,
+                path: path,
                 subOperations: {}
             };
 
-            for (var i = 0; i < this.datamodel[this.operation.index].subOperations[this.topLevelSubOpType].params.length; i++)
+            // Build a stub of the operation using the datamodel, initializing it using any default values provided
+            for (var i = 0; i < this.datamodel[this.operation.index].subOperations[opType].params.length; i++)
             {
-                var param = this.datamodel[this.operation.index].subOperations[this.topLevelSubOpType].params[i];
+                var param = this.datamodel[this.operation.index].subOperations[opType].params[i];
 
                 // Set the value to the default if one exists, null otherwise
                 var defaultValue = StringUtils.isNotBlank(param.defaultValue) ? param.defaultValue : '';
                 Vue.set(newSubOp, param.key, defaultValue);
             }
 
-
-            Vue.set(app.operation.subOperations, this.topLevelSubOpType,  newSubOp);
-        },
-
-
-        addSubOperation: function(subOperation)
-        {
-            if (subOperation.subOperations == null)
-                Vue.set(subOperation, "subOperations",  {});
-
-            var newSubOp = {
-                key: subOperation.subOpLevelType,
-                subOperations: {}
-            };
-
-            // Build a stub of the operation using the datamodel
-            for (var i = 0; i < this.datamodel[this.operation.index].subOperations[subOperation.subOpLevelType].params.length; i++)
-            {
-                var param = this.datamodel[this.operation.index].subOperations[subOperation.subOpLevelType].params[i];
-
-                // Set the value to the default if one exists, null otherwise
-                var defaultValue = StringUtils.isNotBlank(param.defaultValue) ? param.defaultValue : '';
-                Vue.set(newSubOp, param.key, defaultValue);
-            }
-
-            Vue.set(subOperation.subOperations,subOperation.subOpLevelType,  newSubOp);
+            // Explicitly tell Vue to watch for changes (without this, the model is not updated when changes occur
+            Vue.set(parentOperation.subOperations,opType, newSubOp);
         },
 
         getAllSubOperations: function()
@@ -119,6 +111,27 @@ var app = new Vue({
                 this.getAllChildrenRecursive(subOp, newLevel, list);
             }
         },
+
+        deleteOperation: function(parentOperation, pathForDeletion)
+        {
+            if (parentOperation == null)
+                parentOperation = this.operation;
+
+            for (var opKey in parentOperation.subOperations)
+            {
+                var subop = parentOperation.subOperations[opKey];
+                var subopPath = subop.path;
+                if (subopPath == pathForDeletion)
+                {
+                    Vue.delete(parentOperation.subOperations, opKey);
+                    break;
+                }
+                else
+                {
+                    this.deleteOperation(subop, pathForDeletion);
+                }
+            }
+        }
     },
 
     computed: {
