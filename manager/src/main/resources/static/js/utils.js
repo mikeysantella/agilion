@@ -4,7 +4,7 @@
 var StringUtils = {}
 StringUtils.isBlank = function(str)
 {
-    return (str == null || str.length === 0 || !str.trim());
+    return (str == null || str.length === 0 || (str instanceof String && !str.trim()));
 };
 
 StringUtils.isNotBlank = function(str)

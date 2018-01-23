@@ -24,9 +24,9 @@
                         <form>
                             <!--/* First, the user has to select the operation type */-->
                             <div class="form-group">
-                                <label>Operation Type</label>
-                                <select class="form-control" @change="operationTypeChanged">
-                                    <option value="">Please Select one</option>
+                                <label class="control-label">Operation Type:</label>
+                                <select class="form-control" @change="operationTypeChanged" v-model="operation.index">
+                                    <option value="">Select an Operation Type</option>
                                     <option v-for="(op, index) in datamodel" v-bind:value="index" v-text="op.id"></option>
                                 </select>
                             </div>
@@ -34,7 +34,7 @@
                             <!--/* Once the user select the operation type, display that type's parameters one by one */-->
                             <div v-if="operation != null && StringUtils.isNotBlank(operation.index)">
                                 <div v-for="(param, index) in datamodel[operation.index].params" class="form-group">
-                                    <label v-text="param.key"></label>
+                                    <label v-text="param.key+':'"></label>
 
                                     <!--/* If the parameter has more than 0 values, make it a select box */-->
                                     <div v-if="param.possibleValues.length > 0">
@@ -55,32 +55,37 @@
                                     Finally, display the suboperations. A sub operation can have a sub operation, so it
                                     can get a little complicated
                                  */-->
-                                <h3>Sub Operations:</h3>
+
                                 <div class="form-group">
+                                    <label>Sub Operations:</label>
                                     <select class="form-control" v-model="topLevelSubOpType">
-                                        <option v-for="(op, index) in datamodel[operation.index].subOperations" v-bind:value="index" v-text="op.id"></option>
+                                        <option value="">Select a Sub-Operation Type</option>
+                                        <option v-for="(op, index) in datamodel[operation.index].subOperations"
+                                                v-bind:value="index" v-text="op.id"></option>
                                     </select>
 
                                     <button type="button" @click="addSubOperationTopLevel" class="btn btn-primary">+ Add Selected Sub Operation</button>
                                 </div>
 
                                 <div v-for="subOperation in getAllSubOperations()" :style="'margin-left: '+((subOperation.level+1) * 40)+'px;'">
-                                    <label v-text="subOperation.key + ' parameters:'"></label>
-                                    <div v-for="param in datamodel[operation.index].subOperations[subOperation.key].params">
-                                        <label v-text="param.key"></label>
-                                        <input class="form-control" v-model="subOperation[param.key]" type="text">
-                                        <span v-text="param.description"></span>
-                                    </div>
-                                    <select class="form-control" v-model="subOperation.subOpLevelType">
-                                        <option v-for="(op, index) in datamodel[operation.index].subOperations" v-bind:value="index" v-text="op.id"></option>
-                                    </select>
+                                    <div class="form-group">
+                                        <label v-text="subOperation.key + ' parameters:'"></label>
+                                        <div v-for="param in datamodel[operation.index].subOperations[subOperation.key].params">
+                                            <label v-text="param.key"></label>
+                                            <input class="form-control" v-model="subOperation[param.key]" type="text">
+                                            <span v-text="param.description"></span>
+                                        </div>
+                                        <select class="form-control" v-model="subOperation.subOpLevelType">
+                                            <option v-for="(op, index) in datamodel[operation.index].subOperations" v-bind:value="index" v-text="op.id"></option>
+                                        </select>
 
-                                    <button type="button" @click="addSubOperation(subOperation)" class="btn btn-primary">+ Add Selected Sub Operation</button>
+                                        <button type="button" @click="addSubOperation(subOperation)" class="btn btn-primary">+ Add Selected Sub Operation</button>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                         <hr/>
-                        <h3>Vue Data Model (now with live(tm) updates!)</h3>
+                        <h3>Vue Data Model (for debugging purposes)</h3>
                         <pre>{{ $data.operation | json }}</pre>
                     </div>
                 </div>
