@@ -63,7 +63,7 @@
                                                 v-bind:value="index" v-text="op.id"></option>
                                     </select>
 
-                                    <button type="button" @click="addSubOperation(null, topLevelSubOpType)" class="btn btn-primary">+ Add Selected Sub Operation</button>
+                                    <button type="button" @click="addSubOperation(null, topLevelSubOpType)" class="btn btn-default">+ Add Selected Sub Operation</button>
                                 </div>
 
                                 <!--/*
@@ -73,7 +73,9 @@
                                 */-->
                                 <div v-for="subOperation in getAllSubOperations()" :style="'margin-left: '+((subOperation.level+1) * 40)+'px;'">
                                     <label v-text="subOperation.key + ' parameters:'"></label>
-                                    <button type="button" class="btn btn-danger" @click="deleteOperation(null, subOperation.path)">Delete This Operation</button>
+                                    <button type="button" class="btn btn-link" @click="deleteOperation(null, subOperation.path)">
+                                        <span class="text-danger">Delete This Operation</span>
+                                    </button>
                                     <div v-for="param in datamodel[operation.index].subOperations[subOperation.key].params">
                                         <div class="form-group">
                                             <label v-text="param.key"></label>
@@ -104,8 +106,13 @@
                                         </select>
 
                                         <button type="button" @click="addSubOperation(subOperation, subOperation.subOpLevelType)"
-                                                class="btn btn-primary">+ Add Selected Sub Operation</button>
+                                                class="btn btn-default">+ Add Selected Sub Operation</button>
                                     </div>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" @click="submit" class="btn btn-primary">
+                                        Submit To Data Engine
+                                    </button>
                                 </div>
                             </div>
                         </form>

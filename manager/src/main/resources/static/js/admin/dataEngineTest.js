@@ -84,6 +84,8 @@ var app = new Vue({
             Vue.set(parentOperation.subOperations,opType, newSubOp);
         },
 
+        // This method returns all sub operations in the view. It returns a flattened list, but assigns each
+        // sub-op a "level" attribute that indicates its depth so that the display can reflect parent-child relationships
         getAllSubOperations: function()
         {
             var allSubOperations = [];
@@ -99,6 +101,7 @@ var app = new Vue({
             return allSubOperations;
         },
 
+        // Internal method, do not call.
         getAllChildrenRecursive: function(subOperation, level, list)
         {
             var newLevel = level + 1;
@@ -112,8 +115,10 @@ var app = new Vue({
             }
         },
 
+        // This method deletes a sub operation, given it's path.
         deleteOperation: function(parentOperation, pathForDeletion)
         {
+            // If the parent operation is null, it means that we need to start our search at the top
             if (parentOperation == null)
                 parentOperation = this.operation;
 
@@ -127,10 +132,27 @@ var app = new Vue({
                     break;
                 }
                 else
-                {
                     this.deleteOperation(subop, pathForDeletion);
-                }
             }
+        },
+
+        // This method submits the data to the manager component, so that it can send it to the DataEngine.
+        submit: function()
+        {
+            $.ajax({
+                url: contextRoot+"admin/dataengine/submit",
+                method: 'POST',
+                data: JSON.stringify(this.operation),
+                contentType: "application/json",
+                success: function()
+                {
+                    alert("YO");
+                },
+                error: function()
+                {
+                    alert("damn");
+                }
+            });
         }
     },
 
