@@ -38,7 +38,7 @@
 
                                     <!--/* If the parameter has more than 0 values, make it a select box */-->
                                     <div v-if="param.possibleValues.length > 0">
-                                        <select class="form-control" v-model="operation[param.key]">
+                                        <select class="form-control" v-model="operation.params[param.key]">
                                             <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"
                                                     v-bind:selected="value == param.defaultValue ? 'selected' : ''"></option>
                                         </select>
@@ -46,7 +46,7 @@
 
                                     <!--/* Otherwise make it a regular input box */-->
                                     <div v-if="param.possibleValues.length < 1">
-                                        <input class="form-control" v-model="operation[param.key]" :value="param.defaultValue" type="text">
+                                        <input class="form-control" v-model="operation.params[param.key]" :value="param.defaultValue" type="text">
                                     </div>
                                     <span v-text="param.description"></span>
                                 </div>
@@ -82,14 +82,14 @@
 
                                             <!--/* If the parameter has more than 0 values, make it a select box */-->
                                             <div v-if="param.possibleValues.length > 0">
-                                                <select class="form-control" v-model="subOperation[param.key]">
+                                                <select class="form-control" v-model="subOperation.params[param.key]">
                                                     <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"></option>
                                                 </select>
                                             </div>
 
                                             <!--/* Otherwise, make it an input box */-->
                                             <div v-if="param.possibleValues.length == 0">
-                                                <input class="form-control" v-model="subOperation[param.key]" type="text">
+                                                <input class="form-control" v-model="subOperation.params[param.key]" type="text">
                                             </div>
                                             <span v-text="param.description"></span>
                                         </div>
@@ -116,6 +116,10 @@
                                 </div>
                             </div>
                         </form>
+                        <hr/>
+                        <h3 href="#operationStatus">Operation Status</h3>
+                        <pre v-if="sessionID != null">{{ $data.operationStatus | json }}</pre>
+                        <pre v-if="sessionID == null">A Submitted operation's status will appear here</pre>
                         <hr/>
                         <h3>Vue Data Model (for debugging purposes)</h3>
                         <pre>{{ $data.operation | json }}</pre>

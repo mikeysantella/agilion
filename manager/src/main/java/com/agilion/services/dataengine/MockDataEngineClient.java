@@ -1,11 +1,10 @@
 package com.agilion.services.dataengine;
 
-import com.agilion.services.dataengine.DataEngineClient;
-import com.agilion.services.dataengine.NetworkBuildReceipt;
 import dataengine.ApiException;
 import dataengine.api.*;
 import jersey.repackaged.com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.method.P;
 
 import java.io.File;
 import java.net.URI;
@@ -42,7 +41,7 @@ public class MockDataEngineClient implements DataEngineClient
     }
 
     @Override
-    public NetworkBuildReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws ApiException
+    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws ApiException
     {
         // First, start the session
         Session session = startSession(sessionID, username);
@@ -61,18 +60,28 @@ public class MockDataEngineClient implements DataEngineClient
             requestApi.submitRequest(request);
         }
 
-        return new NetworkBuildReceipt(requests);
+        return new DataOperationReceipt(session.getId(), getRequestIDs(requests));
+    }
+
+    private List<String> getRequestIDs(List<Request> reqs)
+    {
+        List<String> list = new LinkedList<>();
+        for (Request r : reqs)
+        {
+            list.add(r.getId());
+        }
+        return list;
     }
 
     @Override
-    public boolean networkBuildIsDone(NetworkBuildReceipt receipt) {
+    public boolean networkBuildIsDone(DataOperationReceipt receipt) {
         boolean allFinished = true;
         try
         {
 
-            for (Request request : receipt.getRequestsInBuild())
+            for (String requestID : receipt.getRequestIDs())
             {
-                Request updatedRequest = this.requestApi.getRequest(request.getId());
+                Request updatedRequest = this.requestApi.getRequest(requestID);
                 if (!requestIsStopped(updatedRequest))
                 {
                     allFinished = false;

@@ -1,7 +1,7 @@
 package com.agilion.mock;
 
 import com.agilion.services.dataengine.DataEngineClient;
-import com.agilion.services.dataengine.NetworkBuildReceipt;
+import com.agilion.services.dataengine.DataOperationReceipt;
 import com.agilion.services.files.FileStore;
 import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.JobState;
@@ -120,7 +120,7 @@ public class MockJobManager implements JobManager
 
                 try {
                     //TODO for now, we are not doing anything with the target deck. We are simply uploading data files to the data engine
-                    NetworkBuildReceipt receipt = dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
+                    DataOperationReceipt receipt = dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
                             networkBuildingRequest.getRequestingUser(),
                             networkBuildingRequest.getDataFilePaths(),
                             null);

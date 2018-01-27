@@ -13,8 +13,8 @@ public interface DataEngineClient
 
     public List<Operation> listOperations();
 
-    public NetworkBuildReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params)
+    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params)
             throws Exception;
 
-    public boolean networkBuildIsDone(NetworkBuildReceipt receipt);
+    public boolean networkBuildIsDone(DataOperationReceipt receipt);
 }

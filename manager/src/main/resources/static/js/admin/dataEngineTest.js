@@ -1,11 +1,4 @@
-Vue.component('subop-template', {
-  template: '#subop-template',
-  props: {
-    suboperationlist: {
-        type: Object
-    }
-  }
-});
+var statusTimer = null;
 
 var app = new Vue({
     el: '#app',
@@ -14,7 +7,9 @@ var app = new Vue({
     data: {
       datamodel: JSON.parse($("#listOperationsJson").text()),
       operation: {},
-      topLevelSubOpType: null
+      topLevelSubOpType: null,
+      sessionID: null,
+      operationStatus: null
     },
 
     // Define the methods for the model/view
@@ -26,20 +21,23 @@ var app = new Vue({
         {
             this.operation = {}
             this.operation.index = e.target.value;
+            Vue.set(this.operation, "params", {});
 
             if (StringUtils.isNotBlank(this.operation.index))
             {
-                // Build a stub of the operation using the datamodel
-                for (var i = 0; i < this.datamodel[this.operation.index].params.length; i++)
+                this.operation.id = this.datamodel[this.operation.index].id
+
+                if (StringUtils.isNotBlank(this.operation.index))
                 {
-                    var param = this.datamodel[this.operation.index].params[i];
+                    // Build a stub of the operation using the datamodel
+                    for (var i = 0; i < this.datamodel[this.operation.index].params.length; i++)
+                    {
+                        var param = this.datamodel[this.operation.index].params[i];
 
-                    // Set the value to the default if one exists, null otherwise. We want this value to be "watched" for UI changes
-                    var defaultValue = StringUtils.isNotBlank(param.defaultValue) ? param.defaultValue : '';
-                    Vue.set(this.operation, param.key, defaultValue);
-
-                    // Set flags for the operation. These dont need to be "watched" for UI-initiated changes
-                    this.operation[param.key]
+                        // Set the value to the default if one exists, null otherwise. We want this value to be "watched" for UI changes
+                        var defaultValue = StringUtils.isNotBlank(param.defaultValue) ? param.defaultValue : '';
+                        Vue.set(this.operation.params, param.key, defaultValue);
+                    }
                 }
             }
         },
@@ -67,6 +65,7 @@ var app = new Vue({
             var newSubOp = {
                 key: opType,
                 path: path,
+                params: {},
                 subOperations: {}
             };
 
@@ -77,7 +76,7 @@ var app = new Vue({
 
                 // Set the value to the default if one exists, null otherwise
                 var defaultValue = StringUtils.isNotBlank(param.defaultValue) ? param.defaultValue : '';
-                Vue.set(newSubOp, param.key, defaultValue);
+                Vue.set(newSubOp.params, param.key, defaultValue);
             }
 
             // Explicitly tell Vue to watch for changes (without this, the model is not updated when changes occur
@@ -139,28 +138,57 @@ var app = new Vue({
         // This method submits the data to the manager component, so that it can send it to the DataEngine.
         submit: function()
         {
+            var vue = this;
             $.ajax({
                 url: contextRoot+"admin/dataengine/submit",
                 method: 'POST',
                 data: JSON.stringify(this.operation),
                 contentType: "application/json",
-                success: function()
+                success: function(data)
                 {
-                    alert("YO");
+                    vue.sessionID = data;
+                    
                 },
                 error: function()
                 {
                     alert("damn");
                 }
             });
+        },
+
+        status: function()
+        {
+            if (this.sessionID != null)
+            {
+                vue = this;
+                $.ajax({
+                    url: contextRoot+"admin/dataengine/status",
+                    method: 'POST',
+                    data: this.sessionID,
+                    contentType: "application/json",
+                    success: function(data)
+                    {
+                        vue.operationStatus = data;
+                    },
+                    error: function()
+                    {
+                        alert("damn");
+                    }
+                });
+            }
+
         }
     },
 
-    computed: {
+    computed:
+    {
+
     },
 
     // Run this when Vue is ready
     mounted() {
         initBootstrapFilePickers();
+        var a = this;
+        statusTimer = setInterval(function(){ a.status(); }, 1000);
     },
 });
