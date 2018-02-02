@@ -8,6 +8,12 @@ import lombok.RequiredArgsConstructor;
 import net.deelam.utils.UriUtil;
 
 public class UriCodec {
+  public static void main(String[] args) {
+    String uriStr=genMySqlUri("mydb", "mytable");
+    UriMySql uriSql=parseMySqlUri(uriStr);
+    System.out.println(uriSql.getDatabaseName());
+  }
+  
   public static final String QUERYSTR_TABLE = "table";
 
   public static String genMySqlUri(String dbname, String tablename) {
@@ -36,7 +42,11 @@ public class UriCodec {
     }
 
     public  String getDatabaseName() {
-      return outUri.getPath();
+      String path=outUri.getPath();
+      if(path.startsWith("/"))
+        return path.substring(1);
+      else
+        return path;
     }
 
   }

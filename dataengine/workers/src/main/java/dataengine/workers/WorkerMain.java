@@ -35,12 +35,14 @@ public class WorkerMain {
     String newJobAvailableTopic=properties.getProperty("newJobAvailableTopic", "newJobAvailableTopic");
     String dispatcherRpcAddr=properties.getProperty("dispatcherRpcAddr", "depJobMgrBroadcastAMQ");
     String jobBoardRpcAddr=properties.getProperty("jobBoardRpcAddr", "jobBoardBroadcastAMQ");
-    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr);
+    Properties configMap=new Properties();
+    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, configMap);
   }
 
-  public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr, String jobBoardRpcAddr) throws JMSException {
+  public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr, String jobBoardRpcAddr,
+      Properties configMap) throws JMSException {
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr);
+    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, configMap);
     DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
     BaseWorker<?>[] hiddenWorkers = {
@@ -77,7 +79,7 @@ public class WorkerMain {
     }
   }
   
-  static Injector createInjector(Connection connection, String dispatcherRpcAddr, String jobBoardRpcAddr) {
+  static Injector createInjector(Connection connection, String dispatcherRpcAddr, String jobBoardRpcAddr, Properties configMap) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -87,7 +89,7 @@ public class WorkerMain {
         },
         new RpcClients4WorkerModule(connection, dispatcherRpcAddr, jobBoardRpcAddr),
         new OperationsSubscriberModule(),
-        new BaseWorkerModule()
+        new BaseWorkerModule(configMap)
         );
   }
 }

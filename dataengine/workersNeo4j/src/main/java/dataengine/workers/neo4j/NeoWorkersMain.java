@@ -49,7 +49,7 @@ public class NeoWorkersMain {
   public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr,
       String jobBoardRpcAddr, Properties domainProps) throws JMSException {
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr);
+    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, domainProps);
     DeployedJobConsumerFactory jcFactory =
         injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
@@ -85,7 +85,7 @@ public class NeoWorkersMain {
   }
 
   static Injector createInjector(Connection connection, String dispatcherRpcAddr,
-      String jobBoardRpcAddr) {
+      String jobBoardRpcAddr, Properties configMap) {
     return Guice.createInjector(new AbstractModule() {
         @Override
         protected void configure() {
@@ -94,6 +94,6 @@ public class NeoWorkersMain {
       }, 
       new RpcClients4WorkerModule(connection, dispatcherRpcAddr, jobBoardRpcAddr),
       new OperationsSubscriberModule(), 
-      new BaseWorkerModule());
+      new BaseWorkerModule(configMap));
   }
 }

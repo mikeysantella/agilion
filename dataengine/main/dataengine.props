@@ -30,6 +30,33 @@ jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
 workers.classname=dataengine.main.WorkersComponent
 // TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
 workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
+workers.sqlConnect=root:dataengine-mysql@localhost:3306
+workers.TIDE.dshape=var * { \
+  'isNatCitizen': ?string,\
+  'birthCountry': ?string,\
+  'citizenship': ?string,\
+  'datasource': ?string,\
+  'dob': ?string,\
+  'hasFlightTraining': ?string,\
+  gender: ?string,\
+  'firstName': ?string,\
+  'terroristName': ?string,\
+  'lastName': ?string,\
+  nickname: ?string,\
+  'biometricID': ?string,\
+  'fbiCaseNumber': ?string,\
+  'tideIdNumber': int64,\
+  'lprStatus': ?string,\
+  'maritalStatus': ?string,\
+  'tideStatus': ?string,\
+  'uspStatus': ?string,\
+  'terroristMembership': ?string,\
+  'tideCategory': ?string,\
+  title: ?string,\
+  'isTsaNoFly': ?string,\
+  'visaNumber': int64,\
+  'visaRevocation': ?string\
+  }
 
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
 neoWorkers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ

@@ -41,7 +41,10 @@ public class WorkersComponent implements ComponentI {
   public void start(Properties configMap) {
     config = new WorkersConfig(configMap);
     try {
-      dataengine.workers.WorkerMain.main(config.brokerUrl, config.newJobAvailableTopic, config.dispatcherRpcAddr, config.jobBoardRpcAddr);
+      dataengine.workers.WorkerMain.main(config.brokerUrl, 
+          config.newJobAvailableTopic, config.dispatcherRpcAddr, config.jobBoardRpcAddr, //
+          configMap
+          );
     } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

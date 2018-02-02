@@ -2,6 +2,7 @@ package dataengine.workers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -19,6 +20,7 @@ import net.deelam.activemq.rpc.AmqComponentSubscriber;
 @Slf4j
 @RequiredArgsConstructor
 public class BaseWorkerModule extends AbstractModule {
+  final Properties configMap;
   final List<ProgressingDoer> doers = new ArrayList<>();
 
   @Override
@@ -26,6 +28,7 @@ public class BaseWorkerModule extends AbstractModule {
     requireBinding(Connection.class);
     
     //bindConstant().annotatedWith(Names.named(NAMED_JOB_BOARD_ID)).to(jobBoardId);
+    bind(Properties.class).toInstance(configMap);
 
     bind(ProgressMonitor.Factory.class).to(AmqProgressMonitor.Factory.class);
   }

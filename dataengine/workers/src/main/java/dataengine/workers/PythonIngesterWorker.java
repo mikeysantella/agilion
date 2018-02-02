@@ -1,12 +1,13 @@
 package dataengine.workers;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -23,25 +24,47 @@ import dataengine.apis.UriCodec;
 import dataengine.apis.UriCodec.UriMySql;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
+import net.deelam.utils.PropertiesUtil;
 
 @Slf4j
 public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
 
+  private static final String HAS_HEADER = "hasHeader";
+
   public static void main(String[] args) throws Exception {
     String brokerURL = "tcp://localhost:61616";
     Connection connection = MQClient.connect(brokerURL);
-    AbstractPythonWrapperWorker worker = new PythonIngesterWorker(null, connection);
-    Job job = new Job().id("testJob");
+    
+    Properties deProps = PropertiesUtil.loadProperties("../main/dataengine.props");
+    Properties props=new Properties();
+    String prefix="workers.";
+    props.put("sqlConnect", deProps.get(prefix+"sqlConnect"));
+    props.put("TIDE.dshape", deProps.get(prefix+"TIDE.dshape"));
+    
+    AbstractPythonWrapperWorker worker = new PythonIngesterWorker(null, connection, props);
+    
+    Map<String, Object> params=new HashMap<>();
+    params.put((OperationConsts.INPUT_URI), "file:///home/dlam/dev/agilionReal/dataengine/dataio/INTEL_datasets/TIDE_sample_data.csv");
+    params.put((OperationConsts.DATA_FORMAT), "TIDE");
+    
+    Job job = new Job().id("testJob").params(params);
     boolean success = worker.doWork(job);
     log.info("success={}", success);
     Thread.sleep(3000);
     connection.close();
   }
 
+  final Properties props;
+  final String sqlConnect;
+  
   @Inject
-  public PythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection)
+  public PythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, Properties props)
       throws JMSException {
     super(sessDb, connection, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
+    this.props=props;
+    sqlConnect=props.getProperty("sqlConnect");
+    if(sqlConnect==null)
+      log.error("sqlConnect not set!");
     type2Conf.values().forEach(confFile->{
       if(!new File(confFile).exists())
         log.warn("File does not exist: {}", confFile);
@@ -78,11 +101,20 @@ public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
     state.setPercent(2).setMessage("Determined input and output datasets");
     
     if(true) {
+      UriMySql outUri = UriCodec.parseMySqlUri(outDS.getUri());
+      final File inputFile = new File(URI.create(inDS.getUri()));
+      if(!inputFile.exists())
+        throw new FileNotFoundException(inputFile.getAbsolutePath());
+      String hasHeaderStr=(String) inDS.getStats().get(HAS_HEADER);
+      boolean inputDSHasHeader=(hasHeaderStr==null)?true:Boolean.valueOf(hasHeaderStr);
+      return createIngestPythonMsg(outUri.getDatabaseName(), outUri.getTablename(), 
+          inputFile.getAbsolutePath(), inDS.getDataFormat(), inputDSHasHeader);
+    } else if(true){
       String fieldmapFile = type2Conf.get(inDS.getDataFormat());
       UriMySql outUri = UriCodec.parseMySqlUri(outDS.getUri());
       return createGetQueryPythonMsg(domainfieldsFile, fieldmapFile, 
           outUri.getDatabaseName(), outUri.getTablename(), inDS.getUri());
-    }else {
+    } else {
       // TODO: get params from Job
       return createGetQueryPythonMsg("/home/dlam/dev/mysql-ingest/domainfields.intel.conf",
           "/home/dlam/dev/mysql-ingest/fieldmap.TIDE.conf", "thegeekstuff",
@@ -95,32 +127,36 @@ public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
         .uri((String) job.getParams().get(OperationConsts.INPUT_URI))
         .dataFormat((String) job.getParams().get(OperationConsts.DATA_FORMAT))
         .label("input for job " + job.getId());
-    CompletableFuture<Dataset> addInputDsF = sessDb.rpc().addInputDataset(inDS, job.getId());
-    addInputDsF.get(); // make sure these have finished before returning
+    if(sessDb!=null) {
+      CompletableFuture<Dataset> addInputDsF = sessDb.rpc().addInputDataset(inDS, job.getId());
+      addInputDsF.get(); // make sure these have finished before returning
+    }
     return inDS;
   }
   
   protected Dataset createOutputDataset(Job job, Dataset inDS) throws Exception {
-    String sessId = sessDb.rpc().getRequest(job.getRequestId()).thenApply(Request::getSessionId).get();
-    String tablename = inDS.getDataFormat() + "-" + System.currentTimeMillis();
+    String sessId = (sessDb==null)?"sess123":sessDb.rpc().getRequest(job.getRequestId()).thenApply(Request::getSessionId).get();
+    String tablename = inDS.getDataFormat() + "_" + System.currentTimeMillis();
     String outDsUri=UriCodec.genMySqlUri(sessId, tablename);
     Dataset outDS = new Dataset()
         .uri(outDsUri)
         .dataFormat(OperationConsts.DATA_FORMAT_PARQUET)
         .label("ingested dataset");
-    CompletableFuture<Void> addOutputDsF =
-        sessDb.rpc().addOutputDataset(outDS, job.getId()).thenAccept((addedOutDs) -> {
-          state.getMetrics().put("ingested.dataset.id", addedOutDs.getId());
-          state.getMetrics().put("ingested.dataset.uri", addedOutDs.getUri());
-          sessDb.rpc().setJobParam(job.getId(), OperationConsts.OUTPUT_URI, addedOutDs.getId());
-        });
-    addOutputDsF.get(); // make sure these have finished before returning
+    if(sessDb!=null) {
+      CompletableFuture<Void> addOutputDsF =
+          sessDb.rpc().addOutputDataset(outDS, job.getId()).thenAccept((addedOutDs) -> {
+            state.getMetrics().put("ingested.dataset.id", addedOutDs.getId());
+            state.getMetrics().put("ingested.dataset.uri", addedOutDs.getUri());
+            sessDb.rpc().setJobParam(job.getId(), OperationConsts.OUTPUT_URI, addedOutDs.getId());
+          });
+      addOutputDsF.get(); // make sure these have finished before returning
+    }
     return outDS;
   }
 
   Message createGetQueryPythonMsg(String domainfieldsFile, String fieldmapFile, String dbname,
       String tablename, String csvFile) throws JMSException {
-    log.info("sendPythonRequest: {}", domainfieldsFile);
+    log.info("createGetQueryPythonMsg: {}", domainfieldsFile);
     Message message = session.createTextMessage("QUERY");
     message.setJMSReplyTo(replyQueue);
     message.setStringProperty("id", "QUERY");
@@ -132,6 +168,28 @@ public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
     message.setStringProperty("tablename", tablename);
     message.setStringProperty("csvFile", csvFile);
     // message.setStringProperty("dbUri", outDS.getUri());
+    return message;
+  }
+  
+  Message createIngestPythonMsg(String dbname, String tablename,
+      String csvFile, String csvFormat, boolean hasHeader) throws JMSException {
+    log.info("createIngestPythonMsg: {} {}", csvFile, csvFormat);
+    Message message = session.createTextMessage("INGEST");
+    message.setJMSReplyTo(replyQueue);
+    message.setStringProperty("id", "INGEST");
+    message.setStringProperty("command", "INGEST");
+
+    message.setStringProperty("sqlConnect", sqlConnect);
+    message.setStringProperty("dbName", dbname);
+    message.setStringProperty("tableName", tablename);
+    message.setStringProperty("sourcedataCsv", csvFile);
+    
+    String dshape=props.getProperty(csvFormat+".dshape");
+    if(dshape==null)
+      log.error("No setting for ", csvFormat+".dshape");
+    message.setStringProperty("dshape", dshape);
+    message.setBooleanProperty(HAS_HEADER, hasHeader);
+    //message.setStringProperty("exportDir", exportDir);
     return message;
   }
 
