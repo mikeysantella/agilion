@@ -6,10 +6,22 @@ mainClassName = "dataengine.sparkjobs.SparkDummyApp"
 dependencies {
   compileOnly project(':constants') // constants seemed to be compiled in so only needed for compile
   compile dep.utils_zero
+  
+  compile group: 'org.json4s', name: 'json4s-native_'+ver.scalaMajorVersion, version: '3.4.2'
+  
+  // provided by Spark cluster
   compileOnly dep.scala_library
-  compileOnly group: 'org.apache.spark', name: 'spark-core_2.11', version: '2.0.2'
+  compileOnly group: 'org.apache.spark', name: 'spark-core_'+ver.scalaMajorVersion, version: '2.0.2'
+  compileOnly group: 'org.apache.spark', name: 'spark-sql_'+ver.scalaMajorVersion, version: '2.0.2'
+
+  /// for testing
+  
+  testCompile group: 'org.apache.spark', name: 'spark-sql_'+ver.scalaMajorVersion, version: '2.0.2'
+  testCompile group: 'org.json4s', name: 'json4s-native_'+ver.scalaMajorVersion, version: '3.4.2'
+  testCompile dep.scala_test
+  
 //  compile dep.hadoop_common
 //  compileOnly 'org.apache.hbase:hbase-client:1.0.0'
-  testCompile dep.scala_test
+  
 }
 

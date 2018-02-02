@@ -18,9 +18,12 @@ configure(subprojects) {
     mavenLocal()
     mavenCentral()
     jcenter()
-   maven {
-       url 'file://'+rootProject.projectDir.absolutePath+'/extJars'
-   }
+    maven {
+      url 'file://'+rootProject.projectDir.absolutePath+'/extJars'
+    
+      // needed by specs2-junit
+      url 'http://dl.bintray.com/scalaz/releases'
+    }
   }
 
   gradle.projectsEvaluated {
@@ -32,7 +35,8 @@ configure(subprojects) {
   ext {
     ver = [
       vertx: '3.3.3',
-      tinkerpop:'2.6.0'
+      tinkerpop:'2.6.0',
+      scalaMajorVersion: '2.11'
     ]
 
     dep = [
@@ -50,8 +54,8 @@ configure(subprojects) {
       commons_io: 'commons-io:commons-io:2.5',
       guava: 'com.google.guava:guava:21.0',
       
-      scala_library: 'org.scala-lang:scala-library:2.11.8',
-      scala_test: 'org.scalatest:scalatest_2.11:3.0.0',
+      scala_library: 'org.scala-lang:scala-library:${scalaMajorVersion}.8',
+      scala_test: 'org.scalatest:scalatest_'+ver.scalaMajorVersion+':3.0.0',
       hadoop_common: 'org.apache.hadoop:hadoop-common:2.5.1',
 
       blueprints: 'com.tinkerpop.blueprints:blueprints-core:'+ver.tinkerpop,
