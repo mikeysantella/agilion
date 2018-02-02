@@ -1,0 +1,45 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.main.MainJetty"
+run {
+	// enable reading from stdin
+   standardInput = System.in
+
+	// pass all the properties
+	//systemProperties System.getProperties()
+
+   // Or just each by name:
+   systemProperty "PROMPT", System.getProperty("PROMPT")
+   systemProperty "PROPFILE", System.getProperty("PROPFILE")
+   systemProperty "RESTURLPATH", System.getProperty("RESTURLPATH")
+}
+
+//apply plugin: 'jar'
+apply plugin: 'war'
+
+//apply from: 'http://raw.github.com/akhikhl/gretty/master/pluginScripts/gretty.plugin'
+apply from: 'gretty.plugin'
+
+dependencies {
+  compile dep.guava
+  compile dep.activemq_rpc
+  compile dep.coord_workers
+  compile project(':server')
+  
+  // for running directly via MainJetty (without gretty)
+  compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.2.v20170220'
+  compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.2.v20170220'
+  compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.25.1'
+  compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.25.1'
+  compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-jetty-http', version: '2.25.1'
+
+  //  compile 'com.eclipsesource.jaxrs:provider-gson:2.0-SR1'
+  
+  // for easily starting everything in one JVM
+  compile project(':sessions')
+  compile project(':tasker')
+  compile project(':jobmgr')
+  compile project(':workers')
+}
+

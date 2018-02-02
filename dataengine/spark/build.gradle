@@ -1,0 +1,14 @@
+apply plugin: 'scala'
+
+apply plugin: 'application'
+mainClassName = "net.deelam.spark.Launcher"
+
+dependencies {
+  compile dep.utils_zero
+  compile dep.scala_library
+  compile group: 'org.apache.spark', name: 'spark-core_2.11', version: '2.0.2'
+  compile dep.hadoop_common
+  compileOnly 'org.apache.hbase:hbase-client:1.0.0'
+  testCompile dep.scala_test
+}
+

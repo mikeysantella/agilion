@@ -1,0 +1,30 @@
+
+/// used by Travis-CI: https://docs.travis-ci.com/user/languages/java/#Projects-Using-Gradle
+task assemble {
+  dependsOn gradle.includedBuilds*.task(':assemble')
+}
+task check {
+  dependsOn gradle.includedBuilds*.task(':check')
+}
+
+
+/// basic tasks
+
+task build {
+  dependsOn gradle.includedBuild('dataengine-api').task(':install')
+  dependsOn gradle.includedBuild('dataengine-client').task(':install')
+  dependsOn gradle.includedBuild('dataengine').task(':server:build')
+}
+task clean {
+  dependsOn gradle.includedBuilds*.task(':clean')
+}
+
+
+/// DataEngine tasks
+
+task runDataEngine {
+  dependsOn gradle.includedBuild('dataengine').task(':runDE')	
+}
+task runDEClientTest {
+  dependsOn gradle.includedBuild('dataengine-client').task(':runClientTest')
+}

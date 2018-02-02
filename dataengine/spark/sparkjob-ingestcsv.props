@@ -1,0 +1,10 @@
+#
+
+# this included file must be in the same directory according to PropertiesConfiguration
+include=sparkjob-common.props
+
+mainClass=dataengine.sparkjobs.SparkDummyApp
+#edu.utexas.arlut.adidis.sparkjobs.IngestCsvFile
+
+inputParams.required=inputFile, domainClass
+
