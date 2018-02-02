@@ -20,7 +20,8 @@ configure(subprojects) {
     jcenter()
     maven {
       url 'file://'+rootProject.projectDir.absolutePath+'/extJars'
-    
+    }
+    maven {
       // needed by specs2-junit
       url 'http://dl.bintray.com/scalaz/releases'
     }

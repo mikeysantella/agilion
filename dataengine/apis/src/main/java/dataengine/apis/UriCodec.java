@@ -31,7 +31,7 @@ public class UriCodec {
   public static class UriMySql {
     final URI outUri;
 
-    @Getter(lazy=true)
+    @Getter(lazy=true, onMethod = @__({@SuppressWarnings("unchecked")}))
     private final Map<String, String> queryParams = _parseQuery();
     private Map<String, String> _parseQuery() {
       return UriUtil.splitSimpleQuery(outUri.getQuery());
