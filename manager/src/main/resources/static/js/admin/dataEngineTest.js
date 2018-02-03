@@ -147,11 +147,11 @@ var app = new Vue({
                 success: function(data)
                 {
                     vue.sessionID = data;
-                    
+
                 },
                 error: function()
                 {
-                    alert("damn");
+                    alert("damn something broke");
                 }
             });
         },
@@ -172,7 +172,7 @@ var app = new Vue({
                     },
                     error: function()
                     {
-                        alert("damn");
+                        alert("damn something broke");
                     }
                 });
             }

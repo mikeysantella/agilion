@@ -11,15 +11,17 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-public class MockDataEngineClient implements DataEngineClient
+public class LocalDataEngineClient implements DataEngineClient
 {
-    @Autowired
     private SessionsApi sessionsApi;
 
-    @Autowired
     private RequestsApi requestApi;
 
-    public MockDataEngineClient(){}
+    public LocalDataEngineClient(SessionsApi sessionsApi, RequestsApi requestApi)
+    {
+        this.sessionsApi = sessionsApi;
+        this.requestApi = requestApi;
+    }
 
     public List<String> getSelectorTypes()
     {

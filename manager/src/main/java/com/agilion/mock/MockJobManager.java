@@ -125,7 +125,7 @@ public class MockJobManager implements JobManager
                             networkBuildingRequest.getDataFilePaths(),
                             null);
 
-                    while (dataEngineClient.networkBuildIsDone(receipt))
+                    while (!dataEngineClient.networkBuildIsDone(receipt))
                     {
                         Thread.sleep(5 * 1000);
                         log.info("Still waiting on network build of sessionId "+this.networkBuildingJob.getId());

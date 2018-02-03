@@ -1,6 +1,7 @@
 package com.agilion.config;
 
-import com.agilion.services.dataengine.MockDataEngineClient;
+import com.agilion.services.dataengine.DemoDataEngineClient;
+import com.agilion.services.dataengine.LocalDataEngineClient;
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.dataengine.interfaceV2.DataEngineInterface;
 import com.agilion.services.dataengine.interfaceV2.SimpleDataEngineClient;
@@ -21,6 +22,9 @@ public class DataEngineConfig
 {
     @Value("${com.agilion.manager.dataengine.endpoint}")
     private String dataEngineRootEndpoint;
+
+    @Value("${com.agilion.manager.dataengine.impl}")
+    private String dataEngineImpl;
 
     @Bean
     public ApiClient apiClient()
@@ -63,9 +67,13 @@ public class DataEngineConfig
     }
 
     @Bean
-    public DataEngineClient client()
-    {
-        return new MockDataEngineClient();
+    public DataEngineClient client() throws Exception {
+        if (this.dataEngineImpl.equalsIgnoreCase("local"))
+            return new LocalDataEngineClient(sessionsApi(), requestsApi());
+        else if (this.dataEngineImpl.equalsIgnoreCase("demo"))
+            return new DemoDataEngineClient();
+        else
+            throw new Exception("No matching DataEngineClient implementation found with "+this.dataEngineImpl);
     }
 
     @Bean
