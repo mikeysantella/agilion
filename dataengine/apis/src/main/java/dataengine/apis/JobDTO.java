@@ -21,7 +21,9 @@ public class JobDTO {
 
   @Override
   public String toString() {
-    return "JobDTO [id=" + id + ", type=" + type +" "+taskerRpcAddr+" "+dispatcherRpcAddr+" "+jobBoardRpcAddr+" "+workerId+ "]";
+    return "JobDTO [id=" + id + ", type=" + type 
+        +" tasker="+taskerRpcAddr+" dispatcher="+dispatcherRpcAddr+" jobBoardRpc="+jobBoardRpcAddr+" workerId="+workerId 
+        + ", requestedJob=" + request + "]";
   }
 
   String progressAddr;

@@ -15,7 +15,10 @@ public final class OperationConsts {
   public static final String TYPE_POSTREQUEST = "post-request";
 
   /// operation/job parameter keys:
+  public static final String DATASET_LABEL = "datasetLabel";
   public static final String INPUT_URI = "inputUri";
+  public static final String INPUT_NODELIST_URIS = "inputNodelistUris";
+  public static final String INPUT_EDGELIST_URIS = "inputEdgelistUris";
   public static final String DATA_FORMAT = "dataFormat";
   public static final String OUTPUT_URI = "outputUri";
   public static final String PREV_JOBID = "prevJobId";

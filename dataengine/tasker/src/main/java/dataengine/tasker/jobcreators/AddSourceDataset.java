@@ -31,15 +31,20 @@ public class AddSourceDataset extends AbstractJobCreator {
     Operation operation = new Operation().level(0).id(this.getClass().getSimpleName())
         .description("add source dataset");
 
-    operation.addParamsItem(new OperationParam().key(OperationConsts.INPUT_URI)
-        .required(true)
-        .description("location of source dataset")
-        .valuetype(ValuetypeEnum.URI));
+//    operation.addParamsItem(new OperationParam().key(OperationConsts.INPUT_URI)
+//        .required(true)
+//        .description("location of source dataset")
+//        .valuetype(ValuetypeEnum.URI));
 
-    operation.addParamsItem(new OperationParam().key(OperationConsts.DATA_FORMAT)
+//    operation.addParamsItem(new OperationParam().key(OperationConsts.DATA_FORMAT)
+//        .required(true)
+//        .description("type and format of data")
+//        .valuetype(ValuetypeEnum.ENUM));
+    
+    operation.addParamsItem(new OperationParam().key(OperationConsts.DATASET_LABEL)
         .required(true)
-        .description("type and format of data")
-        .valuetype(ValuetypeEnum.ENUM));
+        .description("label for dataset")
+        .valuetype(ValuetypeEnum.STRING));
     
     operation.addParamsItem(new OperationParam().key(OperationConsts.INGESTER_WORKER)
         .required(true)
@@ -52,8 +57,9 @@ public class AddSourceDataset extends AbstractJobCreator {
   public void updateOperationParams(Map<String, Operation> currOperations) {
     // copy ingester-type ops from workers
     List<Operation> ingesterOps = copyOperationsOfType(currOperations, OperationConsts.TYPE_INGESTER);
+    opW = new OperationWrapper(initOperation(), ingesterOps);
 
-    // retrieve possible ingest formats and descriptions from ingester-type operations
+/*    // retrieve possible ingest formats and descriptions from ingester-type operations
     Set<Object> possibleDataFormats = new HashSet<>();
     Set<String> descriptions = new HashSet<>();
     removeParamFromSubOperation(ingesterOps, OperationConsts.DATA_FORMAT,(opParam)->{
@@ -62,10 +68,10 @@ public class AddSourceDataset extends AbstractJobCreator {
     });
     removeParamFromSubOperation(ingesterOps, OperationConsts.INPUT_URI,null);
 
-    opW = new OperationWrapper(initOperation(), ingesterOps);
     OperationParam myOpDataFormatParam = opW.getOperationParam(OperationConsts.DATA_FORMAT);
     myOpDataFormatParam.possibleValues(new ArrayList<>(possibleDataFormats));
     myOpDataFormatParam.description(descriptions.toString());
+*/
 
     opW.getOperationParam(OperationConsts.INGESTER_WORKER).possibleValues(
         ingesterOps.stream().map(Operation::getId).collect(toList()));
@@ -89,11 +95,11 @@ public class AddSourceDataset extends AbstractJobCreator {
     Job job1 = new Job().id(jobPrefix + ".job1-ingest")
         .type(OperationConsts.TYPE_INGESTER)
         .requestId(req.getId())
-        .label("Ingest " + selection.getParams().get(OperationConsts.INPUT_URI));
+        .label("Ingest " + selection.getParams().get(OperationConsts.DATASET_LABEL));
     Job job2 = new Job().id(jobPrefix + ".job2-postIngest")
         .type(OperationConsts.TYPE_POSTINGEST)
         .requestId(req.getId())
-        .label("Post-ingest " + selection.getParams().get(OperationConsts.INPUT_URI));
+        .label("Post-ingest " + selection.getParams().get(OperationConsts.DATASET_LABEL));
     Job job3 = new Job().id(jobPrefix + ".job3-postRequest")
         .type(OperationConsts.TYPE_POSTREQUEST)
         .requestId(req.getId())

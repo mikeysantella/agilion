@@ -132,7 +132,7 @@ public final class RestParameterHelper {
   }
 
   private static Response createExceptionResponse(Status status, int code, Throwable e, String errMsg) {
-    log.warn("REST error: {}", errMsg, e);
+    log.warn("REST error: "+errMsg, e);
     return Response.status(status).entity(new ApiResponseMessage(code, errMsg + "\n" + toString(e)))
         .build();
   }

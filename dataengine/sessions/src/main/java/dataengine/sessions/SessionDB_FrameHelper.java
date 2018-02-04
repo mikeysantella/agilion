@@ -1,13 +1,18 @@
 package dataengine.sessions;
 
 import static net.deelam.graph.GrafTxn.tryOn;
-
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -83,19 +88,48 @@ public final class SessionDB_FrameHelper {
       v.setProperty(propPrefix + keySuffix, val.toString());
     }else if(val==null){
       log.warn("Ignoring null value for property {}", propPrefix + keySuffix);
+    } else if(val instanceof List) {
+      try {
+        byte[] bytes = serialize(val);
+        v.setProperty(propPrefix + keySuffix, bytes);
+      } catch (IOException e) {
+        log.warn("Storing as string -- Could not serialize property '{}': {} {}", propPrefix + keySuffix, val.getClass(), val);
+        v.setProperty(propPrefix + keySuffix, val.toString());
+      }
     } else {
-      log.warn("Storing as string -- don't know how to store value as property {}: {} {}", propPrefix + keySuffix,
+      log.warn("Storing as string -- Don't know how to store value as property {}: {} {}", propPrefix + keySuffix,
           val.getClass(), val);
       v.setProperty(propPrefix + keySuffix, val.toString());
     }
   }
 
+  static byte[] serialize(Object obj) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    ObjectOutputStream os = new ObjectOutputStream(out);
+    os.writeObject(obj);
+    return out.toByteArray();
+  }
+
+  static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
+    ByteArrayInputStream in = new ByteArrayInputStream(data);
+    ObjectInputStream is = new ObjectInputStream(in);
+    return is.readObject();
+  }
+  
   static Map<String, Object> loadPropertiesAsMap(Vertex v, String propPrefix) {
     int ppIndex = propPrefix.length();
     Map<String, Object> map = new HashMap<>();
     for (String key : v.getPropertyKeys()) {
       if (key.startsWith(propPrefix)) {
-        map.put(key.substring(ppIndex), v.getProperty(key));
+        Object val = v.getProperty(key);
+        if(val instanceof byte[]) {
+          try {
+            val=deserialize((byte[]) val);
+          } catch (ClassNotFoundException | IOException e) {
+            log.error("Could not deserialize property: {}", key);
+          }
+        }
+        map.put(key.substring(ppIndex), val);
       }
     }
     return map;

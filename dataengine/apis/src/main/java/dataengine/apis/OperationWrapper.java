@@ -5,18 +5,20 @@ import static java.util.stream.Collectors.toMap;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 import dataengine.api.Operation;
 import dataengine.api.OperationMap;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationSelection;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.utils.PropertiesUtil;
 
 @Slf4j
 public final class OperationWrapper {
@@ -121,8 +123,32 @@ public final class OperationWrapper {
     if (opParam == null)
       throw new IllegalArgumentException(operation.getId()+": unknown parameter: " + e.getKey()+" params="+getOperationParamKeys());
     Object val = e.getValue();
-    if (val == null)
-      return null;
+    if (val == null) {
+      if(opParam.getIsMultivalued())
+        return Collections.emptyList();
+      else
+        return null;
+    }
+    if(opParam.getIsMultivalued()) {
+      if(val instanceof String) {
+        log.info("For param={}: converting String into List<{}>: {}", opParam.getKey(), opParam.getValuetype(), val);
+        String listStr=(String) val;
+        List<String> list=PropertiesUtil.splitList(",", listStr);
+        val=list;
+      }
+      if(val instanceof List) {
+        List<?> list=(List<?>) val;
+        List<?> convertedList=list.stream().map(elem->convertToValueType(opParam, elem)).collect(Collectors.toList());
+        return convertedList;
+      } else {
+        throw new UnsupportedOperationException("Cannot convert " + val.getClass() + " to " + opParam.getValuetype());
+      }
+    } else {
+      return convertToValueType(opParam, val);
+    }
+  }
+
+  public Object convertToValueType(OperationParam opParam, Object val) {
     switch (opParam.getValuetype()) {
       case BOOLEAN:
         if (val instanceof Boolean)

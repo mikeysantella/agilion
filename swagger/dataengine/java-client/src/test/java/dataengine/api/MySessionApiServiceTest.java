@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,14 +91,26 @@ public class MySessionApiServiceTest {
     {
       HashMap<String, Object> ingestTelephoneParamValues = new HashMap<>();
       ingestTelephoneParamValues.put("workTime", "10");
+      ingestTelephoneParamValues.put("dataFormat", "TELEPHONE.CSV");
+      boolean sendAsString=false;
+      if(sendAsString) {
+        ingestTelephoneParamValues.put("inputEdgelistUris", "");
+        ingestTelephoneParamValues.put("inputNodelistUris", 
+            new File("README.md").toURI().toASCIIString()+","+new File("README2.md").toURI().toASCIIString());
+      } else {
+        ingestTelephoneParamValues.put("inputEdgelistUris", Collections.emptyList());
+        ArrayList<String> nodeList = new ArrayList<String>();
+        nodeList.add(new File("README3.md").toURI().toASCIIString());
+        nodeList.add(new File("README4.md").toURI().toASCIIString());
+        ingestTelephoneParamValues.put("inputNodelistUris",nodeList);
+      }
       
       OperationSelectionMap subOperationSelections = new OperationSelectionMap();
       OperationSelection subOp1 = new OperationSelection().id("IngestTelephoneDummyWorker").params(ingestTelephoneParamValues);
       subOperationSelections.put(subOp1.getId(), subOp1);
       
       HashMap<String, Object> addSrcDatasetParamValues = new HashMap<>();
-      addSrcDatasetParamValues.put("inputUri", new File("README.md").toURI().toASCIIString());
-      addSrcDatasetParamValues.put("dataFormat", "TELEPHONE.CSV");
+      addSrcDatasetParamValues.put("datasetLabel", "TELEPHONE_TEST_DATASET");
       addSrcDatasetParamValues.put("ingesterWorker", subOp1.getId());
       
       Request req = new Request().sessionId("newSess").label("req1Name")
