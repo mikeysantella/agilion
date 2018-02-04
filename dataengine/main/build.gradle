@@ -12,6 +12,8 @@ run {
    // Or just each by name:
    systemProperty "PROMPT", System.getProperty("PROMPT")
    systemProperty "PROPFILE", System.getProperty("PROPFILE")
+   systemProperty "RESTPORT", System.getProperty("RESTPORT")
+   systemProperty "RESTPORTSSL", System.getProperty("RESTPORTSSL")
    systemProperty "RESTURLPATH", System.getProperty("RESTURLPATH")
 }
 

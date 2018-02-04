@@ -84,8 +84,8 @@ public class MainJetty {
     
     boolean runInSingleJVM = !Boolean.parseBoolean(System.getProperty("ONLY_RUN_SERVER"));
 
-    int port=9090;
-    int sslPort = 9093;
+    int port = getSystemIntProperty("RESTPORT", 9090);
+    int sslPort = getSystemIntProperty("RESTPORTSSL", 9093);
     if(isPortInUse(port)) {
       clog.error("Port {} is already in use!", port);
       System.exit(1);
@@ -118,6 +118,14 @@ public class MainJetty {
       }
     }
     main.startJettyUntilEnds(port, sslPort);
+  }
+
+  public static int getSystemIntProperty(String key, int defVal) {
+    int port=defVal;
+    String propStr=System.getProperty(key);
+    if(propStr!=null && propStr.length()>0)
+      port=Integer.parseInt(propStr);
+    return port;
   }
 
   Server jettyServer;
