@@ -24,6 +24,7 @@ import dataengine.api.Operation;
 import dataengine.api.OperationParam;
 import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.api.OperationSelection;
+import dataengine.api.OperationSelectionMap;
 import dataengine.api.Request;
 import dataengine.apis.DepJobService_I;
 import dataengine.apis.OperationConsts;
@@ -160,15 +161,24 @@ public class TaskerServiceTest {
   public void testSubmitCompleteRequestButWrongEnum() throws InterruptedException, ExecutionException {
     try {
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
-      paramValues.put("inputUri", "hdfs://some/where/");
-      paramValues.put("dataFormat", "SOME_UNKNOWN_FORMAT");
-      paramValues.put("ingesterWorker", "IngestTelephoneDummyWorker");
+      paramValues.put("datasetLabel", "someLabel");
+      paramValues.put("ingesterWorker", "INGEST_SOURCE_DATASET");
+      
+      OperationSelectionMap subOperationSelections = new OperationSelectionMap();
+      HashMap<String, Object> ingestTelephoneParamValues = new HashMap<>();
+      ingestTelephoneParamValues.put("inputUri", "hdfs://some/where/");
+      ingestTelephoneParamValues.put("dataFormat", "SOME_UNKNOWN_FORMAT");
+      OperationSelection subOp1 = new OperationSelection().id("INGEST_SOURCE_DATASET").params(ingestTelephoneParamValues);
+      subOperationSelections.put(subOp1.getId(), subOp1);
+      
       Request req = new Request().sessionId("newSess").label("req1Name")
-          .operation(new OperationSelection().id("AddSourceDataset").params(paramValues));
+          .operation(new OperationSelection().id("AddSourceDataset").params(paramValues)
+              .subOperationSelections(subOperationSelections));
       when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
       taskerSvc.submitRequest(req).get();
       fail("Expected exception");
     } catch (Exception e) {
+      e.printStackTrace();
       assertTrue(e.getMessage().contains("Unknown enum"));
     }
   }
@@ -177,16 +187,25 @@ public class TaskerServiceTest {
   public void testSubmitCompleteRequestButWrongValueType() throws InterruptedException, ExecutionException {
     try {
       HashMap<String, Object> paramValues = new HashMap<String, Object>();
-      paramValues.put("inputUri", "hdfs://some/where/");
-      paramValues.put("dataFormat", 123);
-      paramValues.put("ingesterWorker", "IngestTelephoneDummyWorker");
+      paramValues.put("datasetLabel", "someLabel");
+      //paramValues.put("inputUri", 123);
+      paramValues.put("ingesterWorker", "INGEST_SOURCE_DATASET");
+      
+      OperationSelectionMap subOperationSelections = new OperationSelectionMap();
+      HashMap<String, Object> ingestTelephoneParamValues = new HashMap<>();
+      ingestTelephoneParamValues.put("inputUri", "hdfs://some/where/");
+      ingestTelephoneParamValues.put("dataFormat", 123);
+      OperationSelection subOp1 = new OperationSelection().id("INGEST_SOURCE_DATASET").params(ingestTelephoneParamValues);
+      subOperationSelections.put(subOp1.getId(), subOp1);
       
       Request req = new Request().sessionId("newSess").label("req1Name")
-          .operation(new OperationSelection().id("AddSourceDataset").params(paramValues));
+          .operation(new OperationSelection().id("AddSourceDataset").params(paramValues)
+              .subOperationSelections(subOperationSelections));
       when(sessDB.addRequest(req)).thenReturn(CompletableFuture.completedFuture(req));
       taskerSvc.submitRequest(req).get();
       fail("Expected exception");
     } catch (Exception e) {
+      e.printStackTrace();
       assertTrue(e.getMessage().contains("Cannot convert"));
     }
   }

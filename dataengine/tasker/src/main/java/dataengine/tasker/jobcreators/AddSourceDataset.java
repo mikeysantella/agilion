@@ -109,11 +109,15 @@ public class AddSourceDataset extends AbstractJobCreator {
     selection.getParams().remove(OperationConsts.INGESTER_WORKER); // don't need this after job1
     {
       Map<String, Object> job1Params = new HashMap<>(selection.getParams());
-      OperationSelection ingesterOpSelection = selection.getSubOperationSelections().get(selectedIngesterOpId);
-      if(ingesterOpSelection==null)
-        throw new IllegalArgumentException("Not found '"+selectedIngesterOpId+"' in "+selection.getSubOperationSelections());
-      job1Params.putAll(ingesterOpSelection.getParams());
-      job1.params(job1Params);
+      if(selection.getSubOperationSelections()==null) {
+        throw new IllegalArgumentException("No suboperation specified!");
+      } else {
+        OperationSelection ingesterOpSelection = selection.getSubOperationSelections().get(selectedIngesterOpId);
+        if(ingesterOpSelection==null)
+          throw new IllegalArgumentException("Not found '"+selectedIngesterOpId+"' in "+selection.getSubOperationSelections());
+        job1Params.putAll(ingesterOpSelection.getParams());
+        job1.params(job1Params);
+      }
     }
     selection.getParams().remove(OperationConsts.INPUT_URI); // don't need this after job1
     {
