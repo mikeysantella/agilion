@@ -1,0 +1,18 @@
+#
+
+# spark-submitter script verbosity, different from verbosity of the actual spark job
+submitter.verbose=true
+
+appJar=../sparkjobs/build/libs/sparkjobs-0.0.3-SNAPSHOT.jar
+#classpath=INFER_FROM_APPJAR
+
+# files to copy to current directory of each Spark executor
+#files=sparkjob-splitcsv.props
+
+#inputParams.required=inputFile, domainClass
+
+# See possible configuration options: https://spark.apache.org/docs/1.3.0/configuration.html
+spark.executor.memory=1G
+spark.driver.memory=1G
+#spark.driver.extraJavaOptions=-DTESTING=ADD
+

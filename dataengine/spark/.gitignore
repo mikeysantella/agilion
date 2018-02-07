@@ -1,0 +1,4 @@
+*.tar.gz
+*.tgz
+.cache-main
+spark-2*/

@@ -16,3 +16,4 @@ workspace/
 .idea/
 manager/out/
 manager/AgilionLocalFileStore/
+*.log

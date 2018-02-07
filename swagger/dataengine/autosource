@@ -1,0 +1,6 @@
+pushd java-client
+./update.sh
+popd
+pushd jaxrs
+./update.sh
+popd
