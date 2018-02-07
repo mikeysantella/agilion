@@ -1,0 +1,26 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="common/common::include"></th:block>
+</head>
+
+<body>
+    <div th:replace="common/navbar::navbarContainer ('home')"></div>
+
+    <div class="container page-content">
+        <div class="page-header">
+            <h1 style="text-align: center">
+                Agilion Analytic Workbench
+            </h1>
+        </div>
+        <div style="max-width: 800px; text-align:center; margin-left: auto; margin-right: auto">
+            <div class="row">
+                <div class="col-xs-12">
+                    <a class="btn btn-primary btn-lg btn-block" th:href="@{/project/new}">Start New Project</a>
+                    <a class="btn btn-default btn-lg btn-block" th:href="@{/project/history}">View Existing Projects</a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

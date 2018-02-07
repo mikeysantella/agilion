@@ -1,0 +1,22 @@
+.required-label::after
+{
+    color: red;
+    content: " *";
+}
+
+.invalid
+{
+    color:  #cc0000;
+}
+
+.invalid-feedback
+{
+    display: none;
+    color:  #cc0000;
+    font-size: 12px;
+}
+
+.invalid-feedback.showFeedback
+{
+    display: block;
+}

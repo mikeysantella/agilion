@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<th:block th:fragment="alert (type, msgKey)">
+    <div th:class="'alert alert-'+${type}" role="alert">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <th:block th:if="${type.equals('success')}">
+            <i class="fa fa-check"></i>
+        </th:block>
+        <th:block th:if="${type.equals('info')}">
+            <i class="fa fa-info-circle"></i>
+        </th:block>
+        <th:block th:if="${type.equals('warning')}">
+            <i class="fa fa-warning"></i>
+        </th:block>
+        <th:block th:if="${type.equals('danger')}">
+            <i class="fa fa-remove"></i>
+        </th:block>
+        <span th:text="${#messages.msg(msgKey)}"></span>
+    </div>
+</th:block>
+</body>
+</html>
+

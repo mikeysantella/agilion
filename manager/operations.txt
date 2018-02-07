@@ -1,0 +1,61 @@
+Request API Operation List:
+[class Operation {
+    id: AddSourceDataset
+    description: add source dataset
+    level: 0
+    info: null
+    params: [class OperationParam {
+        key: inputUri
+        description: location of source dataset
+        valuetype: uri
+        required: true
+        isMultivalued: false
+        defaultValue: null
+        possibleValues: []
+    }, class OperationParam {
+        key: dataFormat
+        description: [choosing 'PEOPLE.CSV' will always fail, type and format of data]
+        valuetype: enum
+        required: true
+        isMultivalued: false
+        defaultValue: null
+        possibleValues: [PEOPLE.CSV, TELEPHONE.CSV]
+    }, class OperationParam {
+        key: ingesterWorker
+        description: ingester worker to use
+        valuetype: operationId
+        required: true
+        isMultivalued: false
+        defaultValue: null
+        possibleValues: [IngestTelephoneDummyWorker, IngestPeopleDummyWorker]
+    }]
+    subOperations: class OperationMap {
+        {IngestTelephoneDummyWorker=class Operation {
+            id: IngestTelephoneDummyWorker
+            description: ingest source dataset
+            level: 1
+            info: {operationType=ingester}
+            params: [class OperationParam {
+                key: workTime
+                description: seconds the worker will take
+                valuetype: int
+                required: true
+                isMultivalued: false
+                defaultValue: 10
+                possibleValues: []
+            }]
+            subOperations: class OperationMap {
+                {}
+            }
+        }, IngestPeopleDummyWorker=class Operation {
+            id: IngestPeopleDummyWorker
+            description: null
+            level: 1
+            info: {operationType=ingester}
+            params: []
+            subOperations: class OperationMap {
+                {}
+            }
+        }}
+    }
+}]

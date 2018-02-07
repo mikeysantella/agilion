@@ -1,12 +1,12 @@
-<html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <script th:src="@{/webjars/jquery/jquery.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" href="/webjars/bootstrap/css/bootstrap.css"/>
-
 </head>
     <!-- Fixed navbar -->
     <nav class="navbar navbar-inverse navbar-fixed-top" th:fragment="navbarContainer (active)">
+
         <div class="container">
             <div class="navbar-header">
                 <!-- Hamburger button that only appears if the screen is shrunk down enough -->
@@ -16,44 +16,50 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">Agilion</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li th:classappend="${active.equals('home')} ? 'active'"><a th:href="@{/home}">Home</a></li>
-                    <li class="dropdown" th:classappend="${active.equals('dataEngine')} ? 'active'">
-                        <a href="#" class="dropdown-toggle"  data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            Network Building <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a th:href="@{/session/new}">New Session</a></li>
-                            <li><a th:href="@{/session/history}">Session List</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="#">Preferences</a></li>
-                        </ul>
+                    <li th:classappend="${active.equals('home')} ? 'active'">
+                        <a class="navbar-brand" th:href="@{/home}">Agilion</a>
                     </li>
-                    <li><a href="#">Documentation</a></li>
-                    <li class="dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                            Administration <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a href="#">User Management</a></li>
-                            <li><a href="#">Instance Management</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="#">Instance Logs</a></li>
-                            <li><a href="#">Notifications</a></li>
-                        </ul>
-                    </li>
+
+                    <!--/* Start of navbar that is only viewable to logged in users */-->
+                    <th:block sec:authorize="isFullyAuthenticated()">
+                        <li th:classappend="${active.equals('dataEngine')} ? 'active'">
+                            <a th:href="@{/project/new}">Network Builder</a>
+                        </li>
+                        <li><a th:href="@{/project/history}">History</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                Tools <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Metric Calculator</a></li>
+                                <li><a href="#">Python Snippet Uploader</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                Support <span class="caret"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">User Management</a></li>
+                                <li><a href="#">Instance Management</a></li>
+                            </ul>
+                        </li>
+                    </th:block>
+
                 </ul>
-                <ul class="nav navbar-nav pull-right">
-                    <li>
-                        <a href="#">
-                            <i style="color: white" class="fa fa-user-circle-o"></i>
-                             Alex Campbell
-                        </a>
-                    </li>
-                </ul>
+                <th:block sec:authorize="isFullyAuthenticated()">
+                    <ul class="nav navbar-nav pull-right">
+                        <li>
+                            <a href="#">
+                                <i style="color: white" class="fa fa-user-circle-o"></i>
+                                <span th:text ="${#authentication.getPrincipal().getUsername()}"></span>
+                            </a>
+                        </li>
+                    </ul>
+                </th:block>
             </div><!--/.nav-collapse -->
         </div>
     </nav>

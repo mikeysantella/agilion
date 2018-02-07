@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <th:block th:fragment="include">
+            <meta name="_csrf" th:content="${_csrf.token}"/>
+            <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+            <meta name="_csrf_parameter" th:content="${_csrf.parameterName}"/>
+
+            <!--/* Common libraries and scripts */-->
+            <script th:src="@{/webjars/vue/vue.min.js}"></script>
+            <script th:src="@{/webjars/jquery/jquery.js}"></script>
+            <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+            <script th:src="@{/webjars/font-awesome/svg-with-js/js/fontawesome-all.min.js}"></script>
+            <!--
+            <script th:src="@{/webjars/font-awesome/svg-with-js/js/fontawesome.min.js}"></script>
+            <script th:src="@{/webjars/font-awesome/svg-with-js/js/fa-solid.min.js}"></script>
+            <script th:src="@{/webjars/font-awesome/svg-with-js/js/fa-regular.min.js}"></script>
+            -->
+            <script th:src="@{/js/utils.js}"></script>
+            <script th:src="@{/js/security/csrf.js}"></script>
+            <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.css}" />
+            <link media="all" rel="stylesheet" th:href="@{/css/style.css}" />
+            <link media="all" rel="stylesheet" th:href="@{/css/validation.css}" />
+            <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
+
+            <!--/*
+              This sets a javascript variable that contains the context root. By using this variable, we can avoid
+              having to harccode the context root all over the frontend.
+            */-->
+            <script th:inline="javascript">
+                var contextRoot = /*[[@{/}]]*/ '';
+                if (contextRoot == "/")
+                    contentRoot = "";
+            </script>
+        </th:block>
+    </body>
+</html>

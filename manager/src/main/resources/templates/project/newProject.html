@@ -1,0 +1,166 @@
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <th:block th:replace="common/common::include"></th:block>
+        <script th:src="@{/webjars/bootstrap-datepicker/js/bootstrap-datepicker.min.js}"></script>
+        <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap-datepicker/css/bootstrap-datepicker.min.css}" />
+        <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
+        <link media="all" rel="stylesheet" th:href="@{/css/validation.css}" />
+        <script th:src="@{/js/form/bs_fileinput.js}"></script>
+
+        <!--/*
+          Any simple data objects from the server should be defined here. It's easier than performing a separate AJAX
+          call for it.
+        */-->
+        <script th:inline="javascript">
+            var SERVERDATA = {};
+            SERVERDATA.selectorTypes = /*[[ ${selectorTypes} ]]*/ ;
+            SERVERDATA.dataSources = /*[[ ${dataSources} ]]*/ ;
+        </script>
+    </head>
+    <body>
+        <!--/* Modal for displaying the datafile requirements */-->
+        <!-- Modal -->
+        <div id="dataRequirementsModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">AGILION Data File Requirements</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Some placeholder text</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="common/navbar::navbarContainer  ('dataEngine')"></div>
+        <div class="container page-content">
+            <div class="page-title page-header">
+                Create New Project
+            </div>
+            <div id="app">
+                <form id="form" class="form">
+                    <div class="form-group">
+                        <label class="required-label" v-bind:class="{ 'invalid' : !validProjectName }" for="projectName" >Project Name</label>
+                        <input v-model="form.projectName" class="form-control" id="projectName"/>
+                        <span class="invalid-feedback" v-bind:class="{ 'showFeedback' : !validProjectName }">
+                            A Project Name is required.
+                        </span>
+                    </div>
+                    <div class="form-group ">
+                        <label class="required-label" v-bind:class="{ 'invalid' : !validTargetDeck }" for="projectName">Enter Target Deck</label>
+                        <span class="invalid-feedback" v-bind:class="{ 'showFeedback' : !validTargetDeck }">
+                            All target deck entries must have values, or a file must be provided.
+                        </span>
+                        <div class="row">
+                            <div class="col-xs-7">
+                                <div class="row targetdeck-row" v-for="targetDeckEntry in form.targetDeck.targetDeckEntryList">
+                                    <div class="col-xs-7">
+                                        <label class="control-label sub-label">Selector List</label>
+                                        <div class="input-group">
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-default" @click="removeTargetDeck(targetDeckEntry)"
+                                                        :disabled="form.targetDeck.targetDeckEntryList.length <= 1">
+                                                    Remove
+                                                </button>
+                                            </span>
+                                            <input class="form-control" v-model="targetDeckEntry.selectorList" />
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-5">
+                                        <label class="control-label sub-label">Selector Type</label>
+                                        <select class="form-control" v-model="targetDeckEntry.selectorType">
+                                            <option disabled value="">Please Select one</option>
+                                            <option v-for="type in serverData.selectorTypes" v-bind:value="type" v-text="type"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="">
+                                        <button type="button" class="btn btn-link block" @click="addTargetDeck">
+                                            + Add Target Deck Entry
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-5">
+                                <label class="control-label sub-label">or Upload a file:</label>
+                                <div class="input-group">
+                                    <label class="input-group-btn">
+                                        <span class="btn btn-default">Browse
+                                            <input style="display: none;" type="file" ref="selectorFile"
+                                                   @change="form.targetDeck.selectorFiles = $event.target.value" multiple/>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control" readonly="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required-label" v-bind:class="{ 'invalid' : !validDates }" for="projectName">
+                            Specify Network Date Range
+                        </label>
+                        <div class="input-group">
+                            <input id="fromDate" v-model="form.fromDate" type="text" class="form-control" placeholder="Start Date"/>
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default middle-btn-addon" @click="swapDates()">
+                                    &nbsp;<i class="fa fa-exchange"></i>&nbsp;
+                                </button>
+                            </span>
+                            <input id="toDate" v-model="form.toDate" type="text" class="form-control" placeholder="End Date"/>
+                        </div>
+                        <span class="invalid-feedback" v-bind:class="{ 'showFeedback' : !validDates }">
+                            Both dates must have values
+                        </span>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectName">Select Datasources</label>
+                        <div class="checkbox"  v-for="source in serverData.dataSources">
+                            <label>
+                                <input type="checkbox" :name="source" :value="source" v-model="form.dataSources"/>
+                                <span v-text="source"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="projectName">Datafiles</label>
+                        <div class="row form-group" >
+                            <div class="col-xs-12">
+                                <div class="input-group">
+                                    <label class="input-group-btn">
+                                        <span class="btn btn-default">Browse
+                                            <input id="dataFile" style="display: none;" type="file" ref="dataFile"
+                                                   @change="form.dataFiles = $event.target.value" multiple/>
+                                        </span>
+                                    </label>
+                                    <input type="text" class="form-control" readonly="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="block">
+                            <button type="button" data-target="#dataRequirementsModal" data-toggle="modal" class="btn btn-link btn-sm" onclick="viewDataFileRequirements">
+                                View Data File Requirements
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group text-center">
+                        <button id="submitButton" type="button" class="btn btn-default btn-lg" @click="submitNetworkBuild(form)">
+                            Build Network
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!--/* Initialize vue and the data model here (DO THIS LAST) */-->
+        <script th:src="@{/js/newProject.js}" type="text/javascript"></script>
+    </body>
+</html>

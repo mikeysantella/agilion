@@ -1,0 +1,13 @@
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <th:block th:replace="common/common::include"></th:block>
+    </head>
+    <body>
+        <div th:fragment="errorPage (header, content)">
+            <div class="jumbotron">
+                <h1 th:text="${header}"></h1>
+                <p th:text="${content}"></p>
+            </div>
+        </div>
+    </body>
+</html>

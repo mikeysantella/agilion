@@ -6,7 +6,8 @@ body
 
 .page-content
 {
-    height: 100%;
+    min-height: 100%;
+    padding-bottom: 30px;
 }
 
 .navbar-fixed-top + .page-content
@@ -23,12 +24,24 @@ body
     top: 20%;
 }
 
+.btn-block + .btn-block {
+    margin-top: 15px;
+}
+
+
 .page-header
 {
-    font-size: 40px;
     margin-top: 0px;
     padding: 0px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+}
+
+.page-title
+{
+    font-size: 24;
+    margin-top: 0px;
+    padding: 0px;
+    margin-bottom: 15px;
 }
 
 .thin-form-group
@@ -56,14 +69,17 @@ body
     padding-bottom:7px;
 }
 
-.form-section
+.form-container
 {
-
+    background-color: #f6f6f6;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 0px;
 }
 
-.form-section-body
+.table
 {
-
+    margin-bottom: 5px;
 }
 
 .form-section > .form-section-header
@@ -75,5 +91,77 @@ body
     line-height: 1.1;
     color: inherit;
     margin-bottom: 10px;
+}
 
+/* The last form-group in the section doesn't need spacing at the bottom */
+.form-section-body > .form-group:last-child
+{
+    margin-bottom: 0px;
+}
+
+.formButtonContainer
+{
+    text-align: right;
+}
+
+.sub-label
+{
+    font-weight: normal
+}
+
+.checkbox
+{
+    margin-top: 0px;
+}
+
+.block
+{
+    display: block;
+}
+
+.nudge-right
+{
+    padding-left: 15px;
+}
+
+.middle-button-addon-container
+{
+    height: 100%;
+}
+
+.targetdeck-row
+{
+    padding-bottom: 7.5px;
+}
+
+.middle-btn-addon
+{
+    border-radius:0;
+    border-left:0 none transparent;
+    margin-right: -2px;
+}
+
+.form-feedback
+{
+    color: #a94442;
+}
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
 }

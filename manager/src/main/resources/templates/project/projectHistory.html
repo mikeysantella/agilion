@@ -1,0 +1,40 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="common/common::include"></th:block>
+    <script th:src="@{/js/projectHistory.js}"></script>
+</head>
+
+<body>
+<div th:replace="common/navbar::navbarContainer ('home')"></div>
+<div class="container page-content">
+    <div class="page-header">
+        <h1 style="text-align: center">
+            Project History
+        </h1>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <th:block th:if="${submittedNetwork}">
+                <div th:replace="common/alerts::alert ('success', 'alerts.projectsubmit.success')"></div>
+            </th:block>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <button id="refreshButton" class="btn btn-primary pull-right" onclick="refreshProjectTable()">
+                <span id="spinningButtonIcon" class="hidden">
+                    <i class="fas fa-sync fa-spin"></i>
+                </span>
+                <span id="buttonIcon" >
+                    <i id="" class="fas fa-sync"></i>
+                </span>
+                 <span id="buttonText">Refresh</span>
+            </button>
+            <div id="tableContainer">
+                <table th:replace="project/_projectHistoryTable::table(${jobs})"></table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

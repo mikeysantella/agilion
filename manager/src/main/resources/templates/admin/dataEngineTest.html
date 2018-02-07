@@ -1,0 +1,133 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="common/common::include"></th:block>
+    <script th:src="@{/js/form/bs_fileinput.js}"></script>
+
+    <script type="text/x-template" id="subop-template">
+
+    </script>
+</head>
+
+<body>
+    <div th:replace="common/navbar::navbarContainer ('home')"></div>
+    <div class="container page-content">
+        <div class="page-header">
+            <h1 style="text-align: center">
+                Data Engine Test
+            </h1>
+        </div>
+        <div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div id="app">
+                        <div id="listOperationsJson" class="hidden" th:text="${operations}"></div>
+                        <form>
+                            <!--/* First, the user has to select the operation type */-->
+                            <div class="form-group">
+                                <label class="control-label">Operation Type:</label>
+                                <select class="form-control" @change="operationTypeChanged" v-model="operation.index">
+                                    <option value="">Select an Operation Type</option>
+                                    <option v-for="(op, index) in datamodel" v-bind:value="index" v-text="op.id"></option>
+                                </select>
+                            </div>
+
+                            <!--/* Once the user select the operation type, display that type's parameters one by one */-->
+                            <div v-if="operation != null && StringUtils.isNotBlank(operation.index)">
+                                <div v-for="(param, index) in datamodel[operation.index].params" class="form-group">
+                                    <label v-text="param.key+':'"></label>
+
+                                    <!--/* If the parameter has more than 0 values, make it a select box */-->
+                                    <div v-if="param.possibleValues.length > 0">
+                                        <select class="form-control" v-model="operation.params[param.key]">
+                                            <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"
+                                                    v-bind:selected="value == param.defaultValue ? 'selected' : ''"></option>
+                                        </select>
+                                    </div>
+
+                                    <!--/* Otherwise make it a regular input box */-->
+                                    <div v-if="param.possibleValues.length < 1">
+                                        <input class="form-control" v-model="operation.params[param.key]" :value="param.defaultValue" type="text">
+                                    </div>
+                                    <span v-text="param.description"></span>
+                                </div>
+
+                                <!--/*
+                                    Finally, display the suboperations. A sub operation can have a sub operation, so it
+                                    can get a little complicated
+                                 */-->
+                                <div class="form-group">
+                                    <label>Sub Operations:</label>
+                                    <select class="form-control" v-model="topLevelSubOpType">
+                                        <option value="">Select a Sub-Operation Type</option>
+                                        <option v-for="(op, index) in getValidSubOps()"
+                                                v-bind:value="index" v-text="op.id"></option>
+                                    </select>
+
+                                    <button type="button" @click="addSubOperation(null, topLevelSubOpType)" class="btn btn-default">+ Add Selected Sub Operation</button>
+                                </div>
+
+                                <!--/*
+                                    For all suboperations, get an ordered, flattened list, and display each one. Display
+                                    top-most suboperations furthest to the left, display its children pushed to the right,
+                                    the children's children pushed further to the right, etc, etc
+                                */-->
+                                <div v-for="subOperation in getAllSubOperations()" :style="'margin-left: '+((subOperation.level+1) * 40)+'px;'">
+                                    <label v-text="subOperation.key + ' parameters:'"></label>
+                                    <button type="button" class="btn btn-link" @click="deleteOperation(null, subOperation.path)">
+                                        <span class="text-danger">Delete This Operation</span>
+                                    </button>
+                                    <div v-for="param in datamodel[operation.index].subOperations[subOperation.key].params">
+                                        <div class="form-group">
+                                            <label v-text="param.key"></label>
+
+                                            <!--/* If the parameter has more than 0 values, make it a select box */-->
+                                            <div v-if="param.possibleValues.length > 0">
+                                                <select class="form-control" v-model="subOperation.params[param.key]">
+                                                    <option v-for="value in param.possibleValues" v-bind:value="value" v-text="value"></option>
+                                                </select>
+                                            </div>
+
+                                            <!--/* Otherwise, make it an input box */-->
+                                            <div v-if="param.possibleValues.length == 0">
+                                                <input class="form-control" v-model="subOperation.params[param.key]" type="text">
+                                            </div>
+                                            <span v-text="param.description"></span>
+                                        </div>
+                                    </div>
+
+                                    <!--/*
+                                      Finally, display an input box that allows the user to add a sub-operation to
+                                      the current sub-operation.
+                                    */-->
+                                    <div class="form-group">
+                                        <label>Sub Operations:</label>
+                                        <select class="form-control" v-model="subOperation.subOpLevelType">
+                                            <option v-for="(op, index) in getValidSubOps(subOperation)" v-bind:value="index" v-text="op.id"></option>
+                                        </select>
+
+                                        <button type="button" @click="addSubOperation(subOperation, subOperation.subOpLevelType)"
+                                                class="btn btn-default">+ Add Selected Sub Operation</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" @click="submit" class="btn btn-primary">
+                                        Submit To Data Engine
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <hr/>
+                        <h3 href="#operationStatus">Operation Status</h3>
+                        <pre v-if="sessionID != null">{{ $data.operationStatus | json }}</pre>
+                        <pre v-if="sessionID == null">A Submitted operation's status will appear here</pre>
+                        <hr/>
+                        <h3>Vue Data Model (for debugging purposes)</h3>
+                        <pre>{{ $data.operation | json }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script th:src="@{/js/admin/dataEngineTest.js}" type="text/javascript"></script>
+</body>
+</html>

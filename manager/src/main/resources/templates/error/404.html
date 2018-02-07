@@ -1,0 +1,12 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="common/common::include"></th:block>
+</head>
+
+<body>
+    <div th:replace="common/navbar::navbarContainer ('')"></div>
+    <div class="container page-content">
+        <div th:replace="error/_errorTemplate::errorPage ('404 - Page Not Found', ${#messages.msg('apperror.pagenotfound')})"></div>
+    </div>
+</body>
+</html>
