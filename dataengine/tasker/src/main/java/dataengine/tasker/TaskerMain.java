@@ -3,6 +3,7 @@ package dataengine.tasker;
 import java.io.IOException;
 import java.util.Properties;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import com.google.inject.AbstractModule;
@@ -37,17 +38,18 @@ public class TaskerMain {
 
     String zkConnectionString=properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
     String zkStartupPathHome=properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    main(zkConnectionString, zkStartupPathHome, brokerUrl, null, "jobMgrType");
+    main(zkConnectionString, zkStartupPathHome, brokerUrl, null, "jobMgrType", DeliveryMode.NON_PERSISTENT);
   }
 
-  public static void main(String zookeeperConnectStr, String zkStartupPath, String brokerUrl, String jobCreatorsString, String dispatcherComponentType) throws JMSException, ConfigurationException {
+  public static void main(String zookeeperConnectStr, String zkStartupPath, String brokerUrl, String jobCreatorsString, 
+      String dispatcherComponentType, int deliveryMode) throws JMSException, ConfigurationException {
     log.info("Starting {}", TaskerMain.class);
     
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(zookeeperConnectStr, connection, jobCreatorsString);
+    Injector injector = createInjector(zookeeperConnectStr, connection, jobCreatorsString, deliveryMode);
     
-    opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector);
-    TaskerModule.deployTasker(injector);
+    opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector, deliveryMode);
+    TaskerModule.deployTasker(injector, deliveryMode);
     dispatcherListener = TaskerModule.deployDispatcherListener(injector, zkStartupPath+dispatcherComponentType+ZkComponentStarterI.COPIES_SUBPATH);
   }
 
@@ -72,7 +74,7 @@ public class TaskerMain {
     }
   }
   
-  static Injector createInjector(String zkConnectionString, Connection connection, String jobCreatorsString) {
+  static Injector createInjector(String zkConnectionString, Connection connection, String jobCreatorsString, int deliveryMode) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -81,8 +83,8 @@ public class TaskerMain {
           }
         },
         new GModuleZooKeeper(zkConnectionString, null),
-        new RpcClients4TaskerModule(connection),
-        new OperationsRegistryModule(),
+        new RpcClients4TaskerModule(connection, deliveryMode),
+        new OperationsRegistryModule(deliveryMode),
         new TaskerModule(jobCreatorsString)
         );
   }

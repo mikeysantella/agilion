@@ -7,7 +7,6 @@ import java.util.function.BiFunction;
 import javax.inject.Inject;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -25,17 +24,19 @@ import net.deelam.activemq.rpc.KryoSerDe;
 @ToString
 public class AmqProgressMonitor implements ProgressMonitor {
 
-  @RequiredArgsConstructor(onConstructor = @__(@Inject))
+  @RequiredArgsConstructor
   public static class Factory implements ProgressMonitor.Factory {
     private final Connection connection;
+    private final int deliveryMode;
 
     public ProgressMonitor create(String jobId, int pollIntervalInSeconds, String busAddr) {
       checkNotNull(busAddr);
-      return new AmqProgressMonitor(connection, jobId, pollIntervalInSeconds, busAddr);
+      return new AmqProgressMonitor(connection, deliveryMode, jobId, pollIntervalInSeconds, busAddr);
     }
   }
 
   private final Connection connection;
+  private final int deliveryMode;
   private final String jobId;
   private final int pollIntervalInSeconds;
   private final String busAddr;
@@ -165,7 +166,7 @@ public class AmqProgressMonitor implements ProgressMonitor {
     try {
       Session sess = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
       serde = new KryoSerDe(sess);
-      producer = MQClient.createTopicMsgSender(sess, busAddr, DeliveryMode.NON_PERSISTENT);
+      producer = MQClient.createTopicMsgSender(sess, busAddr, deliveryMode);
       return sess;
     } catch (JMSException e) {
       throw new IllegalStateException("When initializing session", e);

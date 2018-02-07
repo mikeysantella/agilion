@@ -2,6 +2,8 @@ package dataengine.main;
 
 import java.util.Properties;
 import javax.jms.JMSException;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.SettingsUtils;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +27,7 @@ public class WorkersComponent implements ComponentI {
     final String dispatcherRpcAddr;
     final String jobBoardRpcAddr;
     final String newJobAvailableTopic;
-//    int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    final int deliveryMode;
 
     public WorkersConfig(Properties props) {
       super(props);
@@ -33,7 +35,9 @@ public class WorkersComponent implements ComponentI {
       dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
       jobBoardRpcAddr = useRequiredProperty(props, "msgQ.jobBoardRpcAddr");
       newJobAvailableTopic = useRequiredProperty(props, "msgT.newJobAvailable");
-      checkRemainingProps(props);
+      deliveryMode = SettingsUtils.parseMsgPersistenceProperty(
+          useProperty(props, CommunicationConsts.MSG_PERSISTENCE, "PERSISTENT"));
+      //Don't warn about worker-specific props: checkRemainingProps(props);
     }
   }
   
@@ -43,7 +47,7 @@ public class WorkersComponent implements ComponentI {
     try {
       dataengine.workers.WorkerMain.main(config.brokerUrl, 
           config.newJobAvailableTopic, config.dispatcherRpcAddr, config.jobBoardRpcAddr, //
-          configMap
+          configMap, config.deliveryMode
           );
     } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);

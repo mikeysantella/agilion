@@ -21,6 +21,7 @@ import dataengine.api.SessionsApiService;
 import dataengine.apis.OperationsRegistry_I;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
+import dataengine.apis.SettingsUtils;
 import dataengine.apis.Tasker_I;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -45,7 +46,8 @@ public final class DeServerGuiceInjector {
     if(singleton==null) {
       log.info("Starting {}", DeServerGuiceInjector.class);
       String brokerUrl = brokerUrl4Java();
-      deServerGuiceInjector = new DeServerGuiceInjector(brokerUrl);
+      int deliveryMode = SettingsUtils.deliveryMode(properties());
+      deServerGuiceInjector = new DeServerGuiceInjector(brokerUrl, deliveryMode );
       singleton=deServerGuiceInjector.injector();
     }
     return singleton;
@@ -64,14 +66,17 @@ public final class DeServerGuiceInjector {
     return ConstantsAmq.getTcpBrokerUrl(brokerUrlStr);
   }
 
+  private static Properties properties;
   public static Properties properties() {
-    Properties properties=new Properties();
-    try {
-      PropertiesUtil.loadProperties("bootstrap.props", properties);
-    } catch (IOException e) {
-      throw new IllegalStateException("When reading bootstrap.props", e);
+    if(properties==null) {
+      properties=new Properties();
+      try {
+        PropertiesUtil.loadProperties("bootstrap.props", properties);
+      } catch (IOException e) {
+        throw new IllegalStateException("When reading bootstrap.props", e);
+      }
+      properties.forEach((k,v)->log.debug("  "+k+"="+v));
     }
-    properties.forEach((k,v)->log.debug("  "+k+"="+v));
     return properties;
   }
 
@@ -110,14 +115,14 @@ public final class DeServerGuiceInjector {
   @Getter
   final Injector injector;
   private final Connection connection;
-  private DeServerGuiceInjector(String brokerUrl) {
+  private DeServerGuiceInjector(String brokerUrl, int deliveryMode) {
     try {
       connection = MQClient.connect(brokerUrl);
       injector = Guice.createInjector(
-          new RpcClients4ServerModule(connection),
+          new RpcClients4ServerModule(connection, deliveryMode),
           new RestServiceModule());
       log.info("Created DeServerGuiceInjector");
-      new AmqComponentSubscriber(connection, "RESTService");
+      new AmqComponentSubscriber(connection, deliveryMode, "RESTService");
     } catch (JMSException e) {
       throw new IllegalArgumentException(e);
     }

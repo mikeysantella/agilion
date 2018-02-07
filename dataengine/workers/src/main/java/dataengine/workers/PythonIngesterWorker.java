@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import dataengine.api.Dataset;
@@ -41,7 +42,7 @@ public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
     props.put("sqlConnect", deProps.get(prefix+"sqlConnect"));
     props.put("TIDE.dshape", deProps.get(prefix+"TIDE.dshape"));
     
-    AbstractPythonWrapperWorker worker = new PythonIngesterWorker(null, connection, props);
+    AbstractPythonWrapperWorker worker = new PythonIngesterWorker(null, connection, DeliveryMode.NON_PERSISTENT, props);
     
     Map<String, Object> params=new HashMap<>();
     params.put((OperationConsts.INPUT_URI), "file:///home/dlam/dev/agilionReal/dataengine/dataio/INTEL_datasets/TIDE_sample_data.csv");
@@ -57,10 +58,9 @@ public class PythonIngesterWorker extends AbstractPythonWrapperWorker {
   final Properties props;
   final String sqlConnect;
   
-  @Inject
-  public PythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, Properties props)
+  public PythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, int deliveryMode, Properties props)
       throws JMSException {
-    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
+    super(sessDb, connection, deliveryMode, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
     this.props=props;
     sqlConnect=props.getProperty("sqlConnect");
     if(sqlConnect==null)

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Properties;
 import javax.inject.Inject;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -43,13 +44,13 @@ public class NeoWorkersMain {
     String dispatcherRpcAddr = properties.getProperty("dispatcherRpcAddr", "depJobMgrBroadcastAMQ");
     String jobBoardRpcAddr = properties.getProperty("jobBoardRpcAddr", "jobBoardBroadcastAMQ");
     Properties domainProps = PropertiesUtil.loadProperties("tide.props");
-    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, domainProps);
+    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, domainProps, DeliveryMode.NON_PERSISTENT);
   }
 
   public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr,
-      String jobBoardRpcAddr, Properties domainProps) throws JMSException {
+      String jobBoardRpcAddr, Properties domainProps, int deliveryMode) throws JMSException {
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, domainProps);
+    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, domainProps, deliveryMode);
     DeployedJobConsumerFactory jcFactory =
         injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
@@ -64,11 +65,11 @@ public class NeoWorkersMain {
 
     jConsumers = new ArrayList<>(hiddenWorkers.length + workers.length);
     for (BaseWorker<?> worker : hiddenWorkers) {
-      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
+      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic, deliveryMode));
     }
     for (BaseWorker<?> worker : workers) {
-      OperationsSubscriberModule.deployOperationsSubscriber(connection, worker);
-      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
+      OperationsSubscriberModule.deployOperationsSubscriber(connection, deliveryMode, worker);
+      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic, deliveryMode));
     }
   }
 
@@ -85,15 +86,15 @@ public class NeoWorkersMain {
   }
 
   static Injector createInjector(Connection connection, String dispatcherRpcAddr,
-      String jobBoardRpcAddr, Properties configMap) {
+      String jobBoardRpcAddr, Properties configMap, int deliveryMode) {
     return Guice.createInjector(new AbstractModule() {
         @Override
         protected void configure() {
           bind(Connection.class).toInstance(connection);
         }
       }, 
-      new RpcClients4WorkerModule(connection, dispatcherRpcAddr, jobBoardRpcAddr),
+      new RpcClients4WorkerModule(connection, dispatcherRpcAddr, jobBoardRpcAddr, deliveryMode),
       new OperationsSubscriberModule(), 
-      new BaseWorkerModule(configMap));
+      new BaseWorkerModule(configMap, deliveryMode));
   }
 }

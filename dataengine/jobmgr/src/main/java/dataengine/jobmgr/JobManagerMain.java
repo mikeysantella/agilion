@@ -3,6 +3,7 @@ package dataengine.jobmgr;
 import java.io.IOException;
 import java.util.Properties;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -25,15 +26,16 @@ public class JobManagerMain {
       log.info("Setting brokerUrl={}", brokerUrl);
       properties.setProperty("brokerUrl", brokerUrl);
     }
-    main(brokerUrl, properties, "depJobMgrBroadcastAMQ", "jobBoardBroadcastAMQ", "newJobAvailableTopic");
+    main(brokerUrl, properties, "depJobMgrBroadcastAMQ", "jobBoardBroadcastAMQ", "newJobAvailableTopic", DeliveryMode.NON_PERSISTENT);
   }
 
-  public static void main(String brokerUrl, Properties properties, String dispatcherRpcAddr, String jobBoardRpcAddr, String newJobAvailableTopic) throws JMSException {
+  public static void main(String brokerUrl, Properties properties, String dispatcherRpcAddr, String jobBoardRpcAddr,
+      String newJobAvailableTopic, int deliveryMode) throws JMSException {
     log.info("Starting {}", JobManagerMain.class);
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, jobBoardRpcAddr, newJobAvailableTopic);
-    JobBoardModule.deployJobBoard(injector);
-    JobBoardModule.deployDepJobService(injector, dispatcherRpcAddr);
+    Injector injector = createInjector(connection, jobBoardRpcAddr, newJobAvailableTopic, deliveryMode);
+    JobBoardModule.deployJobBoard(injector, deliveryMode);
+    JobBoardModule.deployDepJobService(injector, dispatcherRpcAddr, deliveryMode);
   }
   
   private static Connection connection;
@@ -45,14 +47,14 @@ public class JobManagerMain {
     }
   }
 
-  static Injector createInjector(Connection connection, String jobBoardRpcAddr, String newJobAvailableTopic) {
+  static Injector createInjector(Connection connection, String jobBoardRpcAddr, String newJobAvailableTopic, int deliveryMode) {
     return Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
         bind(Connection.class).toInstance(connection);
       }
-    }, new RpcClients4JobMgrModule(connection, jobBoardRpcAddr),
+    }, new RpcClients4JobMgrModule(connection, jobBoardRpcAddr, deliveryMode),
         new JobBoardModule(jobBoardRpcAddr,
-            newJobAvailableTopic, connection));
+            newJobAvailableTopic, connection, deliveryMode));
   }
 }

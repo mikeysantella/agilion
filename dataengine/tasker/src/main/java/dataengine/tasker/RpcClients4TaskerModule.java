@@ -14,11 +14,13 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 class RpcClients4TaskerModule extends RpcClientsModule {
 
 //  private final String depJobMgrBroadcastAddr;
+  final int deliveryMode;
 
-  public RpcClients4TaskerModule(Connection connection/*, String depJobMgrBroadcastAddr*/) {
+  public RpcClients4TaskerModule(Connection connection/*, String depJobMgrBroadcastAddr*/, int deliveryMode) {
     super(connection);
 //    this.depJobMgrBroadcastAddr=depJobMgrBroadcastAddr;
     //debug = true;
+    this.deliveryMode=deliveryMode;
     log.debug("VertxRpcClients4TaskerModule configured");
   }
 
@@ -29,6 +31,6 @@ class RpcClients4TaskerModule extends RpcClientsModule {
 
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDbRpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR, deliveryMode));
   }
 }

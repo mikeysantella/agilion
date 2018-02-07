@@ -3,6 +3,8 @@ package dataengine.main;
 import java.util.Properties;
 import javax.jms.JMSException;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.SettingsUtils;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +28,7 @@ public class TaskerComponent implements ComponentI {
     final String jobCreators;
     final String dispatcherComponentType;
     final String zkStartupPath;
-    // int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    final int deliveryMode;
 
     public TaskerConfig(Properties props) {
       super(props);
@@ -34,6 +36,8 @@ public class TaskerComponent implements ComponentI {
       jobCreators = useProperty(props, "jobCreators", null);
       dispatcherComponentType = useRequiredProperty(props, "dispatcherComponentType");
       zkStartupPath=System.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
+      deliveryMode = SettingsUtils.parseMsgPersistenceProperty(
+          useProperty(props, CommunicationConsts.MSG_PERSISTENCE, "PERSISTENT"));
       checkRemainingProps(props);
     }
   }
@@ -42,7 +46,8 @@ public class TaskerComponent implements ComponentI {
   public void start(Properties configMap) {
     config = new TaskerConfig(configMap);
     try {
-      dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.zkStartupPath, config.brokerUrl, config.jobCreators, config.dispatcherComponentType);
+      dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.zkStartupPath, config.brokerUrl, 
+          config.jobCreators, config.dispatcherComponentType, config.deliveryMode);
     } catch (JMSException | ConfigurationException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

@@ -14,26 +14,29 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 
 @Slf4j
 class RpcClients4ServerModule extends RpcClientsModule {
+
+  final int deliveryMode;
   
-  public RpcClients4ServerModule(Connection connection) {
+  public RpcClients4ServerModule(Connection connection, int deliveryMode) {
     super(connection);
     //debug=true;
+    this.deliveryMode=deliveryMode;
     log.debug("RpcClients4ServerModule configured");
   }
   
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDb_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR, deliveryMode));
   }
 
   @Provides
   RpcClientProvider<OperationsRegistry_I> opsReg_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(OperationsRegistry_I.class, CommunicationConsts.OPSREGISTRY_RPCADDR));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(OperationsRegistry_I.class, CommunicationConsts.OPSREGISTRY_RPCADDR, deliveryMode));
   }
 
   @Provides
   RpcClientProvider<Tasker_I> tasker_RpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.TASKER_RPCADDR));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.TASKER_RPCADDR, deliveryMode));
   }
 
 }

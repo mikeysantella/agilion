@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.curator.framework.CuratorFramework;
 import org.junit.After;
@@ -74,7 +75,7 @@ public class TaskerServiceTest {
                 bind(Connection.class).toInstance(connection);
                 connection.start();
                 OperationsRegistry opsReg =
-                    new OperationsRegistry(connection);
+                    new OperationsRegistry(connection, DeliveryMode.NON_PERSISTENT);
                 bind(OperationsRegistry.class).toInstance(opsReg);
               } catch (Exception e) {
                 throw new RuntimeException(e);

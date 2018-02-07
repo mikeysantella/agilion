@@ -19,10 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractMultiPythonWrapperWorker extends AbstractPythonWrapperWorker {
 
   @Inject
-  public AbstractMultiPythonWrapperWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection,
+  public AbstractMultiPythonWrapperWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, int deliveryMode,
       String jobType, String pythonExecFile)
       throws JMSException {
-    super(sessDb, connection, jobType, pythonExecFile);
+    super(sessDb, connection, deliveryMode, jobType, pythonExecFile);
   }
 
   @RequiredArgsConstructor

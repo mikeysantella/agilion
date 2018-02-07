@@ -25,10 +25,10 @@ public class OperationsSubscriber implements Closeable {
   private MessageProducer producer;
   private final Worker_I[] workers;
 
-  public OperationsSubscriber(Connection connection, Worker_I... workers) throws JMSException {
+  public OperationsSubscriber(Connection connection, int deliveryMode, Worker_I... workers) throws JMSException {
     this.workers = workers;
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    producer = MQClient.createGenericMsgResponder(session, DeliveryMode.NON_PERSISTENT);
+    producer = MQClient.createGenericMsgResponder(session, deliveryMode);
     listen(CommunicationConsts.OPSREGISTRY_SUBSCRIBER_TOPIC);
   }
 

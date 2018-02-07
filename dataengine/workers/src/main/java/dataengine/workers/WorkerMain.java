@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Properties;
 import javax.inject.Inject;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -36,13 +37,13 @@ public class WorkerMain {
     String dispatcherRpcAddr=properties.getProperty("dispatcherRpcAddr", "depJobMgrBroadcastAMQ");
     String jobBoardRpcAddr=properties.getProperty("jobBoardRpcAddr", "jobBoardBroadcastAMQ");
     Properties configMap=new Properties();
-    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, configMap);
+    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, configMap, DeliveryMode.NON_PERSISTENT);
   }
 
   public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr, String jobBoardRpcAddr,
-      Properties configMap) throws JMSException {
+      Properties configMap, int deliveryMode) throws JMSException {
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, configMap);
+    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, configMap, deliveryMode);
     DeployedJobConsumerFactory jcFactory = injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
     BaseWorker<?>[] hiddenWorkers = {
@@ -60,11 +61,11 @@ public class WorkerMain {
     
     jConsumers=new ArrayList<>(hiddenWorkers.length+workers.length);
     for (BaseWorker<?> worker : hiddenWorkers) {
-      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
+      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic, deliveryMode));
     }
     for (BaseWorker<?> worker : workers) {
-      OperationsSubscriberModule.deployOperationsSubscriber(connection, worker);
-      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic));
+      OperationsSubscriberModule.deployOperationsSubscriber(connection, deliveryMode, worker);
+      jConsumers.add(jcFactory.create(worker, newJobAvailableTopic, deliveryMode));
     }
   }
   
@@ -79,7 +80,8 @@ public class WorkerMain {
     }
   }
   
-  static Injector createInjector(Connection connection, String dispatcherRpcAddr, String jobBoardRpcAddr, Properties configMap) {
+  static Injector createInjector(Connection connection, String dispatcherRpcAddr, String jobBoardRpcAddr, 
+      Properties configMap, int deliveryMode) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -87,9 +89,10 @@ public class WorkerMain {
             bind(Connection.class).toInstance(connection);
           }
         },
-        new RpcClients4WorkerModule(connection, dispatcherRpcAddr, jobBoardRpcAddr),
+        new RpcClients4WorkerModule(connection, dispatcherRpcAddr, jobBoardRpcAddr, deliveryMode),
         new OperationsSubscriberModule(),
-        new BaseWorkerModule(configMap)
+        new BaseWorkerModule(configMap, deliveryMode), 
+        new PythonWorkerModule(configMap, deliveryMode)
         );
   }
 }

@@ -33,7 +33,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
   final String pythonQueueName;
   final Destination pythonDestQ;
 
-  public AbstractPythonWrapperWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection,
+  public AbstractPythonWrapperWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, int deliveryMode,
       String jobType, String pythonExecFile) throws JMSException {
     super(jobType, sessDb);
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -62,7 +62,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
         log.warn("When handling python progress", e);
       }
     });
-    producer = MQClient.createGenericMsgResponder(session, DeliveryMode.NON_PERSISTENT);
+    producer = MQClient.createGenericMsgResponder(session, deliveryMode);
   }
 
   protected void onPythonReply(Message m, int percent, String message) throws JMSException {

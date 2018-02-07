@@ -16,33 +16,35 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 public class RpcClients4WorkerModule extends RpcClientsModule {
   private final String depJobMgrBroadcastAddr;
   private final String jobBoardBroadcastAddr;
+  final int deliveryMode;
 
-  public RpcClients4WorkerModule(Connection connection, String depJobMgrBroadcastAddr, String jobBoardBroadcastAddr) {
+  public RpcClients4WorkerModule(Connection connection, String depJobMgrBroadcastAddr, String jobBoardBroadcastAddr, int deliveryMode) {
     super(connection);
     this.depJobMgrBroadcastAddr=depJobMgrBroadcastAddr;
     this.jobBoardBroadcastAddr=jobBoardBroadcastAddr;
 //    debug = true;
+    this.deliveryMode=deliveryMode;
     log.debug("RpcClients4WorkerModule configured");
   }
 
   @Provides
   RpcClientProvider<Tasker_I> taskerRpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.TASKER_RPCADDR));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(Tasker_I.class, CommunicationConsts.TASKER_RPCADDR, deliveryMode));
   }
 
   @Provides
   RpcClientProvider<DepJobService_I> depJobServiceRpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, depJobMgrBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(DepJobService_I.class, depJobMgrBroadcastAddr, deliveryMode));
   }
 
   @Provides
   RpcClientProvider<SessionsDB_I> sessionsDbRpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(SessionsDB_I.class, CommunicationConsts.SESSIONDB_RPCADDR, deliveryMode));
   }
 
   @Provides
   RpcClientProvider<JobBoardOutput_I> jobConsumerRpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardOutput_I.class, jobBoardBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardOutput_I.class, jobBoardBroadcastAddr, deliveryMode));
   }
 
 }

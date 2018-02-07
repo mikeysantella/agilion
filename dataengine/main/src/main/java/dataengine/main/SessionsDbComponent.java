@@ -2,6 +2,8 @@ package dataengine.main;
 
 import java.util.Properties;
 import javax.jms.JMSException;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.SettingsUtils;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +24,14 @@ public class SessionsDbComponent implements ComponentI {
   class DataEngineConfig extends AbstractCompConfig {
 
     final String brokerUrl;
-//    int deliveryMode = DeliveryMode.NON_PERSISTENT;
-
+    final int deliveryMode;
 
     // populate and print remaining unused properties
     public DataEngineConfig(Properties props) {
       super(props);
       brokerUrl = ConstantsAmq.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
+      deliveryMode = SettingsUtils.parseMsgPersistenceProperty(
+          useProperty(props, CommunicationConsts.MSG_PERSISTENCE, "PERSISTENT"));
       checkRemainingProps(props);
     }
 
@@ -38,7 +41,7 @@ public class SessionsDbComponent implements ComponentI {
   public void start(Properties configMap) {
     config = new DataEngineConfig(configMap);
     try {
-      dataengine.sessions.SessionsMain.main(config.brokerUrl, configMap);
+      dataengine.sessions.SessionsMain.main(config.brokerUrl, configMap, config.deliveryMode);
     } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

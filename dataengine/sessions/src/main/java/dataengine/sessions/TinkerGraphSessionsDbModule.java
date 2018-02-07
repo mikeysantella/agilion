@@ -38,13 +38,13 @@ public class TinkerGraphSessionsDbModule extends AbstractModule {
     log.info("TinkerGraphSessionsDbModule configured");
   }
   
-  static void deploySessionDb(Injector injector) throws JMSException {
+  static void deploySessionDb(Injector injector, int deliveryMode) throws JMSException {
     SessionsDB_I sessDbSvc = injector.getInstance(SessionsDB_I.class);
     log.info("AMQ: SERV: Deploying RPC service for SessionsDB_I: {} ", sessDbSvc); 
-    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.SESSIONDB_RPCADDR, sessDbSvc/*, true*/);
+    injector.getInstance(ActiveMqRpcServer.class).start(CommunicationConsts.SESSIONDB_RPCADDR, sessDbSvc, deliveryMode/*, true*/);
     
     Connection connection=injector.getInstance(Connection.class);
-    new AmqComponentSubscriber(connection, "SessionsDB", 
+    new AmqComponentSubscriber(connection, deliveryMode, "SessionsDB", 
         CommunicationConsts.RPC_ADDR, CommunicationConsts.SESSIONDB_RPCADDR,
         CommunicationConsts.COMPONENT_TYPE, "SessionsDB");
   }

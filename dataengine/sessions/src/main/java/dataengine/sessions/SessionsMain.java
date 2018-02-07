@@ -3,6 +3,7 @@ package dataengine.sessions;
 import java.io.IOException;
 import java.util.Properties;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -26,13 +27,13 @@ public class SessionsMain {
       log.info("Setting brokerUrl={}", brokerUrl);
       properties.setProperty("brokerUrl", brokerUrl);
     }
-    main(brokerUrl, properties);
+    main(brokerUrl, properties, DeliveryMode.NON_PERSISTENT);
   }
-  public static void main(String brokerUrl, Properties properties) throws JMSException {
+  public static void main(String brokerUrl, Properties properties, int deliveryMode) throws JMSException {
     log.info("Starting {}", SessionsMain.class);
     connection = MQClient.connect(brokerUrl);
     Injector injector = createInjector(connection, properties);
-    TinkerGraphSessionsDbModule.deploySessionDb(injector);
+    TinkerGraphSessionsDbModule.deploySessionDb(injector, deliveryMode);
   }
   
   private static Connection connection;

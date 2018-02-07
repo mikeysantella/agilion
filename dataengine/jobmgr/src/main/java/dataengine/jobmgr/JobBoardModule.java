@@ -35,6 +35,7 @@ public class JobBoardModule extends AbstractModule {
   final String jobBoardRpcAddr;
   final String newJobAvailableTopic;
   final Connection connection;
+  final int deliveryMode;
   
   @Override
   protected void configure() {
@@ -49,7 +50,7 @@ public class JobBoardModule extends AbstractModule {
   private Consumer<JobDTO> createNewJobPublisher(Connection connection, String topicName) {
     try {
       Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-      MessageProducer producer = MQClient.createTopicMsgSender(session, topicName, DeliveryMode.NON_PERSISTENT);
+      MessageProducer producer = MQClient.createTopicMsgSender(session, topicName, deliveryMode);
       KryoSerDe serde=new KryoSerDe(session); 
       return jobDto -> {
         try {
@@ -65,22 +66,22 @@ public class JobBoardModule extends AbstractModule {
     }
   }
 
-  static void deployJobBoard(Injector injector) throws JMSException {
+  static void deployJobBoard(Injector injector, int deliveryMode) throws JMSException {
     JobBoard jobBoard = injector.getInstance(JobBoard.class);
     if(DEBUG){
       jobBoard.periodicLogs(10_000, 20);
     }
     
     log.info("AMQ: TASKER: Deploying JobBoard: {} ", jobBoard); 
-    injector.getInstance(ActiveMqRpcServer.class).start(jobBoard.getJobBoardRpcAddr(), jobBoard, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(jobBoard.getJobBoardRpcAddr(), jobBoard, deliveryMode, true);
     
     Connection connection=injector.getInstance(Connection.class);
-    new AmqComponentSubscriber(connection, "JobBoard", 
+    new AmqComponentSubscriber(connection, deliveryMode, "JobBoard", 
         CommunicationConsts.RPC_ADDR, jobBoard.getJobBoardRpcAddr(), 
         CommunicationConsts.COMPONENT_TYPE, "JobBoard");
   }
 
-  static void deployDepJobService(Injector injector, String dispatcherRpcAddr) throws JMSException {
+  static void deployDepJobService(Injector injector, String dispatcherRpcAddr, int deliveryMode) throws JMSException {
     GrafUri depJobGrafUri;
     
     if(false){
@@ -98,10 +99,10 @@ public class JobBoardModule extends AbstractModule {
     DepJobService depJobMgr = new DepJobService(depJobMgrGraf, jbInputRpc);
     depJobMgr.setDispatcherRpcAddr(dispatcherRpcAddr);
     log.info("AMQ: TASKER: Deploying RPC service for DepJobService: {}", depJobMgr); 
-    injector.getInstance(ActiveMqRpcServer.class).start(depJobMgr.getDispatcherRpcAddr(), depJobMgr, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(depJobMgr.getDispatcherRpcAddr(), depJobMgr, deliveryMode, true);
     
     Connection connection=injector.getInstance(Connection.class);
-    new AmqComponentSubscriber(connection, "Dispatcher", 
+    new AmqComponentSubscriber(connection, deliveryMode, "Dispatcher", 
         CommunicationConsts.RPC_ADDR, dispatcherRpcAddr, 
         CommunicationConsts.COMPONENT_TYPE, "JobDispatcher");
 

@@ -3,6 +3,8 @@ package dataengine.workers.neo4j;
 import java.io.IOException;
 import java.util.Properties;
 import javax.jms.JMSException;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.SettingsUtils;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +29,7 @@ public class NeoWorkersComponent implements ComponentI {
     final String dispatcherRpcAddr;
     final String jobBoardRpcAddr;
     final String newJobAvailableTopic;
-//    int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    final int deliveryMode;
 
     public NeoWorkersConfig(Properties props) {
       super(props);
@@ -35,6 +37,8 @@ public class NeoWorkersComponent implements ComponentI {
       dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
       jobBoardRpcAddr = useRequiredProperty(props, "msgQ.jobBoardRpcAddr");
       newJobAvailableTopic = useRequiredProperty(props, "msgT.newJobAvailable");
+      deliveryMode = SettingsUtils.parseMsgPersistenceProperty(
+          useProperty(props, CommunicationConsts.MSG_PERSISTENCE, "PERSISTENT"));
       checkRemainingProps(props);
     }
   }
@@ -45,7 +49,7 @@ public class NeoWorkersComponent implements ComponentI {
     try {
       Properties domainProps = PropertiesUtil.loadProperties("tide.props");
       dataengine.workers.neo4j.NeoWorkersMain.main(config.brokerUrl, config.newJobAvailableTopic,
-          config.dispatcherRpcAddr, config.jobBoardRpcAddr, domainProps);
+          config.dispatcherRpcAddr, config.jobBoardRpcAddr, domainProps, config.deliveryMode);
     } catch (JMSException | IOException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

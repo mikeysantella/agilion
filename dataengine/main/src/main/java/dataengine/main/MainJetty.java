@@ -30,6 +30,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import com.google.common.base.Stopwatch;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.SettingsUtils;
 import dataengine.server.DeServerGuiceInjector;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.ConstantsAmq;
@@ -301,7 +303,8 @@ public class MainJetty {
         // must create connection and AmqComponentRegistry in separate thread so that msgs can be
         // handled by a daemon subthreads that don't prevent shutdown 
         connection = MQClient.tryUntilConnect(brokerUrl);
-        compRegistry.complete(new AmqComponentRegistry(connection));
+        int deliveryMode = SettingsUtils.deliveryMode(properties);
+        compRegistry.complete(new AmqComponentRegistry(connection, deliveryMode));
       } catch (JMSException e) {
         log.warn("While running AmqComponentRegistry", e);
       }

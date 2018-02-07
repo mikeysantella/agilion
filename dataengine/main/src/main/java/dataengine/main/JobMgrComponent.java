@@ -2,6 +2,8 @@ package dataengine.main;
 
 import java.util.Properties;
 import javax.jms.JMSException;
+import dataengine.apis.CommunicationConsts;
+import dataengine.apis.SettingsUtils;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +27,7 @@ public class JobMgrComponent implements ComponentI {
     final String dispatcherRpcAddr;
     final String jobBoardRpcAddr;
     final String newJobAvailableTopic;
-//    int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    final int deliveryMode;
 
     public DataEngineConfig(Properties props) {
       super(props);
@@ -33,8 +35,12 @@ public class JobMgrComponent implements ComponentI {
       dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
       jobBoardRpcAddr = useRequiredProperty(props, "msgQ.jobBoardRpcAddr");
       newJobAvailableTopic = useRequiredProperty(props, "msgT.newJobAvailable");
+      deliveryMode = SettingsUtils.parseMsgPersistenceProperty(
+          useProperty(props, CommunicationConsts.MSG_PERSISTENCE, "PERSISTENT"));
       checkRemainingProps(props);
     }
+
+
 
   }
   
@@ -42,7 +48,8 @@ public class JobMgrComponent implements ComponentI {
   public void start(Properties configMap) {
     config = new DataEngineConfig(configMap);
     try {
-      dataengine.jobmgr.JobManagerMain.main(config.brokerUrl, configMap, config.dispatcherRpcAddr, config.jobBoardRpcAddr, config.newJobAvailableTopic);
+      dataengine.jobmgr.JobManagerMain.main(config.brokerUrl, configMap, config.dispatcherRpcAddr, config.jobBoardRpcAddr, 
+          config.newJobAvailableTopic, config.deliveryMode);
     } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

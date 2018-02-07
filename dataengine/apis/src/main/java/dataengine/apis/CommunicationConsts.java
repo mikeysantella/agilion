@@ -10,4 +10,6 @@ public final class CommunicationConsts {
   public static final String RPC_ADDR="rpcAddr";
   public static final String COMPONENT_TYPE="compType";
   public static final String HOSTNAME="hostname";
+  public static final String MSG_PERSISTENT_SYSPROP = "MSG_PERSISTENT";
+  public static final String MSG_PERSISTENCE = "msgPersistence";
 }

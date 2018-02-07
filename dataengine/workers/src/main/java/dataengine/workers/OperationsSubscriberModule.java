@@ -14,9 +14,9 @@ public final class OperationsSubscriberModule extends AbstractModule {
 
   static int subscriberCounter = 0;
 
-  public static void deployOperationsSubscriber(Connection connection, Worker_I worker)
+  public static void deployOperationsSubscriber(Connection connection, int deliveryMode, Worker_I worker)
       throws JMSException {
-    OperationsSubscriber opSubscriber = new OperationsSubscriber(connection, worker);
+    OperationsSubscriber opSubscriber = new OperationsSubscriber(connection, deliveryMode, worker);
     // TODO: call opSubscriber.close()
   }
 }

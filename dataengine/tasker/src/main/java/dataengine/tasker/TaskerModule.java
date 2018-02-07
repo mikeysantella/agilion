@@ -49,7 +49,6 @@ final class TaskerModule extends AbstractModule {
     bind(Tasker_I.class).to(TaskerService.class);
     bind(TaskerService.class).in(Singleton.class);
   }
-
   
   @Provides
   List<JobsCreator_I> getJobCreators(Injector injector) {
@@ -76,15 +75,16 @@ final class TaskerModule extends AbstractModule {
     return jobCreators;
   }
 
-  static void deployTasker(Injector injector) throws JMSException {
+  static void deployTasker(Injector injector, int deliveryMode) throws JMSException {
     TaskerService taskerSvc = injector.getInstance(TaskerService.class);
+    taskerSvc.deliveryMode=deliveryMode;
     
     log.info("AMQ: SERV: Deploying RPC service for TaskerService: {} ", taskerSvc); 
     taskerSvc.setTaskerRpcAddr(CommunicationConsts.TASKER_RPCADDR);
-    injector.getInstance(ActiveMqRpcServer.class).start(taskerSvc.getTaskerRpcAddr(), taskerSvc, true);
+    injector.getInstance(ActiveMqRpcServer.class).start(taskerSvc.getTaskerRpcAddr(), taskerSvc, deliveryMode, true);
     
     Connection connection=injector.getInstance(Connection.class);
-    new AmqComponentSubscriber(connection, "Tasker", 
+    new AmqComponentSubscriber(connection, deliveryMode, "Tasker", 
         CommunicationConsts.RPC_ADDR, taskerSvc.getTaskerRpcAddr(),
         CommunicationConsts.COMPONENT_TYPE, "Tasker");
   }

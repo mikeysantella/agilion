@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.inject.Inject;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -21,7 +20,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.CombinedResponse;
 import net.deelam.activemq.TopicUtils;
-import net.deelam.activemq.rpc.AmqComponentSubscriber;
 
 /**
  * Used by OperationsSubscriber allow themselves to be queried by this class.
@@ -36,10 +34,9 @@ public class OperationsRegistry implements OperationsRegistry_I {
   private final Session session;
   private final TopicUtils topicUtils;
 
-  @Inject
-  public OperationsRegistry(Connection connection) throws JMSException {
+  public OperationsRegistry(Connection connection, int deliveryMode) throws JMSException {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    topicUtils = new TopicUtils(session, session.createTopic(CommunicationConsts.OPSREGISTRY_SUBSCRIBER_TOPIC));
+    topicUtils = new TopicUtils(session, deliveryMode, session.createTopic(CommunicationConsts.OPSREGISTRY_SUBSCRIBER_TOPIC));
     topicUtils.listenToTopicConsumerResponses(GET_OPERATIONS.name(), null);
   }
   

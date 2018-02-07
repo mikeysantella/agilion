@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
+import javax.jms.DeliveryMode;
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.Request;
@@ -182,9 +183,11 @@ public class TaskerService implements Tasker_I {
 
   final JobProcessingEntry.Factory jobProcessingEntryFactory;
 
+  int deliveryMode=DeliveryMode.PERSISTENT;
+  
   // When a new JobManager JVM is created, it must register itself with this class such that a new TaskerJobListener is created  
   public void handleNewDepJobService(String amqAddress) {
-    JobProcessingEntry jpEntry = jobProcessingEntryFactory.create(amqAddress, -1);
+    JobProcessingEntry jpEntry = jobProcessingEntryFactory.create(amqAddress, deliveryMode, -1);
     jpEntries.add(jpEntry);
     log.info("jobProcessingEntries={}", jpEntries);
   }

@@ -8,10 +8,10 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Session;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import dataengine.apis.CommunicationConsts;
 import dataengine.apis.JobBoardOutput_I;
 import dataengine.apis.RpcClientProvider;
-import dataengine.workers.ProgressMonitor.Factory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
@@ -21,31 +21,35 @@ import net.deelam.activemq.rpc.AmqComponentSubscriber;
 @RequiredArgsConstructor
 public class BaseWorkerModule extends AbstractModule {
   final Properties configMap;
+  final int deliveryMode;
   final List<ProgressingDoer> doers = new ArrayList<>();
-
+  
   @Override
   protected void configure() {
     requireBinding(Connection.class);
     
     //bindConstant().annotatedWith(Names.named(NAMED_JOB_BOARD_ID)).to(jobBoardId);
     bind(Properties.class).toInstance(configMap);
-
-    bind(ProgressMonitor.Factory.class).to(AmqProgressMonitor.Factory.class);
+  }
+  
+  @Provides
+  ProgressMonitor.Factory createProgressMonitorFactory(Connection connection){
+    return new AmqProgressMonitor.Factory(connection, deliveryMode);
   }
 
   public static class DeployedJobConsumerFactory {
     final ProgressMonitor.Factory pmFactory;
     final RpcClientProvider<JobBoardOutput_I> jobBoardRpc;
     final Connection connection;
-
+    
     @Inject
-    DeployedJobConsumerFactory(Factory pmFactory, RpcClientProvider<JobBoardOutput_I> jobBoard, Connection connection) {
+    DeployedJobConsumerFactory(ProgressMonitor.Factory pmFactory, RpcClientProvider<JobBoardOutput_I> jobBoard, Connection connection) {
       this.pmFactory = pmFactory;
       this.jobBoardRpc = jobBoard;
       this.connection = connection;
     }
 
-    public JobConsumer create(ProgressingDoer doer, String newJobAvailableTopic) {
+    public JobConsumer create(ProgressingDoer doer, String newJobAvailableTopic, int deliveryMode) {
       ReportingWorker rw = new ReportingWorker(doer, doer::canDo, doer::state)
           .setProgressMonitorFactory(pmFactory);
       
@@ -57,7 +61,7 @@ public class BaseWorkerModule extends AbstractModule {
         String workerAddr=jConsumer.start("JobConsumer-"+doer.name(), 
             MQClient.createTopicConsumer(session, newJobAvailableTopic, null));
 
-        new AmqComponentSubscriber(connection, workerAddr, 
+        new AmqComponentSubscriber(connection, deliveryMode, workerAddr, 
             CommunicationConsts.COMPONENT_TYPE, "JobConsumer", 
             "jobType", doer.jobType());
         return jConsumer;

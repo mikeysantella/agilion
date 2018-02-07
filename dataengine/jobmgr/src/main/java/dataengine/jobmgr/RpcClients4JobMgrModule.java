@@ -12,16 +12,18 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 class RpcClients4JobMgrModule extends RpcClientsModule {
 
   private final String jobBoardBroadcastAddr;
-
-  public RpcClients4JobMgrModule(Connection connection, String jobBoardBroadcastAddr) {
+  final int deliveryMode;
+  
+  public RpcClients4JobMgrModule(Connection connection, String jobBoardBroadcastAddr, int deliveryMode) {
     super(connection);
     this.jobBoardBroadcastAddr=jobBoardBroadcastAddr;
+    this.deliveryMode=deliveryMode;
     log.debug("VertxRpcClients4JobMgrModule configured");
   }
 
   @Provides
   RpcClientProvider<JobBoardInput_I> jobBoardInputRpcClient(){
-    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardInput_I.class, jobBoardBroadcastAddr));
+    return new RpcClientProvider<>(getAmqClientSupplierFor(JobBoardInput_I.class, jobBoardBroadcastAddr, deliveryMode));
   }
 
 }

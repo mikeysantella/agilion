@@ -2,8 +2,8 @@ package dataengine.workers;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.inject.Inject;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import dataengine.api.Dataset;
@@ -13,8 +13,6 @@ import dataengine.api.OperationParam;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
-import dataengine.workers.AbstractMultiPythonWrapperWorker.SubjobCommandMsg;
-import dataengine.workers.AbstractMultiPythonWrapperWorker.SubjobProgress;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 
@@ -24,7 +22,7 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
   public static void main(String[] args) throws Exception {
     String brokerURL = "tcp://localhost:61616";
     Connection connection = MQClient.connect(brokerURL);
-    PythonIngestExporterWorker worker = new PythonIngestExporterWorker(null, connection);
+    PythonIngestExporterWorker worker = new PythonIngestExporterWorker(null, connection, DeliveryMode.NON_PERSISTENT);
     Job job = new Job().id("testJob");
     boolean success = worker.doWork(job);
     log.info("success={}", success);
@@ -32,10 +30,9 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
     connection.close();
   }
 
-  @Inject
-  public PythonIngestExporterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection)
+  public PythonIngestExporterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, int deliveryMode)
       throws JMSException {
-    super(sessDb, connection, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
+    super(sessDb, connection, deliveryMode, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
   }
 
   @Override

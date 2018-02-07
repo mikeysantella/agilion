@@ -20,7 +20,9 @@ import net.deelam.activemq.rpc.RpcClientsModule;
 class JobProcessingEntry {
 
   static interface Factory {
-    JobProcessingEntry create(String amqAddress, int progressPollIntervalSeconds);
+    JobProcessingEntry create(String amqAddress, 
+        @Assisted("deliveryMode") int deliveryMode, 
+        @Assisted("pollInterval") int progressPollIntervalSeconds);
   }
 
   final Connection connection;
@@ -38,7 +40,9 @@ class JobProcessingEntry {
   @Inject
   public JobProcessingEntry(Connection connection,
       JobListener_I.Factory jobListenerFactory, RpcClientProvider<SessionsDB_I> sessDb,
-      @Assisted String amqAddress, @Assisted int progressPollIntervalSeconds) {
+      @Assisted String amqAddress, 
+      @Assisted("deliveryMode") int deliveryMode, 
+      @Assisted("pollInterval") int progressPollIntervalSeconds) {
     log.info("------ Creating {} at {}", this, amqAddress);
     this.connection = connection;
     this.sessDb = sessDb;
@@ -47,7 +51,7 @@ class JobProcessingEntry {
     if (progressPollIntervalSeconds < 0)
       this.progressPollIntervalSeconds = 2;
     jobDispatcher = new RpcClientProvider<>(
-        RpcClientsModule.getAmqClientSupplierFor(connection, DepJobService_I.class, amqAddress, true));
+        RpcClientsModule.getAmqClientSupplierFor(connection, DepJobService_I.class, amqAddress, deliveryMode, true));
     this.jobListener = createJobListener(jobListenerFactory, jobDispatcher);
   }
 

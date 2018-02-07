@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.BrokerService;
 import org.junit.After;
@@ -46,7 +47,7 @@ public class VertxRpcSessionsTest {
         connection.start();
         // simulate REST server that uses SessionsDB RPC client 
         Injector injector = Guice.createInjector(
-            new RpcClients4ServerModule(connection));
+            new RpcClients4ServerModule(connection, DeliveryMode.NON_PERSISTENT));
         RpcClientProvider<SessionsDB_I> sessionsDbRpcClientS = injector.getInstance(
             Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
         sessionsDbRpcClient = sessionsDbRpcClientS.rpc();
@@ -69,7 +70,7 @@ public class VertxRpcSessionsTest {
         log.info("sessVert={}", sessVert);
 //        new RpcVerticleServer(vertx, VerticleConsts.sessionDbBroadcastAddr)
 //            .start("SessionsDBServiceBusAddr", sessVert, true);
-        new ActiveMqRpcServer(connection).start(CommunicationConsts.SESSIONDB_RPCADDR, sessVert, true);
+        new ActiveMqRpcServer(connection).start(CommunicationConsts.SESSIONDB_RPCADDR, sessVert, DeliveryMode.NON_PERSISTENT, true);
       } catch (Exception e) {
         e.printStackTrace();
       }

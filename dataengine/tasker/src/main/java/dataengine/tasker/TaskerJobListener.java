@@ -52,7 +52,7 @@ public class TaskerJobListener implements JobListener_I {
 
 //    final String brokerUrl;
 //    final String jobStatusTopic;
-    int deliveryMode = DeliveryMode.NON_PERSISTENT;
+    //int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
 
     // populate and print remaining unused properties
