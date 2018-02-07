@@ -135,6 +135,23 @@ var app = new Vue({
             }
         },
 
+        getValidSubOps: function(parentSubOperation)
+        {
+            if (parentSubOperation == null)
+            {
+                return this.datamodel[this.operation.index].subOperations;
+            }
+            else
+            {
+                var subops = this.datamodel[this.operation.index].subOperations;
+                var pathTokens = parentSubOperation.path.split(".");
+                for (var i in pathTokens)
+                {
+                    subops = subops[pathTokens[i]].subOperations;
+                }
+            }
+        },
+
         // This method submits the data to the manager component, so that it can send it to the DataEngine.
         submit: function()
         {

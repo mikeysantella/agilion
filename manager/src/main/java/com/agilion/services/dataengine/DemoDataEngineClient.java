@@ -4,7 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dataengine.api.Operation;
 import jersey.repackaged.com.google.common.collect.Lists;
+import org.apache.commons.io.FileUtils;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +19,6 @@ import java.util.Map;
  */
 public class DemoDataEngineClient implements DataEngineClient
 {
-    private static final String listOperationJson = "[{\"id\":\"AddSourceDataset\",\"description\":\"add source dataset\",\"level\":0,\"params\":[{\"key\":\"inputUri\",\"description\":\"location of source dataset\",\"valuetype\":\"URI\",\"required\":true,\"isMultivalued\":false,\"possibleValues\":[]},{\"key\":\"dataFormat\",\"description\":\"[choosing \\u0027PEOPLE.CSV\\u0027 will always fail, type and format of data]\",\"valuetype\":\"ENUM\",\"required\":true,\"isMultivalued\":false,\"possibleValues\":[\"PEOPLE.CSV\",\"TELEPHONE.CSV\"]},{\"key\":\"ingesterWorker\",\"description\":\"ingester worker to use\",\"valuetype\":\"OPERATIONID\",\"required\":true,\"isMultivalued\":false,\"possibleValues\":[\"IngestTelephoneDummyWorker\",\"IngestPeopleDummyWorker\"]}],\"subOperations\":{\"IngestTelephoneDummyWorker\":{\"id\":\"IngestTelephoneDummyWorker\",\"description\":\"ingest source dataset\",\"level\":1,\"info\":{\"operationType\":\"ingester\"},\"params\":[{\"key\":\"workTime\",\"description\":\"seconds the worker will take\",\"valuetype\":\"INT\",\"required\":true,\"isMultivalued\":false,\"defaultValue\":10,\"possibleValues\":[]}],\"subOperations\":{}},\"IngestPeopleDummyWorker\":{\"id\":\"IngestPeopleDummyWorker\",\"level\":1,\"info\":{\"operationType\":\"ingester\"},\"params\":[],\"subOperations\":{}}}}]";
     private List<Operation> operations;
     private Map<DataOperationReceipt, Integer> map = new HashMap<>();
 
@@ -31,9 +33,20 @@ public class DemoDataEngineClient implements DataEngineClient
         return Lists.newArrayList("Facebook", "DeviantArt", "Reddit", "MeleeItOnMe");
     }
 
-    public DemoDataEngineClient()
-    {
+    public DemoDataEngineClient() throws IOException {
         Type listType = new TypeToken<ArrayList<Operation>>(){}.getType();
+        String listOperationJson = null;
+        ClassPathResource demoListOperations = null;
+        try
+        {
+             demoListOperations = new ClassPathResource("static/demoFiles/sampleListOperations.json");
+            listOperationJson = FileUtils.readFileToString(demoListOperations.getFile(),"UTF-8");
+        }
+        catch(Exception e)
+        {
+            e.printStackTrace();
+        }
+
         this.operations = new Gson().fromJson(listOperationJson, listType);
     }
 

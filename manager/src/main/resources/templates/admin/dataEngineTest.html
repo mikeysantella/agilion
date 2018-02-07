@@ -59,7 +59,7 @@
                                     <label>Sub Operations:</label>
                                     <select class="form-control" v-model="topLevelSubOpType">
                                         <option value="">Select a Sub-Operation Type</option>
-                                        <option v-for="(op, index) in datamodel[operation.index].subOperations"
+                                        <option v-for="(op, index) in getValidSubOps()"
                                                 v-bind:value="index" v-text="op.id"></option>
                                     </select>
 
@@ -102,7 +102,7 @@
                                     <div class="form-group">
                                         <label>Sub Operations:</label>
                                         <select class="form-control" v-model="subOperation.subOpLevelType">
-                                            <option v-for="(op, index) in datamodel[operation.index].subOperations" v-bind:value="index" v-text="op.id"></option>
+                                            <option v-for="(op, index) in getValidSubOps(subOperation)" v-bind:value="index" v-text="op.id"></option>
                                         </select>
 
                                         <button type="button" @click="addSubOperation(subOperation, subOperation.subOpLevelType)"
