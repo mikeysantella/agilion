@@ -61,7 +61,7 @@ public class DataEngineTestController
     }
 
     @RequestMapping(value = "/status", method = RequestMethod.POST)
-    public @ResponseBody DataOperationStatus dataEngineSubmit(@RequestBody String sessID) throws Exception {
+    public @ResponseBody DataOperationStatus dataEngineStatus(@RequestBody String sessID) throws Exception {
         return this.v2Client.getDataEngineOperationStatus(new DataOperationReceipt(sessID, "NOTNEEDED"));
     }
 
@@ -80,7 +80,7 @@ public class DataEngineTestController
         return this.v2Client.submitDataEngineOperation(operation, userGetter.getCurrentlyLoggedInUser().getUsername());
     }
 
-    public void buildSubOperations(OperationSelection parentOperation, Map<String, Object> subOpData)
+    private void buildSubOperations(OperationSelection parentOperation, Map<String, Object> subOpData)
     {
         // Build the SubOperation data structures and link them to the main operation
         OperationSelectionMap parentSubOperationSelections = new OperationSelectionMap();
