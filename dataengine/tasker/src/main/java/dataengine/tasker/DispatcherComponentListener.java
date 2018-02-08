@@ -1,7 +1,6 @@
 package dataengine.tasker;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -12,6 +11,7 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCache;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache.StartMode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.utils.PathUtil;
 import net.deelam.zkbasedinit.ZNodeListener;
 import net.deelam.zkbasedinit.ZkComponentStarter;
 import net.deelam.zkbasedinit.ZkConnector;
@@ -99,7 +99,7 @@ public class DispatcherComponentListener {
     } else {
       String newPath = new String(byteArr);
       log.info("CACHE: Got newpath={} for {}", newPath, cd.getPath());
-      String componentId = Paths.get(newPath).getFileName().toString();
+      String componentId = PathUtil.getFileName(newPath);
       String startedPath = newPath + ZkComponentStarter.STARTED_SUBPATH;
       
       try {

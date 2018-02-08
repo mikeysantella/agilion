@@ -5,3 +5,8 @@ initDevEnv(){
 	npm install ng-admin --save
 }
 
+# may need updated Node.js version
+updateNode(){
+	nvm use 8.9.4
+}
+
