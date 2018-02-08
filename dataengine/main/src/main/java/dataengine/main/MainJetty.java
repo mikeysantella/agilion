@@ -59,6 +59,10 @@ import net.deelam.zkbasedinit.MainZookeeper;
  */
 @Slf4j
 public class MainJetty {
+  static {
+    log.info("Using version 2018-02-08 of dataengine");
+  }
+  
   static final boolean DEBUG=false;
   static int SLEEPTIME=500;
   

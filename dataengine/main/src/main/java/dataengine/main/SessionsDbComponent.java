@@ -19,15 +19,15 @@ public class SessionsDbComponent implements ComponentI {
   private boolean running = true;
 
   @Delegate(types=ComponentConfigI.class)
-  DataEngineConfig config;
+  SessionsDbConfig config;
 
-  class DataEngineConfig extends AbstractCompConfig {
+  class SessionsDbConfig extends AbstractCompConfig {
 
     final String brokerUrl;
     final int deliveryMode;
 
     // populate and print remaining unused properties
-    public DataEngineConfig(Properties props) {
+    public SessionsDbConfig(Properties props) {
       super(props);
       brokerUrl = ConstantsAmq.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
       deliveryMode = SettingsUtils.parseMsgPersistenceProperty(
@@ -39,7 +39,7 @@ public class SessionsDbComponent implements ComponentI {
   
   @Override
   public void start(Properties configMap) {
-    config = new DataEngineConfig(configMap);
+    config = new SessionsDbConfig(configMap);
     try {
       dataengine.sessions.SessionsMain.main(config.brokerUrl, configMap, config.deliveryMode);
     } catch (JMSException e) {

@@ -34,11 +34,11 @@ public class MySessionApiServiceTest {
     me.testSessionsApi();
     
     List<String> priorReqIds=new ArrayList<>();
-    Request req1=me.testRequestsApi(null);   
+    Request req1=me.testRequestsApi(null, "testReq1");   
     priorReqIds.add(req1.getId());
-    Request req2=me.testRequestsApi(priorReqIds);
+    Request req2=me.testRequestsApi(priorReqIds, "testReq2");
     priorReqIds.add(req2.getId());
-    Request req3=me.testRequestsApi(priorReqIds);
+    Request req3=me.testRequestsApi(priorReqIds, "testReq3");
   }
 
   final SessionsApi sessApi;
@@ -78,7 +78,7 @@ public class MySessionApiServiceTest {
   }
 
   @Test
-  public Request testRequestsApi(List<String> priorRequestIds) throws ApiException, InterruptedException {
+  public Request testRequestsApi(List<String> priorRequestIds, String reqLabel) throws ApiException, InterruptedException {
     List<Operation> ops = reqsApi.listOperations();
     System.out.println(ops);
     
@@ -113,7 +113,7 @@ public class MySessionApiServiceTest {
       addSrcDatasetParamValues.put("datasetLabel", "TELEPHONE_TEST_DATASET");
       addSrcDatasetParamValues.put("ingesterWorker", subOp1.getId());
       
-      Request req = new Request().sessionId("newSess").label("req1Name")
+      Request req = new Request().sessionId("newSess").label(reqLabel)
           .operation(new OperationSelection().id("AddSourceDataset").params(addSrcDatasetParamValues)
               .subOperationSelections(subOperationSelections)
               );

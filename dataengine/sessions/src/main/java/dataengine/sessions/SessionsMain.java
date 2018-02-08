@@ -10,7 +10,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
-import net.deelam.activemq.rpc.AmqComponentSubscriber;
 import net.deelam.utils.PropertiesUtil;
 
 @Slf4j

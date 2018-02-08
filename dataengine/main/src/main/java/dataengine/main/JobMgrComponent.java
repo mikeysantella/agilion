@@ -19,9 +19,9 @@ public class JobMgrComponent implements ComponentI {
   private boolean running = true;
 
   @Delegate(types=ComponentConfigI.class)
-  DataEngineConfig config;
+  JobMgrConfig config;
 
-  class DataEngineConfig extends AbstractCompConfig {
+  class JobMgrConfig extends AbstractCompConfig {
 
     final String brokerUrl;
     final String dispatcherRpcAddr;
@@ -29,7 +29,7 @@ public class JobMgrComponent implements ComponentI {
     final String newJobAvailableTopic;
     final int deliveryMode;
 
-    public DataEngineConfig(Properties props) {
+    public JobMgrConfig(Properties props) {
       super(props);
       brokerUrl = ConstantsAmq.getTcpBrokerUrl(useRequiredRefProperty(props, "brokerUrl.ref"));
       dispatcherRpcAddr = useRequiredProperty(props, "msgQ.dispatcherRpcAddr");
@@ -46,7 +46,7 @@ public class JobMgrComponent implements ComponentI {
   
   @Override
   public void start(Properties configMap) {
-    config = new DataEngineConfig(configMap);
+    config = new JobMgrConfig(configMap);
     try {
       dataengine.jobmgr.JobManagerMain.main(config.brokerUrl, configMap, config.dispatcherRpcAddr, config.jobBoardRpcAddr, 
           config.newJobAvailableTopic, config.deliveryMode);
