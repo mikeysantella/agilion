@@ -1,0 +1,28 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.workers.neo4j.WorkerMain"
+
+dependencies {
+  compile project(':apis')
+  compile project(':workers')
+  compile dep.utils_zero
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile dep.activemq_rpc
+  compile dep.coord_workers
+  compile dep.commons_io
+
+  // https://mvnrepository.com/artifact/org.neo4j/neo4j-kernel
+  compile group: 'org.neo4j', name: 'neo4j-kernel', version: '3.3.1'
+  // needed for indexing
+  compile group: 'org.neo4j', name: 'neo4j-lucene-index', version: '3.3.1'
+  compile group: 'org.neo4j', name: 'neo4j-cypher', version: '3.3.1'
+  // for APOC
+  compile group: 'org.neo4j.procedure', name: 'apoc', version: '3.3.0.1'
+
+  // https://mvnrepository.com/artifact/org.codehaus.jackson/jackson-mapper-asl
+  compile group: 'org.codehaus.jackson', name: 'jackson-mapper-asl', version: '1.9.13'
+
+}

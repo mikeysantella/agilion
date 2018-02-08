@@ -1,0 +1,17 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.tasker.TaskerMain"
+
+dependencies {
+  compile project(':apis')
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guice_assisted
+  compile dep.activemq_rpc
+  compile dep.coord_workers
+  compile dep.guava
+    
+  testCompile dep.vertx_unittest
+  
+}

@@ -1,0 +1,17 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.sessions.SessionsMain"
+
+dependencies {
+  compile project(':apis')
+  compile dep.graph
+  compile dep.frames
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile dep.activemq_rpc
+  
+  testCompile dep.vertx_unittest
+}
+

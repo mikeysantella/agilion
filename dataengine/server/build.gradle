@@ -1,0 +1,20 @@
+
+apply plugin: 'war'
+
+//apply from: 'http://raw.github.com/akhikhl/gretty/master/pluginScripts/gretty.plugin'
+apply from: 'gretty.plugin'
+
+
+dependencies {
+  compile project(':apis')
+  compile dep.guava
+  compile dep.dataengine_api
+  compile dep.guice
+  compile dep.activemq_rpc
+  compile dep.utils_zero
+
+  testCompile project(':sessions')
+  testCompile project(':tasker')
+
+}
+

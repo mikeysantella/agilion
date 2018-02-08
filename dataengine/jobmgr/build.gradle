@@ -1,0 +1,20 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.jobmgr.JobManagerMain"
+
+dependencies {
+  compile project(':apis')
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile dep.graph
+  compile dep.activemq_rpc
+  compile dep.coord_workers
+
+
+  compileOnly dep.frames
+  testCompile dep.frames    
+  testCompile dep.vertx_unittest
+  
+}

@@ -1,0 +1,9 @@
+
+alias gr='gradle'
+
+. gradle/gradle-tab-completion.bash
+complete -F _gradle gr
+
+#. gradle/gradle_tab_completion.sh
+#complete -F _gradle gr
+

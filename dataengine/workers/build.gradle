@@ -1,0 +1,14 @@
+
+apply plugin: 'application'
+
+mainClassName = "dataengine.workers.WorkerMain"
+
+dependencies {
+  compile project(':apis')
+  compile dep.xinject
+  compile dep.guice
+  compile dep.guava
+  compile dep.activemq_rpc
+  compile dep.commons_io
+    
+}

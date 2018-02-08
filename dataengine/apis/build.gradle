@@ -1,0 +1,7 @@
+
+dependencies {
+  compile dep.guava
+  compile dep.dataengine_api
+  compile dep.utils_zero
+  //compile group: 'joda-time', name: 'joda-time', version: '2.9.7'
+}

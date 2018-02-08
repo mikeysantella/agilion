@@ -1,0 +1,63 @@
+componentIds=amq, sessions, tasker, jobMgrType, workers, neoWorkers
+componentIdsToStart=amq, sessions, tasker, jobMgrType, workers
+
+
+include=startup.props
+
+# ActiveMQ service: shares connectionUrl
+amq.classname=net.deelam.coordworkers.AmqServiceComp
+amq.brokerUrls=tcp://localhost:33330,stomp://localhost:33331
+
+
+# 'connectionTcpUrl' is a SharedValue set by AmqServiceComp named 'amq' in this property file
+needsAmq.brokerUrl.ref=amq/connectionTcpUrl
+
+sessions.classname=dataengine.main.SessionsDbComponent
+sessions.include=needsAmq
+
+tasker.classname=dataengine.main.TaskerComponent
+tasker.include=needsAmq
+tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset
+tasker.dispatcherComponentType=jobMgrType
+
+jobMgrType.classname=dataengine.main.JobMgrComponent
+jobMgrType.include=needsAmq
+// TODO: have workers discover msgT.newJobAvailable by asking jobDto.jobBoardRpcAddr
+jobMgrType.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
+jobMgrType.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
+jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
+
+workers.classname=dataengine.main.WorkersComponent
+// TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
+workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
+workers.sqlConnect=root:dataengine-mysql@localhost:3306
+workers.TIDE.dshape=var * { \
+  'isNatCitizen': ?string,\
+  'birthCountry': ?string,\
+  'citizenship': ?string,\
+  'datasource': ?string,\
+  'dob': ?string,\
+  'hasFlightTraining': ?string,\
+  gender: ?string,\
+  'firstName': ?string,\
+  'terroristName': ?string,\
+  'lastName': ?string,\
+  nickname: ?string,\
+  'biometricID': ?string,\
+  'fbiCaseNumber': ?string,\
+  'tideIdNumber': int64,\
+  'lprStatus': ?string,\
+  'maritalStatus': ?string,\
+  'tideStatus': ?string,\
+  'uspStatus': ?string,\
+  'terroristMembership': ?string,\
+  'tideCategory': ?string,\
+  title: ?string,\
+  'isTsaNoFly': ?string,\
+  'visaNumber': int64,\
+  'visaRevocation': ?string\
+  }
+
+neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
+neoWorkers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
+

@@ -7,8 +7,6 @@ import dataengine.api.factories.OperationsApiServiceFactory;
 import io.swagger.annotations.ApiParam;
 import io.swagger.jaxrs.*;
 
-import com.sun.jersey.multipart.FormDataParam;
-
 import dataengine.api.Operation;
 
 import java.util.List;
@@ -16,8 +14,8 @@ import dataengine.api.NotFoundException;
 
 import java.io.InputStream;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -28,7 +26,7 @@ import javax.ws.rs.*;
 
 
 @io.swagger.annotations.Api(description = "the operations API")
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaJerseyServerCodegen", date = "2017-01-28T14:58:05.392Z")
+
 public class OperationsApi  {
    private final OperationsApiService delegate = OperationsApiServiceFactory.getOperationsApi();
 
@@ -36,12 +34,22 @@ public class OperationsApi  {
     
     
     @Produces({ "application/json" })
-    @io.swagger.annotations.ApiOperation(value = "retrieve list of operations for requests", notes = "list operations", response = Operation.class, responseContainer = "List", tags={ "requests" })
+    @io.swagger.annotations.ApiOperation(value = "retrieve list of operations for requests", notes = "list operations", response = Operation.class, responseContainer = "List", tags={ "requests", })
     @io.swagger.annotations.ApiResponses(value = { 
         @io.swagger.annotations.ApiResponse(code = 200, message = "operation objects", response = Operation.class, responseContainer = "List") })
-    public Response listOperations(
-        @Context SecurityContext securityContext)
+    public Response listOperations(@Context SecurityContext securityContext)
     throws NotFoundException {
         return delegate.listOperations(securityContext);
+    }
+    @GET
+    @Path("/refresh")
+    
+    @Produces({ "application/json" })
+    @io.swagger.annotations.ApiOperation(value = "refresh list of operations", notes = "refresh operations list from active workers", response = Boolean.class, tags={ "requests", })
+    @io.swagger.annotations.ApiResponses(value = { 
+        @io.swagger.annotations.ApiResponse(code = 200, message = "whether operations are being refreshed", response = Boolean.class) })
+    public Response refreshOperations(@Context SecurityContext securityContext)
+    throws NotFoundException {
+        return delegate.refreshOperations(securityContext);
     }
 }
