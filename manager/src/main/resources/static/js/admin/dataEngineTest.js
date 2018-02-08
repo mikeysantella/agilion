@@ -73,10 +73,13 @@ var app = new Vue({
             for (var i = 0; i < this.datamodel[this.operation.index].subOperations[opType].params.length; i++)
             {
                 var param = this.datamodel[this.operation.index].subOperations[opType].params[i];
-
-                // Set the value to the default if one exists, null otherwise
                 var defaultValue = StringUtils.isNotBlank(param.defaultValue) ? param.defaultValue : '';
-                Vue.set(newSubOp.params, param.key, defaultValue);
+
+                if (param.isMultivalued)
+                    Vue.set(newSubOp.params, param.key, [defaultValue]);
+                else
+                    Vue.set(newSubOp.params, param.key, defaultValue);
+
             }
 
             // Explicitly tell Vue to watch for changes (without this, the model is not updated when changes occur
@@ -150,6 +153,16 @@ var app = new Vue({
                     subops = subops[pathTokens[i]].subOperations;
                 }
             }
+        },
+
+        addElement: function(subOperation, paramKey)
+        {
+            subOperation.params[paramKey].push("");
+        },
+
+        deleteElement: function(subOperation, paramKey, index)
+        {
+            subOperation.params[paramKey].splice(index, 1);
         },
 
         // This method submits the data to the manager component, so that it can send it to the DataEngine.
