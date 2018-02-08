@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# https://github.com/marmelab/ng-admin
+initDevEnv(){
+	npm install ng-admin --save
+}
+
