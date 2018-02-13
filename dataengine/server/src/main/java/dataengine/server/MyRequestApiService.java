@@ -1,7 +1,7 @@
 package dataengine.server;
 
 import static dataengine.server.RestParameterHelper.makeBadRequestResponse;
-import static dataengine.server.RestParameterHelper.makeResponseIfIdInvalid;
+import static dataengine.server.RestParameterHelper.makeBadResponseIfIdInvalid;
 import static dataengine.server.RestParameterHelper.makeResponseIfNotSecure;
 import static dataengine.server.RestParameterHelper.makeResultResponse;
 import static dataengine.server.RestParameterHelper.tryCreateObject;
@@ -57,7 +57,7 @@ public class MyRequestApiService extends RequestApiService {
     if (resp != null)
       return resp;
 
-    resp = makeResponseIfIdInvalid(OBJECT_TYPE, id);
+    resp = makeBadResponseIfIdInvalid(OBJECT_TYPE, id);
     if (resp != null)
       return resp;
 

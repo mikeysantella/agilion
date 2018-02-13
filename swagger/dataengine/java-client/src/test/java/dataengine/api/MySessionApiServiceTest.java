@@ -34,11 +34,11 @@ public class MySessionApiServiceTest {
     me.testSessionsApi();
     
     List<String> priorReqIds=new ArrayList<>();
-    Request req1=me.testRequestsApi(null, "testReq1");   
+    Request req1=me.testRequestsApi(null, "testReq 1");   
     priorReqIds.add(req1.getId());
-    Request req2=me.testRequestsApi(priorReqIds, "testReq2");
+    Request req2=me.testRequestsApi(priorReqIds, "testReq.2");
     priorReqIds.add(req2.getId());
-    Request req3=me.testRequestsApi(priorReqIds, "testReq3");
+    Request req3=me.testRequestsApi(priorReqIds, "testReq_3");
   }
 
   final SessionsApi sessApi;
@@ -56,6 +56,7 @@ public class MySessionApiServiceTest {
 
   @Test
   public void testSessionsApi() throws ApiException {
+    sessApi.createSession(new Session().label("emptySession"));
     String sessId = "newSess"+System.currentTimeMillis();
     Session session = new Session().id(sessId);
     Session session1 = sessApi.createSession(session);

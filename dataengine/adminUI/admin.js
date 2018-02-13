@@ -9,6 +9,14 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
     var dataset = nga.entity('dataset');
     dataset.showView().fields([
         nga.field('id'),
+        nga.field('label'),
+        nga.field('state'),
+        nga.field('createdTime'),
+        nga.field('deletedTime'),
+        nga.field('dataFormat'),
+        nga.field('dataSchema'),
+        nga.field('uri'),
+        nga.field('stats'),
     ]);
     admin.addEntity(dataset);
 
@@ -16,16 +24,26 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
     job.showView().fields([
         nga.field('requestId').label('parent request')
             .template('<a href=\'#request/show/{{ entry.values.requestId }}\')>{{ entry.values.requestId }}</a>'),
-        nga.field('id'),
-        nga.field('label'),
-        nga.field('type'),
-        nga.field('createdTime'),
-        nga.field('state'),
-        nga.field('progress', 'json'),
-        nga.field('inputDatasetIds', 'json'),
-        nga.field('outputDatasetIds', 'json'),
-    ]);
+            nga.field('id'),
+            nga.field('label'),
+            nga.field('type'),
+            nga.field('createdTime'),
+            nga.field('state'),
+            nga.field('params', 'json'),
+            nga.field('progress', 'json'),
+            nga.field('inputDatasetIds', 'json')
+                .template('<li ng-repeat="(dsLabel, dsId) in entry.values.inputDatasetIds">'+
+                    ' {{dsLabel}} (<a href=\'#dataset/show/{{ dsId }}\')>{{ dsId }}</a>)</li>'),
+            nga.field('outputDatasetIds', 'json')
+                .template('<li ng-repeat="(dsLabel, dsId) in entry.values.outputDatasetIds">'+
+                    '{{dsLabel}} (<a href=\'#dataset/show/{{ dsId }}\')>{{ dsId }}</a>)</li>'),
+        ]);
     admin.addEntity(job);
+
+    // Very useful:
+    // nga.field('outputDatasetIds', 'json')
+    //   .template('<table><tr ng-repeat="(key, value) in entry.values">'+
+    //   '<td> {{key}} </td> <td> {{ value }} </td></tr></table>')
 
     var request = nga.entity('request');
     // file:///datadrive/dlam/dev/ng-admin/index.html#/request/show/88a11bf3-44c4-49b6-834d-fcbe6a3d72da
@@ -44,9 +62,14 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
         //     .targetEntity(operationSel)
         //     .targetField(nga.field('id')),
         nga.field('jobs', 'json')
-        //     .targetEntity(job)
-        //     .targetField(nga.field('id')),
-
+            .template('<li ng-repeat="job in entry.values.jobs">'+
+                '<i>{{job.state}}</i>: "{{job.label}}" (<a href=\'#job/show/{{ job.id }}\')>{{ job.id }}</a>)'+
+                '<ul><li ng-repeat="(dsLabel, dsId) in job.inputDatasetIds">'+
+                '<i>input</i>: {{dsLabel}} (<a href=\'#dataset/show/{{ dsId }}\')>{{ dsId }}</a>)</li>'+
+                '<li ng-repeat="(dsLabel, dsId) in job.outputDatasetIds">'+
+                '<i>output</i>: {{dsLabel}} (<a href=\'#dataset/show/{{ dsId }}\')>{{ dsId }}</a>)</li>'+
+                '</ul></li>'),
+        //DEBUG: nga.field('jobs', 'json')
     ]);
     admin.addEntity(request);
 
@@ -58,30 +81,59 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
         nga.field('username'),
         nga.field('createdTime'),
         nga.field('defaults', 'json'),
+        nga.field('requests', 'json')
+            .template('<li ng-repeat="req in entry.values.requests">'+
+                '<i>{{req.state}}</i>: "{{req.label}}" (<a href=\'#req/show/{{ req.id }}\')>{{ req.id }}</a>)'+
+                '<ul><li ng-repeat="job in req.jobs">'+
+                '<i>job {{job.state}}</i>: "{{job.label}}" (<a href=\'#job/show/{{ job.id }}\')>{{ job.id }}</a>)'+
+                '</ul></li>'),
+        nga.field('requests', 'embedded_list')
+            .targetFields([
+                nga.field('createdTime'),
+                nga.field('id').label('Request Label (Operation, Id)')
+                    .template('{{entry.values.label}} <br/>'+
+                    '({{entry.values["operation.id"]}}, <br/>'+
+                    '<a href=\'#request/show/{{ entry.values.id }}\')>{{ entry.values.id }}</a>)'),
+                nga.field('jobs', 'embedded_list')
+                    .targetFields([
+                        nga.field('createdTime'),
+                        nga.field('id').label('Job Label (Id)')
+                            .template('{{entry.values.label}} <br/>'+
+                            '(<a href=\'#job/show/{{ entry.values.id }}\')>{{ entry.values.id }}</a>)'),
+                    ]).sortField('createdTime')
+            ]).sortField('createdTime'),
         nga.field('requests', 'json'),
     ]);
     admin.addEntity(session);
 
     var sessions = nga.entity('sessions');
+    //sessions.readOnly();
     sessions.listView().fields([
         nga.field('createdTime'),
         nga.field('label').label('Label (Id)')
-            .template('{{entry.values.label}} (<a href=\'#session/show/{{ entry.values.id }}\')>{{entry.values.id}}</a>)'),
+            .template('{{entry.values.label}} <br/>'+
+            '(<a href=\'#session/show/{{ entry.values.id }}\')>{{entry.values.id}}</a>)'),
         nga.field('username'),
         nga.field('requests', 'embedded_list')
             .targetFields([
                 nga.field('createdTime'),
-                nga.field('id').label('Request Label (Id)')
-                    .template('{{entry.values.label}} (<a href=\'#request/show/{{ entry.values.id }}\')>{{ entry.values.id }}</a>)'),
-                nga.field('operation.id'),
+                nga.field('id').label('Request Label (Operation, Id)')
+                    .template('{{entry.values.label}} <br/>'+
+                    '({{entry.values["operation.id"]}}, <br/>'+
+                    '<a href=\'#request/show/{{ entry.values.id }}\')>{{ entry.values.id }}</a>)'),
                 nga.field('jobs', 'embedded_list')
                     .targetFields([
                         nga.field('createdTime'),
                         nga.field('id').label('Job Label (Id)')
-                            .template('{{entry.values.label}} (<a href=\'#job/show/{{ entry.values.id }}\')>{{ entry.values.id }}</a>)'),
+                            .template('{{entry.values.label}} <br/>'+
+                            '(<a href=\'#job/show/{{ entry.values.id }}\')>{{ entry.values.id }}</a>)'),
                     ]).sortField('createdTime')
             ]).sortField('createdTime')
-    ]).sortField('createdTime');
+    ]).sortField('createdTime')
+    .filters([
+        nga.field('username')
+            .pinned(true)
+    ]);
     admin.addEntity(sessions);
 
     var operations = nga.entity('operations');

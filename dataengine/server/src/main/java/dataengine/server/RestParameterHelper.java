@@ -5,11 +5,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import dataengine.api.ApiResponseMessage;
+import dataengine.apis.ValidIdUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -27,18 +27,11 @@ public final class RestParameterHelper {
     return log(response);
   }
 
-  static Response makeResponseIfIdInvalid(String idType, String id) {
-    if (!isValidIdString(id))
-      return makeBadRequestResponse("ID for " + idType + " is not valid: " + id + " allowedChars="+allowedChars);
+  static Response makeBadResponseIfIdInvalid(String idType, String id) {
+    if (!ValidIdUtils.isValidIdString(id))
+      return makeBadRequestResponse("ID for " + idType + " is not valid: " + id + " allowedChars="+ValidIdUtils.allowedChars);
     return null;
   }
-
-  private static String allowedChars="a-zA-Z0-9.-";
-  private static Pattern illegalCharsRegex = Pattern.compile("[^"+allowedChars+"]");
-  private static boolean isValidIdString(String id) {
-    return !illegalCharsRegex.matcher(id).find();
-  }
-
 
   static Response makeResultResponse(String msg, Future<?> responseObj) {
     Response response;

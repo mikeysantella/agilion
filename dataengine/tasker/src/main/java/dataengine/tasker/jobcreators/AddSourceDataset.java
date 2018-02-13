@@ -20,12 +20,16 @@ import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationWrapper;
+import dataengine.apis.RpcClientProvider;
+import dataengine.apis.SessionsDB_I;
 import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class AddSourceDataset extends AbstractJobCreator {
 
+  //private final RpcClientProvider<SessionsDB_I> sessDb;
+  
   @Override
   protected Operation initOperation() {
     Operation operation = new Operation().level(0).id(this.getClass().getSimpleName())
@@ -87,11 +91,11 @@ public class AddSourceDataset extends AbstractJobCreator {
     checkArgument(opW.getOperation().getId().equals(selection.getId()), "Operation.id does not match!");
     opW.convertParamValues(selection);
     
-    final String jobPrefix = getJobIdPrefix(req); //req.getId() + "-" + req.getLabel();
+    final String jobPrefix = genJobIdPrefix(req);
     Job job0 = new Job().id(jobPrefix + ".job0-preRequest")
         .type(OperationConsts.TYPE_PREREQUEST)
         .requestId(req.getId())
-        .label("Post-request " + req.getId() + ":" + req.getLabel());
+        .label("Pre-request job for: " + req.getLabel());
     Job job1 = new Job().id(jobPrefix + ".job1-ingest")
         .type(OperationConsts.TYPE_INGESTER)
         .requestId(req.getId())
@@ -103,7 +107,7 @@ public class AddSourceDataset extends AbstractJobCreator {
     Job job3 = new Job().id(jobPrefix + ".job3-postRequest")
         .type(OperationConsts.TYPE_POSTREQUEST)
         .requestId(req.getId())
-        .label("Post-request " + req.getId() + ":" + req.getLabel());
+        .label("Post-request job for: " + req.getLabel());
 
     String selectedIngesterOpId = (String) selection.getParams().get(OperationConsts.INGESTER_WORKER);
     selection.getParams().remove(OperationConsts.INGESTER_WORKER); // don't need this after job1

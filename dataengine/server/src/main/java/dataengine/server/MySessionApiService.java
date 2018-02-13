@@ -1,7 +1,7 @@
 package dataengine.server;
 
 import static dataengine.server.RestParameterHelper.makeBadRequestResponse;
-import static dataengine.server.RestParameterHelper.makeResponseIfIdInvalid;
+import static dataengine.server.RestParameterHelper.makeBadResponseIfIdInvalid;
 import static dataengine.server.RestParameterHelper.makeResponseIfNotSecure;
 import static dataengine.server.RestParameterHelper.makeResultResponse;
 import static dataengine.server.RestParameterHelper.tryCreateObject;
@@ -45,7 +45,7 @@ public class MySessionApiService extends SessionApiService {
     Response resp = makeResponseIfNotSecure(securityContext);
     if (resp != null)
       return resp;
-    resp = makeResponseIfIdInvalid(OBJECT_TYPE, id);
+    resp = makeBadResponseIfIdInvalid(OBJECT_TYPE, id);
     if (resp != null)
       return resp;
     return makeResultResponse(OBJECT_TYPE, "session/", id, sessDb.rpc().getSession(id));
@@ -60,7 +60,7 @@ public class MySessionApiService extends SessionApiService {
     if (resp != null)
       return resp;
 
-    resp = makeResponseIfIdInvalid(OBJECT_TYPE, id);
+    resp = makeBadResponseIfIdInvalid(OBJECT_TYPE, id);
     if (resp != null)
       return resp;
 

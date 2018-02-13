@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import dataengine.api.Operation;
@@ -13,8 +14,11 @@ import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationUtils;
 import dataengine.apis.OperationWrapper;
+import dataengine.apis.RpcClientProvider;
+import dataengine.apis.SessionsDB_I;
 import dataengine.tasker.JobsCreator_I;
 import lombok.extern.slf4j.Slf4j;
+import net.deelam.utils.IdUtils;
 
 @Slf4j
 public abstract class AbstractJobCreator implements JobsCreator_I {
@@ -40,8 +44,8 @@ public abstract class AbstractJobCreator implements JobsCreator_I {
     opW.checkForRequiredParams(req.getOperation());
   }
 
-  String getJobIdPrefix(Request req) {
-    return req.getId() + "-" + req.getLabel();
+  static String genJobIdPrefix(Request req) {
+    return req.getId().substring(0,12) + "." + UUID.randomUUID();
   }
 
   public static List<Operation> copyOperationsOfType(Map<String, Operation> currOperations, String opType) {

@@ -19,6 +19,7 @@ import dataengine.api.Request;
 import dataengine.api.Session;
 import dataengine.api.State;
 import dataengine.apis.SessionsDB_I;
+import dataengine.apis.ValidIdUtils;
 import dataengine.sessions.SessionDB_DatasetHelper.IO;
 import dataengine.sessions.frames.JobFrame;
 import lombok.Getter;
@@ -115,6 +116,8 @@ public class SessionsDBService implements SessionsDB_I {
     } else {
       sId = UUID.randomUUID().toString();
     }
+    if(!ValidIdUtils.isValidIdString(sId))
+      throw new IllegalStateException("Id is invalid: "+sId);
     return sId;
   }
 
@@ -174,6 +177,18 @@ public class SessionsDBService implements SessionsDB_I {
     return CompletableFuture.completedFuture(sessDB.hasRequest(id));
   }
 
+  @Override
+  public CompletableFuture<Boolean> hasJob(String id) {
+    log.debug("SERV: hasJob: {}", id);
+    return CompletableFuture.completedFuture(sessDB.hasJob(id));
+  }
+  
+  @Override
+  public CompletableFuture<Boolean> hasDataset(String id) {
+    log.debug("SERV: hasDataset: {}", id);
+    return CompletableFuture.completedFuture(sessDB.hasDataset(id));
+  }
+  
   @Override
   public CompletableFuture<Session> getSession(String id) {
     log.debug("SERV: getSession: {}", id);

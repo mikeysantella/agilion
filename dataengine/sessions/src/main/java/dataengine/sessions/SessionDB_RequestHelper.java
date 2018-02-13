@@ -38,8 +38,6 @@ public final class SessionDB_RequestHelper {
     return frameHelper.getVertexFrame(id, RequestFrame.class);
   }
 
-  static int requestCounter = 0;
-
   public void addRequestNode(Request request) {
     SessionDB.clog.info("SESS: addRequestNode: '{}' id={}", request.getLabel(), request.getId());
     tryAndCloseTxn(graph, graph -> {
@@ -51,7 +49,7 @@ public final class SessionDB_RequestHelper {
         rf = graph.addVertex(reqId, RequestFrame.class);
         sf.addRequest(rf);
         if (request.getLabel() == null)
-          rf.setLabel("request " + (++requestCounter));
+          rf.setLabel(genRequestLabel(request));
         else
           rf.setLabel(SessionDB_FrameHelper.checkLabel(request.getLabel()));
         if (request.getCreatedTime() != null)
@@ -86,6 +84,11 @@ public final class SessionDB_RequestHelper {
         throw new IllegalArgumentException("Request.id already exists: " + reqId);
       }
     });
+  }
+
+  static int requestCounter = 0;
+  public String genRequestLabel(Request request) {
+    return "req" + (++requestCounter)+"_"+request.getOperation().getId();
   }
   
   public void connectRequestToOutputDataset(String requestId, String datasetId){

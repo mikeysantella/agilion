@@ -1,6 +1,6 @@
 package dataengine.server;
 
-import static dataengine.server.RestParameterHelper.makeResponseIfIdInvalid;
+import static dataengine.server.RestParameterHelper.makeBadResponseIfIdInvalid;
 import static dataengine.server.RestParameterHelper.makeResponseIfNotSecure;
 import static dataengine.server.RestParameterHelper.makeResultResponse;
 
@@ -30,7 +30,7 @@ public class MyDatasetApiService extends DatasetApiService {
     if (resp != null)
       return resp;
 
-    resp = makeResponseIfIdInvalid(OBJECT_TYPE, id);
+    resp = makeBadResponseIfIdInvalid(OBJECT_TYPE, id);
     if (resp != null)
       return resp;
     return makeResultResponse(OBJECT_TYPE, "dataset/", id, sessDb.rpc().getDataset(id));

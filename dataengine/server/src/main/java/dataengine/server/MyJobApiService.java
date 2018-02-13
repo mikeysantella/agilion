@@ -1,5 +1,6 @@
 package dataengine.server;
 
+import static dataengine.server.RestParameterHelper.makeBadResponseIfIdInvalid;
 import static dataengine.server.RestParameterHelper.makeResponseIfNotSecure;
 import static dataengine.server.RestParameterHelper.makeResultResponse;
 
@@ -20,6 +21,8 @@ public class MyJobApiService extends JobApiService {
 
   final RpcClientProvider<SessionsDB_I> sessDb;
 
+  private static final String OBJECT_TYPE = "Job";
+
   @Override
   public Response getJob(String id, SecurityContext securityContext) throws NotFoundException {
     log.info("REST {}: getJob: {}", securityContext.getUserPrincipal(), id);
@@ -27,6 +30,10 @@ public class MyJobApiService extends JobApiService {
     if (resp != null)
       return resp;
 
-    return makeResultResponse("Job", "job/", id, sessDb.rpc().getJob(id));
+    resp = makeBadResponseIfIdInvalid(OBJECT_TYPE, id);
+    if (resp != null)
+      return resp;
+
+    return makeResultResponse(OBJECT_TYPE, "job/", id, sessDb.rpc().getJob(id));
   }
 }

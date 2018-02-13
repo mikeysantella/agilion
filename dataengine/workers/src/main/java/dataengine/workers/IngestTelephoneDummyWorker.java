@@ -73,7 +73,7 @@ public class IngestTelephoneDummyWorker extends BaseWorker<Job> {
     Dataset inDS = new Dataset()
         //.uri((String) job.getParams().get(OperationConsts.INPUT_URI))
         .dataFormat((String) job.getParams().get(OperationConsts.DATA_FORMAT))
-        .label((String) job.getParams().get(OperationConsts.DATASET_LABEL)+"input for job " + job.getId())
+        .label((String) job.getParams().get(OperationConsts.DATASET_LABEL)+" data for job " + job.getId())
         .stats(statsMap);
     
     log.info("WORKER: doWork on job={}", job);
@@ -102,7 +102,7 @@ public class IngestTelephoneDummyWorker extends BaseWorker<Job> {
         sessDb.rpc().addOutputDataset(outDS, job.getId()).thenAccept((addedOutDs) -> {
           state.getMetrics().put("ingested.dataset.id", addedOutDs.getId());
           state.getMetrics().put("ingested.dataset.uri", addedOutDs.getUri());
-          sessDb.rpc().setJobParam(job.getId(), OperationConsts.OUTPUT_URI, addedOutDs.getId());
+          sessDb.rpc().setJobParam(job.getId(), OperationConsts.OUTPUT_URI, addedOutDs.getUri());
         });
 
     state.setPercent(2).setMessage("Determined input and output datasets");

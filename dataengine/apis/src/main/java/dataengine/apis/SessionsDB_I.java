@@ -46,6 +46,8 @@ public interface SessionsDB_I {
   
   CompletableFuture<Job> addJob(Job job, String[] inputJobIds);
 
+  CompletableFuture<Boolean> hasJob(String id);
+  
   CompletableFuture<Boolean> addJobDependency(String jobId, String inputJobId);
   
   CompletableFuture<Job> getJob(String id);
@@ -68,6 +70,8 @@ public interface SessionsDB_I {
   
   /// Dataset
 
+  CompletableFuture<Boolean> hasDataset(String id);
+  
   CompletableFuture<Dataset> getDataset(String id);
 
   CompletableFuture<Void> connectRequestToOutputDataset(String requestId, String datasetId);
