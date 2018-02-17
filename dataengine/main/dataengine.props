@@ -31,31 +31,53 @@ workers.classname=dataengine.main.WorkersComponent
 // TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
 workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 workers.sqlConnect=root:dataengine-mysql@localhost:3306
+
+# dshape = http://datashape.readthedocs.io/en/latest/types.html
 workers.TIDE.dshape=var * { \
+  'dataSource': ?string,\
   'isNatCitizen': ?string,\
   'birthCountry': ?string,\
   'citizenship': ?string,\
-  'datasource': ?string,\
   'dob': ?string,\
   'hasFlightTraining': ?string,\
-  gender: ?string,\
+  'gender': ?string,\
   'firstName': ?string,\
-  'terroristName': ?string,\
   'lastName': ?string,\
-  nickname: ?string,\
+  'fullNameIGNORE': ?string,\
+  'terroristName': ?string,\
+  'nickname': ?string,\
   'biometricID': ?string,\
   'fbiCaseNumber': ?string,\
-  'tideIdNumber': int64,\
+  'tideIdNumber': ?string,\
   'lprStatus': ?string,\
   'maritalStatus': ?string,\
   'tideStatus': ?string,\
   'uspStatus': ?string,\
   'terroristMembership': ?string,\
   'tideCategory': ?string,\
-  title: ?string,\
+  'title': ?string,\
   'isTsaNoFly': ?string,\
-  'visaNumber': int64,\
-  'visaRevocation': ?string\
+  'visaNumber': ?string,\
+  'visaRevocation': ?string,\
+  'numPass': ?string\
+  }
+workers.I94Visa.dshape=var * { \
+  'dataSource': ?string,\
+  'addrStreet': ?string,\
+  'addrStreetPerm': ?string,\
+  'cityIGNORE': ?string,\
+  'dateBirth': ?string,\
+  'visaIssueCity': ?string,\
+  'countryEmbark': ?string,\
+  'countryCitizen': ?string,\
+  'visaIssueDate': ?string,\
+  'nameLast': ?string,\
+  'nameFirst': ?string,\
+  'fullNameIGNORE': ?string,\
+  'carrier': ?string,\
+  'numIdDoc': ?string,\
+  'numPass': ?string,\
+  'gender': ?string\
   }
 
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent

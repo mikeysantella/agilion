@@ -1,0 +1,12 @@
+
+The startMysqlDocker.sh script starts the MySQL database service within a docker.  Before executing the script, set the MYSQL_ROOT_PW environment variable to be the root password for the MySQL database, which should be the same as the workers.sqlConnect setting (which is passed to SqlAlchemy as a connection URL) in main/dataengine.props.
+
+PythonIngesterWorker runs workerConf/stompworker.pex (Python executable) by sending commands to it via stomp communication service (provided by ActiveMQ).
+
+stompworker.pex is an assembled package from files under pythonStompWorker.
+MsgListener in __main__.py maps commands from stomp msgs to functions:
+- INGEST: ingests specified input file into specified MySQL database
+- END: causes stompworker.pex to terminate
+
+
+

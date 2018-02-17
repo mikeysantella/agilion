@@ -22,6 +22,7 @@ public final class OperationConsts {
   public static final String DATA_FORMAT = "dataFormat";
   public static final String OUTPUT_URI = "outputUri";
   public static final String PREV_JOBID = "prevJobId";
+  public static final String HAS_HEADER = "hasHeader";
   
   /// DATA_FORMAT values:
   public static final String DATA_FORMAT_PARQUET = "parquet";
@@ -39,6 +40,7 @@ public final class OperationConsts {
   public static final String CYPHER_EXPR = "cypherExpression";
 
   public static final String PROPERTY_COLUMNS = "propertyColumns";
+
 
 
 

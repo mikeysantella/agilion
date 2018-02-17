@@ -157,7 +157,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
 
   Message createEndPythonMsg() throws JMSException {
     log.info("createEndPythonMsg for python worker: {}", pythonExecFile);
-    Message message = session.createTextMessage();
+    Message message = session.createTextMessage("shutdownPython");
     message.setStringProperty("id", END);
     message.setStringProperty("command", END);
     return message;
