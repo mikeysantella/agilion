@@ -93,6 +93,22 @@ public final class SessionDB_JobHelper {
     });
   }
   
+  public void addInputDataset(String jobId, String datasetId) {
+    tryCAndCloseTxn(graph, graph -> {
+      JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
+      DatasetFrame df = dsHelper.getDatasetFrame(datasetId);
+      jf.addInputDataset(df);
+    });
+  }
+
+  public void addOutputDataset(String jobId, String datasetId) {
+    tryCAndCloseTxn(graph, graph -> {
+      JobFrame jf = frameHelper.getVertexFrame(jobId, JobFrame.class);
+      DatasetFrame df = dsHelper.getDatasetFrame(datasetId);
+      jf.addOutputDataset(df);
+    });
+  }
+
   public void setJobParam(String jobId, String key, Object value){
     log.info("setJobParam: {} {}={}", jobId, key, value);
     JobFrame existingJf = graph.getVertex(jobId, JobFrame.class);
@@ -187,6 +203,7 @@ public final class SessionDB_JobHelper {
             case CREATED:
             case RUNNING:
               jf.setState(state);
+              jf.getRequest().setState(State.CANCELLED);
               break;
             default:
               log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());
@@ -198,6 +215,7 @@ public final class SessionDB_JobHelper {
             case CREATED:
             case RUNNING:
               jf.setState(state);
+              jf.getRequest().setState(State.FAILED);
               break;
             default:
               log.warn("For {}, not expecting state={} from current state={}; IGNORING", jobId, state, jf.getState());

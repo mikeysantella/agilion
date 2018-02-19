@@ -38,15 +38,16 @@ public class TaskerMain {
 
     String zkConnectionString=properties.getProperty(ConstantsZk.ZOOKEEPER_CONNECT);
     String zkStartupPathHome=properties.getProperty(ConstantsZk.ZOOKEEPER_STARTUPPATH);
-    main(zkConnectionString, zkStartupPathHome, brokerUrl, null, "jobMgrType", DeliveryMode.NON_PERSISTENT);
+    Properties configMap=new Properties();
+    main(zkConnectionString, zkStartupPathHome, brokerUrl, null, "jobMgrType", configMap, DeliveryMode.NON_PERSISTENT);
   }
 
   public static void main(String zookeeperConnectStr, String zkStartupPath, String brokerUrl, String jobCreatorsString, 
-      String dispatcherComponentType, int deliveryMode) throws JMSException, ConfigurationException {
+      String dispatcherComponentType, Properties configMap, int deliveryMode) throws JMSException, ConfigurationException {
     log.info("Starting {}", TaskerMain.class);
     
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(zookeeperConnectStr, connection, jobCreatorsString, deliveryMode);
+    Injector injector = createInjector(zookeeperConnectStr, connection, jobCreatorsString, configMap, deliveryMode);
     
     opsRegistry=OperationsRegistryModule.deployOperationsRegistry(injector, deliveryMode);
     TaskerModule.deployTasker(injector, deliveryMode);
@@ -74,7 +75,8 @@ public class TaskerMain {
     }
   }
   
-  static Injector createInjector(String zkConnectionString, Connection connection, String jobCreatorsString, int deliveryMode) {
+  static Injector createInjector(String zkConnectionString, Connection connection, String jobCreatorsString, 
+      Properties configMap, int deliveryMode) {
     return Guice.createInjector(
         new AbstractModule() {
           @Override
@@ -85,7 +87,7 @@ public class TaskerMain {
         new GModuleZooKeeper(zkConnectionString, null),
         new RpcClients4TaskerModule(connection, deliveryMode),
         new OperationsRegistryModule(deliveryMode),
-        new TaskerModule(jobCreatorsString)
+        new TaskerModule(configMap, jobCreatorsString)
         );
   }
 

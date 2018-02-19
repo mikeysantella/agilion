@@ -58,28 +58,33 @@ public class TaskerService implements Tasker_I {
     CompletableFuture<List<String>> priorJobIdsF = getLastJobsOfRequests(addedReq.getPriorRequestIds());
 
     return priorJobIdsF.thenCompose(priorJobIds->{
-      // add job(s) to request and submit job(s)
-      List<JobEntry> jobs = jc.createFrom(addedReq, priorJobIds);
-      
-      CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);
-      for (JobEntry jobE : jobs) {
-        log.debug("created new job " + jobE.job().getId());
-        // add job to sessionsDB and submit to jobDispatcher
-        addJobsChainF = addJobsChainF.thenCompose((isAdded) -> {
+      try {
+        // add job(s) to request and submit job(s)
+        List<JobEntry> jobs = jc.createFrom(addedReq, priorJobIds);
+        
+        CompletableFuture<Boolean> addJobsChainF = CompletableFuture.completedFuture(true);
+        for (JobEntry jobE : jobs) {
+          log.debug("created new job " + jobE.job().getId());
+          // add job to sessionsDB and submit to jobDispatcher
+          addJobsChainF = addJobsChainF.thenCompose((isAdded) -> {
+            if (isAdded)
+              return addJob(jobE.job, jobE.inputJobIds);
+            else
+              throw new IllegalStateException(
+                  "Previous job was not added!  Not continuing to add job: " + jobE.job.getId());
+          });
+        }
+        return addJobsChainF.thenCompose((isAdded) -> {
           if (isAdded)
-            return addJob(jobE.job, jobE.inputJobIds);
+            return sessDb.rpc().getRequest(addedReq.getId());
           else
             throw new IllegalStateException(
-                "Previous job was not added!  Not continuing to add job: " + jobE.job.getId());
+                "Last job was not added!");
         });
+      }catch(Throwable t) {
+        log.error("When creating jobs for request "+addedReq.getId(), t);
+        throw t;
       }
-      return addJobsChainF.thenCompose((isAdded) -> {
-        if (isAdded)
-          return sessDb.rpc().getRequest(addedReq.getId());
-        else
-          throw new IllegalStateException(
-              "Last job was not added!");
-      });
     });
   }
 
@@ -113,11 +118,16 @@ public class TaskerService implements Tasker_I {
       Map<String, Operation> currOps = opsRegistry.getOperations(); // TODO: 4: replace with RPC call and .thenApply
       
       jobCreators.forEach(jc -> {
-        jc.updateOperationParams(currOps);
-        JobsCreator_I oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
-        if(oldJc!=null && oldJc!=jc)
-          log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);
-        opsRegistry.mergeOperation(jc.getOperation());
+        try {
+          log.info("updateOperationParams: {}", jc);
+          jc.updateOperationParams(currOps);
+          JobsCreator_I oldJc = jobsCreatorMap.put(jc.getOperation().getId(), jc);
+          if(oldJc!=null && oldJc!=jc)
+            log.warn("Replaced JobsCreator old={} with updated={}", oldJc, jc);
+          opsRegistry.mergeOperation(jc.getOperation());
+        }catch(Exception e) {
+          log.error("When updating jobCreators", e);
+        }
       });
     });
   }

@@ -258,7 +258,7 @@ public class JobBoard implements JobBoardInput_I, JobBoardOutput_I {
       log.debug("No '{}' jobs for: {}", jobType, searchParams);
     
     JobListDTO jobList = new JobListDTO(System.currentTimeMillis(), jobListL);
-    log.info("availableJobs={}",toString(jobList));
+    log.info("availableJobs with searchParams={}: jobs={}", searchParams, toString(jobList));
     return jobList;
   }
 

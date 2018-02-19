@@ -2,16 +2,10 @@ package dataengine.tasker.jobcreators;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.stream.Collectors.toList;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import javax.inject.Inject;
-
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
@@ -20,8 +14,6 @@ import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.OperationWrapper;
-import dataengine.apis.RpcClientProvider;
-import dataengine.apis.SessionsDB_I;
 import jersey.repackaged.com.google.common.collect.Lists;
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +25,8 @@ public class AddSourceDataset extends AbstractJobCreator {
   @Override
   protected Operation initOperation() {
     Operation operation = new Operation().level(0).id(this.getClass().getSimpleName())
-        .description("add source dataset");
+        .description("add source dataset")
+        .info(new HashMap<>());
 
 //    operation.addParamsItem(new OperationParam().key(OperationConsts.INPUT_URI)
 //        .required(true)
@@ -100,11 +93,11 @@ public class AddSourceDataset extends AbstractJobCreator {
         .type(OperationConsts.TYPE_INGESTER)
         .requestId(req.getId())
         .label("Ingest " + selection.getParams().get(OperationConsts.DATASET_LABEL));
-    Job job2 = new Job().id(jobPrefix + ".job2-postIngest")
-        .type(OperationConsts.TYPE_POSTINGEST)
-        .requestId(req.getId())
-        .label("Post-ingest " + selection.getParams().get(OperationConsts.DATASET_LABEL));
-    Job job3 = new Job().id(jobPrefix + ".job3-postRequest")
+//    Job job2 = new Job().id(jobPrefix + ".job2-postIngest")
+//        .type(OperationConsts.TYPE_POSTINGEST)
+//        .requestId(req.getId())
+//        .label("Post-ingest " + selection.getParams().get(OperationConsts.DATASET_LABEL));
+    Job job3 = new Job().id(jobPrefix + ".job2-postRequest")
         .type(OperationConsts.TYPE_POSTREQUEST)
         .requestId(req.getId())
         .label("Post-request job for: " + req.getLabel());
@@ -124,22 +117,23 @@ public class AddSourceDataset extends AbstractJobCreator {
       }
     }
     selection.getParams().remove(OperationConsts.INPUT_URI); // don't need this after job1
-    {
-      Map<String, Object> job2Params = new HashMap<>(selection.getParams());
-      job2Params.put(OperationConsts.PREV_JOBID, job1.getId());
-      job2.params(job2Params);
-    }
+//    {
+//      Map<String, Object> job2Params = new HashMap<>(selection.getParams());
+//      job2Params.put(OperationConsts.PREV_JOBID, job1.getId());
+//      job2.params(job2Params);
+//    }
     selection.getParams().remove(OperationConsts.DATA_FORMAT); // don't need this any more
     {
       Map<String, Object> job3Params = new HashMap<>(selection.getParams());
-      job3Params.put(OperationConsts.PREV_JOBID, job1.getId());
+      //job3Params.put(OperationConsts.PREV_JOBID, job2.getId());
+      job3Params.put(OperationConsts.JOBID_OF_OUTPUT_DATASET, job1.getId());
       job3.params(job3Params);
     }
 
     return Lists.newArrayList(
         new JobEntry(job0, priorJobIds.toArray(new String[priorJobIds.size()])),
         new JobEntry(job1, job0.getId()),
-        new JobEntry(job2, job1.getId()),
-        new JobEntry(job3, job2.getId()));
+        //new JobEntry(job2, job1.getId()),
+        new JobEntry(job3, job1.getId()));
   }
 }

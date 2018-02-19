@@ -93,7 +93,7 @@ public class AmqProgressMonitor implements ProgressMonitor {
   @Override
   public void stop() {
     if (isStopped) {
-      log.warn("stop() already called!");
+      log.debug("stop() already called!");
       return;
     }
     isStopped = true;
@@ -106,7 +106,7 @@ public class AmqProgressMonitor implements ProgressMonitor {
       ProgressState p = progressMaker.getProgress();
       if (p.getPercent() > 0 && p.getPercent() < 100)
         log.warn("Stopping progress updates for {} before completion: {}", jobId, p);
-
+      update(p);
       progressMaker = null;
     }
   }

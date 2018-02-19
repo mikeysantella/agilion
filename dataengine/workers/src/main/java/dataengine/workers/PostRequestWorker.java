@@ -1,5 +1,6 @@
 package dataengine.workers;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +16,9 @@ import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Accessors(fluent = true)
 public class PostRequestWorker extends BaseWorker<Job> {
 
@@ -31,19 +34,23 @@ public class PostRequestWorker extends BaseWorker<Job> {
     return new Operation().level(1).id(jobType())
         .description("connect request to dataset")
         .info(info)
+//        .addParamsItem(new OperationParam()
+//            .key(OperationConsts.PREV_JOBID).required(true)
+//            .valuetype(ValuetypeEnum.STRING))
         .addParamsItem(new OperationParam()
-            .key(OperationConsts.PREV_JOBID).required(true)
+            .key(OperationConsts.JOBID_OF_OUTPUT_DATASET).required(true)
             .valuetype(ValuetypeEnum.STRING));
-
-    //    requiredParams = OperationUtils.getRequiredParams(getOperation());
   }
 
   @Override
   protected boolean doWork(Job job) throws Exception {
-    CompletableFuture<Void> connectF = getPrevJobDatasetId(job)
-        .thenCompose(datasetId -> sessDb.rpc().connectRequestToOutputDataset(job.getRequestId(), datasetId))
-        .thenAccept(v -> sessDb.rpc().updateRequestState(job.getRequestId(), State.COMPLETED));
-    connectF.get(); // call get so that exception can be thrown
+    String jobIdOfOutputDs = (String) job.getParams().get(OperationConsts.JOBID_OF_OUTPUT_DATASET);
+    Collection<String> datasetIds=getJobOutputDatasetIds(jobIdOfOutputDs).get();
+    log.info("datasetIds=", datasetIds);
+    datasetIds.forEach(datasetId-> 
+        sessDb.rpc().connectRequestToOutputDataset(job.getRequestId(), datasetId).join()
+    );
+    sessDb.rpc().updateRequestState(job.getRequestId(), State.COMPLETED);
     return true;
   }
 

@@ -47,10 +47,9 @@ public class NeoWorkersComponent implements ComponentI {
   public void start(Properties configMap) {
     config = new NeoWorkersConfig(configMap);
     try {
-      Properties domainProps = PropertiesUtil.loadProperties("tide.props");
       dataengine.workers.neo4j.NeoWorkersMain.main(config.brokerUrl, config.newJobAvailableTopic,
-          config.dispatcherRpcAddr, config.jobBoardRpcAddr, domainProps, config.deliveryMode);
-    } catch (JMSException | IOException e) {
+          config.dispatcherRpcAddr, config.jobBoardRpcAddr, configMap, config.deliveryMode);
+    } catch (JMSException e) {
       throw new IllegalStateException("While starting "+this, e);
     }
     running = true;

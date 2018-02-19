@@ -56,6 +56,7 @@ public class EmbeddedNeo4j implements Closeable {
 
   private final GraphDatabaseService graphDb;
 
+  @SuppressWarnings("deprecation")
   public EmbeddedNeo4j(File databaseDirectory, String pathToConfig, Properties props,
       boolean readOnly, boolean allowApoc) {
     GraphDatabaseBuilder builder =

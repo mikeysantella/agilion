@@ -47,7 +47,7 @@ public class TaskerComponent implements ComponentI {
     config = new TaskerConfig(configMap);
     try {
       dataengine.tasker.TaskerMain.main(config.getZookeeperConnectString(), config.zkStartupPath, config.brokerUrl, 
-          config.jobCreators, config.dispatcherComponentType, config.deliveryMode);
+          config.jobCreators, config.dispatcherComponentType, configMap, config.deliveryMode);
     } catch (JMSException | ConfigurationException e) {
       throw new IllegalStateException("While starting "+this, e);
     }

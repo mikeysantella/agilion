@@ -28,3 +28,7 @@ task runDataEngine {
 task runDEClientTest {
   dependsOn gradle.includedBuild('dataengine-client').task(':runClientTest')
 }
+task runDEIngestMergeExportTest {
+  dependsOn gradle.includedBuild('dataengine-client').task(':runIngestMergeExportTest')
+}
+

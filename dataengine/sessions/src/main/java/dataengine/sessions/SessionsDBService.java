@@ -102,12 +102,30 @@ public class SessionsDBService implements SessionsDB_I {
     sessDB.addDatasetNode(ds, jobId, io);
     return getDataset(ds.getId());
   }
+  
+  @Override
+  public CompletableFuture<Void> addInputDataset(String jobId, String datasetId){
+    sessDB.addInputDataset(jobId, datasetId);
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<Void> addOutputDataset(String jobId, String datasetId){
+    sessDB.addOutputDataset(jobId, datasetId);
+    return CompletableFuture.completedFuture(null);
+  }
 
   @Override
   public CompletableFuture<Void> connectRequestToOutputDataset(String requestId, String datasetId) {
     sessDB.connectRequestToOutputDataset(requestId, datasetId);
     return CompletableFuture.completedFuture(null);
   }
+  
+  @Override
+  public CompletableFuture<List<Dataset>> getRequestOutputDatasets(String requestId){
+    return CompletableFuture.completedFuture(sessDB.getOutputDatasetIds(requestId));
+  }
+  
 
   private String useOrGenerateId(String sId) {
     if (sId != null) {

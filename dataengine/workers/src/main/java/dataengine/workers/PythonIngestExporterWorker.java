@@ -10,6 +10,7 @@ import dataengine.api.Dataset;
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
+import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -32,17 +33,20 @@ public class PythonIngestExporterWorker extends AbstractMultiPythonWrapperWorker
 
   public PythonIngestExporterWorker(RpcClientProvider<SessionsDB_I> sessDb, Connection connection, int deliveryMode)
       throws JMSException {
-    super(sessDb, connection, deliveryMode, OperationConsts.TYPE_INGESTER, "workerConf/stompworker.pex");
+    super(sessDb, connection, deliveryMode, OperationConsts.TYPE_EXPORTER, "workerConf/stompworker.pex");
   }
 
   @Override
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
-    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_INGESTER);
+    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_EXPORTER);
     return new Operation().level(1).id(this.getClass().getSimpleName()).info(info)
-        .addParamsItem(new OperationParam().key(OperationConsts.INPUT_URI).required(true))
+        .addParamsItem(new OperationParam().key(OperationConsts.INPUT_URI).required(true)
+            .valuetype(ValuetypeEnum.URI))
         .addParamsItem(new OperationParam().key(OperationConsts.DATA_FORMAT).required(true)
-            .description("type and format of data").addPossibleValuesItem(MY_DATA_FORMAT));
+            .description("type and format of data")
+            .valuetype(ValuetypeEnum.ENUM)
+            .addPossibleValuesItem(MY_DATA_FORMAT));
   }
 
   private static final String MY_DATA_FORMAT = "PEOPLE.CSV";

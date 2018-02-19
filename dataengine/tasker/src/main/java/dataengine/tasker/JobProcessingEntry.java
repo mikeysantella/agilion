@@ -81,7 +81,7 @@ class JobProcessingEntry {
   private void updateSessionDb(RpcClientProvider<SessionsDB_I> sessDb,
       ProgressState progressState) {
     Progress progress =
-        new Progress().percent(progressState.getPercent()).stats(progressState.getMetrics());
+        new Progress().percent(Math.abs(progressState.getPercent())).stats(progressState.getMetrics());
     log.info("updateJobProgress: {} {}", progressState.getJobId(), progress);
     // placeholder to do any checking
     sessDb.rpc().updateJobProgress(progressState.getJobId(), progress);

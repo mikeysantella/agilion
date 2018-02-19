@@ -20,14 +20,18 @@ import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
 import dataengine.apis.Tasker_I;
 import dataengine.tasker.jobcreators.AddSourceDataset;
+import dataengine.tasker.jobcreators.ExportDataset;
+import dataengine.tasker.jobcreators.MergeDatasetToNeo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.rpc.ActiveMqRpcServer;
 import net.deelam.activemq.rpc.AmqComponentSubscriber;
+import net.deelam.utils.PropertiesUtil;
 
 @Slf4j
 @RequiredArgsConstructor(onConstructor = @__(@Inject) )
 final class TaskerModule extends AbstractModule {
+  final Properties configMap;
   final String jobCreatorsString;
   
   @Override
@@ -36,7 +40,7 @@ final class TaskerModule extends AbstractModule {
     requireBinding(CuratorFramework.class); // for DispatcherComponentListener
     requireBinding(Key.get(new TypeLiteral<RpcClientProvider<SessionsDB_I>>() {}));
     
-//    bind(Properties.class).toInstance(properties);
+    bind(Properties.class).toInstance(configMap);
 
     install(new FactoryModuleBuilder()
         .implement(JobListener_I.class, TaskerJobListener.class)
@@ -56,12 +60,14 @@ final class TaskerModule extends AbstractModule {
     String jobCreatorsStr=jobCreatorsString;
     if(jobCreatorsStr==null) {
       String[] defaultJobCreatorClasses={
-        AddSourceDataset.class.getCanonicalName()
+        AddSourceDataset.class.getCanonicalName(),
+        MergeDatasetToNeo.class.getCanonicalName(),
+        ExportDataset.class.getCanonicalName()
       };
-      jobCreatorsStr = String.join(" ",defaultJobCreatorClasses);
+      jobCreatorsStr = String.join(",",defaultJobCreatorClasses);
       log.info("Using default jobCreators: {}", jobCreatorsStr);
     }
-    List<String> classes = Arrays.asList(jobCreatorsStr.split(" "));
+    List<String> classes = PropertiesUtil.splitList(",", jobCreatorsStr);
     List<JobsCreator_I> jobCreators = classes.stream().map(jcClassName -> {
       try {
         @SuppressWarnings("unchecked")

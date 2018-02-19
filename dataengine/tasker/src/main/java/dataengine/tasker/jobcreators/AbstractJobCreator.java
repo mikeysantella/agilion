@@ -1,5 +1,6 @@
 package dataengine.tasker.jobcreators;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
 import java.util.Iterator;
@@ -49,9 +50,16 @@ public abstract class AbstractJobCreator implements JobsCreator_I {
   }
 
   public static List<Operation> copyOperationsOfType(Map<String, Operation> currOperations, String opType) {
+    checkNotNull(currOperations);
+    checkNotNull(opType);
     return currOperations.values().stream()
-        .filter(op -> opType.equals(op.getInfo().get(OperationConsts.OPERATION_TYPE)))
-        .map(op -> OperationUtils.copy(op))
+        .filter(op -> {
+          if(op.getInfo()==null) {
+            log.error("Operation should not have null info: {}", op);
+            return false;
+          }
+          return opType.equals(op.getInfo().get(OperationConsts.OPERATION_TYPE));
+        }).map(op -> OperationUtils.copy(op))
         .collect(toList());
   }
 

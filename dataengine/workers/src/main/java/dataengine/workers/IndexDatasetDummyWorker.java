@@ -1,5 +1,6 @@
 package dataengine.workers;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,20 +42,24 @@ public class IndexDatasetDummyWorker extends BaseWorker<Job> {
 
   @Override
   protected boolean doWork(Job job) throws Exception {
-    getPrevJobDatasetId(job).thenCompose(datasetId -> {
+    Collection<String> datasetIds=getPrevJobDatasetIds(job).get();
+    for(String datasetId:datasetIds){
       log.info("WORKER: indexing {}", datasetId);
-      return sessDb.rpc().getDataset(datasetId);
-    }).thenCompose((inDS) -> {
-      String inputFilename = FilenameUtils.getBaseName(inDS.getUri());
-      String outDsUri = "hdfs://cluster.domain.com:8020/tmp/" + job.getId() + "/" + inputFilename + "-indexDB";
-      Dataset outDS = new Dataset()
-          .uri(outDsUri)
-          .dataFormat(OperationConsts.DATA_FORMAT_LUCENE)
-          .label("entity-index");
-      return sessDb.rpc().addOutputDataset(outDS, job.getId());
-    }).thenAccept(addedOutDs -> {
-      sessDb.rpc().setJobParam(job.getId(), OperationConsts.OUTPUT_URI, addedOutDs.getId());
-    }).get(); // call get so that exception can be thrown
+      sessDb.rpc().getDataset(datasetId)
+      .thenCompose((inDS) -> {
+        String inputFilename = FilenameUtils.getBaseName(inDS.getUri());
+        String outDsUri = "hdfs://cluster.domain.com:8020/tmp/" + job.getId() + "/" + inputFilename + "-indexDB";
+        Dataset outDS = new Dataset()
+            .uri(outDsUri)
+            .dataFormat(OperationConsts.DATA_FORMAT_LUCENE)
+            .label("entity-index");
+        return sessDb.rpc().addOutputDataset(outDS, job.getId());
+      })
+      .thenAccept(addedOutDs -> {
+        sessDb.rpc().setJobParam(job.getId(), OperationConsts.OUTPUT_URI, addedOutDs.getId());
+      })
+      .get();
+    }
 
     try {
       Thread.sleep(1000);

@@ -102,7 +102,11 @@ public final class OperationWrapper {
 
   static final Map<String, OperationParam> initMap(Operation operation) {
     Map<String, OperationParam> map = new HashMap<>();
-    operation.getParams().forEach(p -> map.put(p.getKey(), p));
+    operation.getParams().forEach(p -> { 
+      if(p.getValuetype()==null)
+        throw new IllegalStateException("OperationParam needs valueType: "+p);
+      map.put(p.getKey(), p);
+    });
     return map;
   }
 
@@ -149,6 +153,8 @@ public final class OperationWrapper {
   }
 
   public Object convertToValueType(OperationParam opParam, Object val) {
+    if(opParam.getValuetype()==null)
+      throw new IllegalStateException("OperationParam needs valueType: "+opParam);
     switch (opParam.getValuetype()) {
       case BOOLEAN:
         if (val instanceof Boolean)

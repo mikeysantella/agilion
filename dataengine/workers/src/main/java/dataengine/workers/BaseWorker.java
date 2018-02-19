@@ -1,6 +1,8 @@
 package dataengine.workers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Collection;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
@@ -65,7 +67,7 @@ public abstract class BaseWorker<T extends Job> implements Worker_I, Progressing
     return canDo((T) jobDto.getRequest());
   }
   
-  public boolean canDo(Job job) {
+  public boolean canDo(T job) {
     return true;
   }
   
@@ -81,7 +83,7 @@ public abstract class BaseWorker<T extends Job> implements Worker_I, Progressing
       // within doWork(), remember to call Future.get() to wait for work to finish or throw exception
       clog.info("WORKER: {} start jobId={}", name, job.getId());
       state.getMetrics().put("job.id", job.getId());
-      if (doWork(job)) 
+      if (doWork(job, jobDto)) 
         state.done(jobDto);
       else
         state.failed("doWork() returned false for job=" + job);
@@ -95,6 +97,10 @@ public abstract class BaseWorker<T extends Job> implements Worker_I, Progressing
     }
   }
 
+  protected boolean doWork(T job, JobDTO jobDto) throws Exception {
+    return doWork(job);
+  }
+  
   protected boolean doWork(T job) throws Exception {
     clog.error("WORKER: TODO: implement doWork(): {}", job);
     AtomicInteger metricInt=new AtomicInteger();
@@ -108,26 +114,41 @@ public abstract class BaseWorker<T extends Job> implements Worker_I, Progressing
     return true;
   }
   
-  CompletableFuture<String> getPrevJobDatasetId(Job job) {
+  CompletableFuture<Collection<String>> getPrevJobDatasetIds(Job job) {
     String prevJobId = (String) job.getParams().get(OperationConsts.PREV_JOBID);
-    checkNotNull(prevJobId);
-    return sessDb.rpc().getJob(prevJobId)
-        .thenApply(prevJob -> {
-          String prevDatasetId=(String) prevJob.getParams().get(OperationConsts.OUTPUT_URI);
-          checkNotNull(prevDatasetId);
-          return prevDatasetId;
+    return getJobOutputDatasetIds(prevJobId);
+  }
+  @SuppressWarnings("unchecked")
+  CompletableFuture<Collection<String>> getJobOutputDatasetIds(String jobId) {
+    checkNotNull(jobId);
+    return sessDb.rpc().getJob(jobId)
+        .thenApply(job -> {
+          log.info("previous job: {}", job);
+          return job.getOutputDatasetIds().values();
+          //String prevDatasetId=(String) job.getParams().get(OperationConsts.OUTPUT_URI);
+          //checkNotNull(prevDatasetId);
+          //return prevDatasetId;
           });
   }
   
-  @RequiredArgsConstructor
+/*  @RequiredArgsConstructor
   static class SubjobFactory {
     final String jobListenerAddr;
     final int progressPollIntervalSeconds;
 
+    SubjobFactory(JobDTO jobDto) {
+      jobListenerAddr=jobDto.getProgressAddr();
+      progressPollIntervalSeconds=jobDto.getProgressPollIntervalSeconds();
+    }
+    
     JobDTO createJobDTO(String subjobId, String subjobType, Object request) {
       return new JobDTO(subjobId, subjobType, request)
           .progressAddr(jobListenerAddr, progressPollIntervalSeconds);
     }
+  }*/
+
+  public static String genSubJobIdPrefix(Job job) {
+    return job.getId().substring(0,16) + "." + UUID.randomUUID();
   }
 
 }

@@ -43,20 +43,20 @@ public class NeoWorkersMain {
         properties.getProperty("newJobAvailableTopic", "newJobAvailableTopic");
     String dispatcherRpcAddr = properties.getProperty("dispatcherRpcAddr", "depJobMgrBroadcastAMQ");
     String jobBoardRpcAddr = properties.getProperty("jobBoardRpcAddr", "jobBoardBroadcastAMQ");
-    Properties domainProps = PropertiesUtil.loadProperties("tide.props");
-    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, domainProps, DeliveryMode.NON_PERSISTENT);
+    Properties configMap = PropertiesUtil.loadProperties("dataengine.props");
+    main(brokerUrl, newJobAvailableTopic, dispatcherRpcAddr, jobBoardRpcAddr, configMap, DeliveryMode.NON_PERSISTENT);
   }
 
   public static void main(String brokerUrl, String newJobAvailableTopic, String dispatcherRpcAddr,
-      String jobBoardRpcAddr, Properties domainProps, int deliveryMode) throws JMSException {
+      String jobBoardRpcAddr, Properties configMap, int deliveryMode) throws JMSException {
     connection = MQClient.connect(brokerUrl);
-    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, domainProps, deliveryMode);
+    Injector injector = createInjector(connection, dispatcherRpcAddr, jobBoardRpcAddr, configMap, deliveryMode);
     DeployedJobConsumerFactory jcFactory =
         injector.getInstance(BaseWorkerModule.DeployedJobConsumerFactory.class);
 
     Factory csv2NeoWorkerFactory=injector.getInstance(CsvToNeoWorker.Factory.class);
     BaseWorker<?>[] hiddenWorkers = {
-        csv2NeoWorkerFactory.create(domainProps)
+        csv2NeoWorkerFactory.create(configMap)
     };
 
     BaseWorker<?>[] workers = {

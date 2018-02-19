@@ -30,6 +30,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
   protected final Queue replyQueue;
 
   final String pythonExecFile;
+  final String stompPort="33331"; // TODO: ensure consistent with stomp port specified in dataengine.props
   final String pythonQueueName;
   final Destination pythonDestQ;
 
@@ -52,7 +53,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
           return;
         int percent = m.getIntProperty("percent");
         String message = m.getStringProperty("message");
-        if (pythonCompleteF.isDone())
+        if (getCurrentCompletableFuture().isDone())
           log.warn("After job was done, received python status msg: {}; {}; {}", percent, message, m);
         else
           log.info("Received python status msg: {}; {}; {}", percent, message, m);
@@ -67,7 +68,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
 
   protected void onPythonReply(Message m, int percent, String message) throws JMSException {
     state.setPercent(percent).setMessage(message);
-    updateFuture(percent, pythonCompleteF);
+    updateFuture(percent, getCurrentCompletableFuture());
   }
 
   static void updateFuture(int percent, CompletableFuture<Boolean> completeF) {
@@ -80,7 +81,10 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
   
   protected String pythonExecutable = "python3";
   protected CompletableFuture<Boolean> pythonCompleteF;
-
+  CompletableFuture<Boolean> getCurrentCompletableFuture(){
+    return pythonCompleteF;
+  }
+  
   @Override
   protected boolean doWork(Job job) throws Exception {
     pythonCompleteF = new CompletableFuture<>();
@@ -114,6 +118,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
       if (p != null) {
         log.info("Waiting for subprocess thread to complete");
         p.waitFor(); // waits for subprocess to end
+        log.info("Subprocess thread completed");
       }
     }
 
@@ -133,11 +138,12 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
     try {
       // -u option so that output is unbuffered
       p = RuntimeUtils.exec(pythonExecFile, genPythonCmdAndArgs());
-      Thread.sleep(1000); // allow some time for python to crash
+      Thread.sleep(2000); // allow some time for python to crash
       if (!p.isAlive()) {
         log.error("Python worker died");
         pythonCompleteF.complete(false);
       }
+      log.info("Assuming python subprocess is running");
     } catch (Exception e) {
       log.error("When running python worker", e);
       pythonCompleteF.complete(false);
@@ -150,7 +156,7 @@ public abstract class AbstractPythonWrapperWorker extends BaseWorker<Job> {
   }
 
   private String[] genPythonCmdAndArgs() {
-    return new String[] {pythonExecutable, "-u", pythonExecFile, pythonQueueName};
+    return new String[] {pythonExecutable, "-u", pythonExecFile, stompPort, pythonQueueName};
   }
 
   protected abstract Message createCommandMsg(Job job, Dataset inDS, Dataset outDS) throws Exception;

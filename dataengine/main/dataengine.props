@@ -1,5 +1,5 @@
 componentIds=amq, sessions, tasker, jobMgrType, workers, neoWorkers
-componentIdsToStart=amq, sessions, tasker, jobMgrType, workers
+componentIdsToStart=amq, sessions, tasker, jobMgrType, workers, neoWorkers
 
 
 include=startup.props
@@ -17,7 +17,8 @@ sessions.include=needsAmq
 
 tasker.classname=dataengine.main.TaskerComponent
 tasker.include=needsAmq
-tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset
+tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset, dataengine.tasker.jobcreators.MergeDatasetToNeo, dataengine.tasker.jobcreators.ExportDataset
+tasker.exportDir=/home/dlam/dev/agilionReal/dataengine/dataio/exportDir
 tasker.dispatcherComponentType=jobMgrType
 
 jobMgrType.classname=dataengine.main.JobMgrComponent
@@ -31,6 +32,9 @@ workers.classname=dataengine.main.WorkersComponent
 // TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
 workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 workers.sqlConnect=root:dataengine-mysql@localhost:3306
+
+# supported data formats
+workers.dataFormats=TIDE, I94Visa
 
 # dshape = http://datashape.readthedocs.io/en/latest/types.html
 workers.TIDE.dshape=var * { \
@@ -80,6 +84,28 @@ workers.I94Visa.dshape=var * { \
   'gender': ?string\
   }
 
+# concepts to export from each data format
+workers.TIDE.exportConcepts=Person, Country, CITIZEN_OF
+workers.I94Visa.exportConcepts=Person, Country, CITIZEN_OF
+
+# how data is extracted for each concept
+workers.Person.selectHeader='personId', 'lastName', 'firstName', 'nickname', 'terroristName', 'biometricID', 'maritalStatus', 'gender', 'countryId', 'dob', 'birthCountry', 'isNatCitizen', 'hasFlightTraining', 'isTsaNoFly', 'visaNumber', 'visaRevocation'
+workers.Person.selectFields=concat(lastName, ' ', firstName) as personId, lastName, firstName, nickname, terroristName, biometricID, maritalStatus, gender, citizenship as countryId, dob, birthCountry, isNatCitizen, hasFlightTraining, isTsaNoFly, visaNumber, visaRevocation
+workers.Person.selectDistinct=false
+
+workers.Country.selectHeader='countryId', 'citizenship'
+workers.Country.selectFields=citizenship as countryId, citizenship
+workers.Country.selectDistinct=true
+
+workers.CITIZEN_OF.selectHeader='personId', 'countryId'
+workers.CITIZEN_OF.selectFields=concat(lastName, ' ', firstName) as personId, citizenship as countryId
+workers.CITIZEN_OF.selectDistinct=false
+
+
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
 neoWorkers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
+
+# path to properties need to load CSV files into Neo4j
+neoWorkers.TIDE.neo4jCsvLoadPropFile=workerConf/neo4j-tide.props
+neoWorkers.I94Visa.neo4jCsvLoadPropFile=workerConf/neo4j-i94.props
 

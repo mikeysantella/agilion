@@ -50,3 +50,11 @@ task runClientTest(type:JavaExec) {
    }
 }
 
+task runIngestMergeExportTest(type:JavaExec) {
+   main = 'dataengine.api.IngestMergeExportTest'
+   classpath = sourceSets.test.runtimeClasspath
+   if(project.hasProperty('clientArgs')){
+       args(clientArgs.split(','))
+   }
+}
+

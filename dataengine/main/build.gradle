@@ -43,5 +43,6 @@ dependencies {
   compile project(':tasker')
   compile project(':jobmgr')
   compile project(':workers')
+  compile project(':workersNeo4j')
 }
 

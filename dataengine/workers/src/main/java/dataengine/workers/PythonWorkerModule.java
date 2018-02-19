@@ -23,14 +23,20 @@ public class PythonWorkerModule extends AbstractModule {
   }
 
   @Provides
-  PythonIngesterWorker createPythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb,
+  PythonIngestToSqlWorker createPythonIngesterWorker(RpcClientProvider<SessionsDB_I> sessDb,
       Connection connection, Properties props) throws JMSException {
-    return new PythonIngesterWorker(sessDb, connection, deliveryMode, props);
+    return new PythonIngestToSqlWorker(sessDb, connection, deliveryMode, props);
   }
 
   @Provides
-  PythonIngestExporterWorker createPythonIngestExporterWorker(
-      RpcClientProvider<SessionsDB_I> sessDb, Connection connection) throws JMSException {
-    return new PythonIngestExporterWorker(sessDb, connection, deliveryMode);
+  PythonExportSqlWorker createPythonExportSqlWorker(RpcClientProvider<SessionsDB_I> sessDb,
+      Connection connection, Properties props) throws JMSException {
+    return new PythonExportSqlWorker(sessDb, connection, deliveryMode, props);
   }
+  
+//  @Provides
+//  PythonIngestExporterWorker createPythonIngestExporterWorker(
+//      RpcClientProvider<SessionsDB_I> sessDb, Connection connection) throws JMSException {
+//    return new PythonIngestExporterWorker(sessDb, connection, deliveryMode);
+//  }
 }

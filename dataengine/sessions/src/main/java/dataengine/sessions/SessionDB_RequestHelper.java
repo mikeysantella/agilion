@@ -4,14 +4,14 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static net.deelam.graph.GrafTxn.tryAndCloseTxn;
 import static net.deelam.graph.GrafTxn.tryCAndCloseTxn;
-
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.tinkerpop.blueprints.TransactionalGraph;
 import com.tinkerpop.frames.FramedTransactionalGraph;
-
+import dataengine.api.Dataset;
 import dataengine.api.Request;
 import dataengine.api.State;
 import dataengine.sessions.frames.DatasetFrame;
@@ -97,6 +97,16 @@ public final class SessionDB_RequestHelper {
       RequestFrame rf = frameHelper.getVertexFrame(requestId, RequestFrame.class);
       DatasetFrame df = frameHelper.getVertexFrame(datasetId, DatasetFrame.class);
       rf.addOutputDataset(df);
+    });
+  }
+  
+  public List<Dataset> getOutputDatasetIds(String requestId){
+    log.debug("SESS: getOutputDatasetIds: reqId={}", requestId);
+    return tryAndCloseTxn(graph, graph -> {
+      RequestFrame rf = frameHelper.getVertexFrame(requestId, RequestFrame.class);
+      List<Dataset> dsIds=new ArrayList<>();
+      rf.getOutputDatasets().forEach(dsFrame->dsIds.add(SessionDB_DatasetHelper.toDataset(dsFrame)));
+      return dsIds;
     });
   }
 

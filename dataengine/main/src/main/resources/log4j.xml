@@ -13,7 +13,7 @@
       <param name="Threshold" value="WARN"/> 
       <layout class="org.apache.log4j.PatternLayout">
          <param name="ConversionPattern"
-            value="%d{yyyy-MM-dd HH:mm:ss} %-5p %t (%F:%L): %m%n" />
+            value="--- %d{yyyy-MM-dd HH:mm:ss} %-5p %t (%F:%L): %m%n" />
       </layout>
    </appender>
    <appender name="tempfile" class="org.apache.log4j.FileAppender">
@@ -39,7 +39,6 @@
    </logger>
    <logger name="net.deelam.utils">
       <level value="INFO" />
-      <appender-ref ref="user" />
    </logger>
    <logger name="dataengine">
       <level value="INFO" />

@@ -45,42 +45,43 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     Factory(RpcClientProvider<SessionsDB_I> sessDb){
       this.sessDb=sessDb;
     }
-    public CsvToNeoWorker create(Properties domainProps) {
-      return new CsvToNeoWorker(sessDb, domainProps);
+    public CsvToNeoWorker create(Properties configMap) {
+      return new CsvToNeoWorker(sessDb, configMap);
     }
   }
 
-  final Properties domainProps;// = new Properties();
-  CsvToNeoWorker(RpcClientProvider<SessionsDB_I> sessDb, Properties domainProps){
-    super(OperationConsts.TYPE_CONVERTER, sessDb);
-    this.domainProps=domainProps;
-    nodeLabels = PropertiesUtil.splitList(domainProps, "nodeLabels", " ");
-    edgeLabels = PropertiesUtil.splitList(domainProps, "edgeLabels", " ");
+  final Properties configMap;
+  CsvToNeoWorker(RpcClientProvider<SessionsDB_I> sessDb, Properties configMap){
+    super(OperationConsts.TYPE_IMPORTER, sessDb);
+    this.configMap=configMap;
+    log.info("CsvToNeoWorker configMap={}", configMap);
   }
 
-  final List<String> nodeLabels;
-  final List<String> edgeLabels;
   @Override
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
-    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_CONVERTER);
+    info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_IMPORTER);
     ;
-    final Operation operation = new Operation().level(2).id(jobType()).description("").info(info);
+    final Operation operation = new Operation().level(1).id(jobType()).description("").info(info);
     operation.addParamsItem(new OperationParam().key(OperationConsts.DB_PATH).required(true)
-        .description("path to output Neo4j DB"));
+        .description("path to output Neo4j DB")
+        .valuetype(ValuetypeEnum.STRING));
+    operation.addParamsItem(new OperationParam().key(OperationConsts.DATA_SCHEMA).required(true)
+        .description("determines how CSV files are loaded into Neo4j")
+        .valuetype(ValuetypeEnum.STRING));
     
-    for(String nodeLabel:nodeLabels) {
-      OperationParam opParam = new OperationParam().key(nodeLabel)
-          .description("CSV file for node type '"+nodeLabel+"'")
-          .valuetype(ValuetypeEnum.STRING);
-      operation.addParamsItem(opParam);
-    }
-    for(String edgeLabel:edgeLabels) {
-      OperationParam opParam = new OperationParam().key(edgeLabel)
-          .description("CSV file for edge type '"+edgeLabel+"'")
-          .valuetype(ValuetypeEnum.STRING);
-      operation.addParamsItem(opParam);
-    }
+//    for(String nodeLabel:nodeLabels) {
+//      OperationParam opParam = new OperationParam().key(nodeLabel)
+//          .description("CSV file for node type '"+nodeLabel+"'")
+//          .valuetype(ValuetypeEnum.STRING);
+//      operation.addParamsItem(opParam);
+//    }
+//    for(String edgeLabel:edgeLabels) {
+//      OperationParam opParam = new OperationParam().key(edgeLabel)
+//          .description("CSV file for edge type '"+edgeLabel+"'")
+//          .valuetype(ValuetypeEnum.STRING);
+//      operation.addParamsItem(opParam);
+//    }
     return operation
 //        .addParamsItem(new OperationParam().key(OperationConsts.CSVFILE2NODELABEL_MAP).required(true)
 //            .description("mapping of node label to nodelist CSV file")
@@ -90,9 +91,24 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
 //            .possibleValues((List) PropertiesUtil.splitList(domainProps, "edgeLabels", " ")))
         ;
   }
-
+  
+  @Override
+  public boolean canDo(Job job) {
+    //return OperationConsts.DATA_FORMAT_CSV.equals(job.getParams().get(OperationConsts.DATA_FORMAT)) &&
+    return "CsvToNeoWorker".equals(job.getParams().get(OperationConsts.WORKER_NAME));
+  }
+  
   @Override
   protected boolean doWork(Job job) throws Exception {
+    String dataSchema=(String) job.getParams().get(OperationConsts.DATA_SCHEMA);
+    String propFile=configMap.getProperty(dataSchema+".neo4jCsvLoadPropFile");
+    if(propFile==null)
+      throw new IllegalStateException("No setting for "+dataSchema+".neo4jCsvLoadPropFile");
+    final Properties domainProps = PropertiesUtil.loadProperties(propFile);
+    final List<String> nodeLabels = PropertiesUtil.splitList(domainProps, "nodeLabels", " ");
+    final List<String> edgeLabels = PropertiesUtil.splitList(domainProps, "edgeLabels", " ");
+
+    
     String dbPath = (String) job.getParams().get(OperationConsts.DB_PATH);
     File databaseDirectory = new File(dbPath);
     String neoConfig = null;
@@ -103,15 +119,15 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       Map<String, String> nodeInputs = extractLabelsToImport(job, nodeLabels);
       final Collection<String> nodeLabelsToImport = nodeInputs.keySet();
       state.setPercent(10).setMessage("Importing nodes: "+nodeLabelsToImport);
-      importNodeCsvFiles(db, nodeInputs);
+      importNodeCsvFiles(db, domainProps, nodeInputs);
       state.setPercent(50).setMessage("Indexing nodes: "+nodeLabelsToImport);
-      createUniqueConstraint(db, nodeLabelsToImport);
-      createIndices(db, nodeLabelsToImport);
+      createUniqueConstraint(db, domainProps,nodeLabelsToImport);
+      createIndices(db, domainProps, nodeLabelsToImport);
       db.waitUntilIndexesDone(10);
 
       Map<String, String> edgeInputs = extractLabelsToImport(job, edgeLabels);
       state.setPercent(60).setMessage("Importing edges: "+edgeInputs.values());
-      importEdgeCsvFiles(db, edgeInputs);
+      importEdgeCsvFiles(db, domainProps, edgeInputs);
     }
     state.setPercent(99).setMessage("Imported CSV files: "+job.getId());
     return true;
@@ -127,7 +143,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     return labelsToImport;
   }
 
-  private void importNodeCsvFiles(EmbeddedNeo4j db, Map<String, String> inputs) {
+  private void importNodeCsvFiles(EmbeddedNeo4j db, Properties domainProps, Map<String, String> inputs) {
     for (Entry<String, String> e : inputs.entrySet()) {
       String nodeLabel = e.getKey();
       String csvFile = e.getValue();
@@ -144,7 +160,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     }
   }
 
-  private void importEdgeCsvFiles(EmbeddedNeo4j db, Map<String, String> inputs) {
+  private void importEdgeCsvFiles(EmbeddedNeo4j db, Properties domainProps, Map<String, String> inputs) {
     for (Entry<String, String> e : inputs.entrySet()) {
       String edgeLabel = e.getKey();
       String csvFile = e.getValue();
@@ -163,7 +179,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     }
   }
 
-  private void createUniqueConstraint(EmbeddedNeo4j db, Collection<String> nodeLabels) {
+  private void createUniqueConstraint(EmbeddedNeo4j db, Properties domainProps, Collection<String> nodeLabels) {
     for (String nodeLabel : nodeLabels)
       for (String uniqProp : PropertiesUtil.splitList(domainProps, nodeLabel + ".uniqueProps", ",")) {
         String cypherCmd = "CREATE CONSTRAINT ON (n:"+nodeLabel+") ASSERT n."+uniqProp+" IS UNIQUE";
@@ -171,7 +187,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       }
   }
 
-  private void createIndices(EmbeddedNeo4j db, Collection<String> nodeLabels) {
+  private void createIndices(EmbeddedNeo4j db, Properties domainProps, Collection<String> nodeLabels) {
     for (String nodeLabel : nodeLabels)
       for (String propToIndex : PropertiesUtil.splitList(domainProps, nodeLabel + ".propsToIndex", ",")) {
         String cypherCmd = "CREATE INDEX ON :" + nodeLabel + "(" + propToIndex + ")";

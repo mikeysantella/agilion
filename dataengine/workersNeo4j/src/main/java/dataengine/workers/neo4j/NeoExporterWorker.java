@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
+import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -36,7 +37,7 @@ public class NeoExporterWorker extends BaseWorker<Job> {
 //    edgeInputs.put(new File(mysqlDir,"countries.csv").toURI().toString(), "CITIZEN_OF");
 //    params.put(OperationConsts.CSVFILE2EDGELABEL_MAP, edgeInputs);
 
-    params.put((OperationConsts.DB_PATH), "ingested-neo2");
+    params.put((OperationConsts.DB_PATH), "/home/dlam/dev/agilionReal/dataengine/main/neoDBs/1519020512372/");
     if (false) {
       params.put((OperationConsts.EXPORT_PATH), "export.graphml");
       params.put((OperationConsts.EXPORT_FORMAT), ExportFormats.graphml.name());
@@ -68,21 +69,29 @@ public class NeoExporterWorker extends BaseWorker<Job> {
   protected Operation initOperation() {
     Map<String, String> info = new HashMap<>();
     info.put(OperationConsts.OPERATION_TYPE, OperationConsts.TYPE_EXPORTER);
-    return new Operation().level(1).id(jobType()).description("").info(info)
+    return new Operation().level(1).id("NeoExporterWorker").description("").info(info)
         .addParamsItem(new OperationParam().key(OperationConsts.DB_PATH).required(true)
-            .description("path to source Neo4j DB"))
+            .description("path to source Neo4j DB")
+            .valuetype(ValuetypeEnum.STRING))
+        .addParamsItem(new OperationParam().key(OperationConsts.EXPORT_PATH).required(true)
+            .description("path of output file")
+            .valuetype(ValuetypeEnum.STRING))
         .addParamsItem(new OperationParam().key(OperationConsts.EXPORT_FORMAT).required(true)
             .description("export format") //
+            .valuetype(ValuetypeEnum.STRING)
             .defaultValue(ExportFormats.graphml.name()) //
             .addPossibleValuesItem(ExportFormats.graphml) //
             .addPossibleValuesItem(ExportFormats.csv) //
+            .addPossibleValuesItem(ExportFormats.nodelist) //
             .addPossibleValuesItem(ExportFormats.edgelist) //
             )
         .addParamsItem(new OperationParam().key(OperationConsts.CYPHER_EXPR)
             .description("expression to execute for 'cypher' export format") //
+            .valuetype(ValuetypeEnum.STRING)
             )
         .addParamsItem(new OperationParam().key(OperationConsts.PROPERTY_COLUMNS)
-            .description("properties to include as columns in CSV file") //
+            .description("properties to include as columns in CSV nodelist file") //
+            .valuetype(ValuetypeEnum.STRING)
             .defaultValue("id, name")
             );
   }
@@ -90,6 +99,11 @@ public class NeoExporterWorker extends BaseWorker<Job> {
   enum ExportFormats { graphml, csv, nodelist, edgelist }
   Properties domainProps = new Properties();
 
+  @Override
+  public boolean canDo(Job job) {
+    return "NeoExporterWorker".equals(job.getParams().get(OperationConsts.WORKER_NAME));
+  }
+  
   @Override
   protected boolean doWork(Job job) throws Exception {
     String dbPath = (String) job.getParams().get(OperationConsts.DB_PATH);
@@ -133,7 +147,7 @@ public class NeoExporterWorker extends BaseWorker<Job> {
           procCall="apoc.export.csv.query";
           if(cypherExpr!=null && cypherExpr.trim().length()>0)
             log.warn("Ignoring {}: {}", OperationConsts.CYPHER_EXPR, cypherExpr);
-          cypherExpr="MATCH edge = (s)-[]->(t) RETURN s.id,t.id";
+          cypherExpr="MATCH edge = (start)-[]->(end) RETURN start.id,end.id";
           break;
         default:
         case graphml:

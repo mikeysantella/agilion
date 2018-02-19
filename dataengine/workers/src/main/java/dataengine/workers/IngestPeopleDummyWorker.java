@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import dataengine.api.Job;
 import dataengine.api.Operation;
 import dataengine.api.OperationParam;
+import dataengine.api.OperationParam.ValuetypeEnum;
 import dataengine.apis.OperationConsts;
 import dataengine.apis.RpcClientProvider;
 import dataengine.apis.SessionsDB_I;
@@ -31,10 +32,12 @@ public class IngestPeopleDummyWorker extends BaseWorker<Job> {
         .description("ingest People source dataset")
         .info(info)
         .addParamsItem(new OperationParam()
-            .key(OperationConsts.INPUT_URI).required(true))
+            .key(OperationConsts.INPUT_URI).required(true)
+            .valuetype(ValuetypeEnum.URI))
         .addParamsItem(new OperationParam()
             .key(OperationConsts.DATA_FORMAT).required(true)
             .description("choosing '"+MY_DATA_FORMAT+"' will always fail")
+            .valuetype(ValuetypeEnum.STRING)
             .addPossibleValuesItem(MY_DATA_FORMAT));
   }
 
