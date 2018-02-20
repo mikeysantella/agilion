@@ -43,7 +43,7 @@ workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 workers.sqlConnect=root:dataengine-mysql@localhost:3306
 
 # supported data schemas
-workers.dataSchemas=TIDE, I94Visa, FB, FBEdges
+workers.dataSchemas=TIDE, I94Visa, FB, FBEdges, CDR, CDREdges
 
 # dshape = http://datashape.readthedocs.io/en/latest/types.html
 workers.TIDE.dshape=var * { \
@@ -119,50 +119,96 @@ workers.FBEdges.dshape=var * { \
   'accountIdFROM' : ?string,\
   'accountIdTO' : ?string\
   }
+workers.CDR.dshape=var * { \
+  'dataSource' : ?string,\
+  'phoneMSISDN' : ?string,\
+  'phoneAreaCode' : ?string,\
+  'phoneNumber' : ?string,\
+  'phoneIMSI' : ?string,\
+  'phoneIMEI' : ?string,\
+  'nameFirst' : ?string,\
+  'nameMiddle' : ?string,\
+  'nameLast' : ?string,\
+  'fullNameIGNORE' : ?string,\
+  'addrStreet' : ?string,\
+  'addrZipCode' : ?string,\
+  'cityIGNORE' : ?string,\
+  'stateIGNORE' : ?string,\
+  'stateAbbrIGNORE' : ?string,\
+  'countyIGNORE' : ?string,\
+  'lat' : ?string,\
+  'lon' : ?string,\
+  'gender' : ?string,\
+  'ageIGNORE' : ?string\
+}
+workers.CDREdges.dshape=var * { \
+  'dataSource' : ?string,\
+  'phoneCallDate' : ?string,\
+  'phoneMSISDNSource' : ?string,\
+  'phoneMSISDNTarget' : ?string,\
+  'numberCalls' : ?string,\
+  'minutes' : ?string,\
+  'text' : ?string,\
+  'sms' : ?string,\
+  'classification' : ?string,\
+  'family' : ?string\
+}
 
 # concepts to export from each data format
 workers.TIDE.exportConcepts=Person, Country, CITIZEN_OF
 workers.I94Visa.exportConcepts=Person, Country, CITIZEN_OF
 workers.FB.exportConcepts=Person
 workers.FBEdges.exportConcepts=FB_KNOWS
+workers.CDR.exportConcepts=Person
+workers.CDREdges.exportConcepts=PHONE_COMM
 
 # how data is extracted for each concept
 # syntax: workers.<exportConcept>.selectHeader
 # TIDE
-workers.TIDE.Person.selectHeader='personId', 'nameLast', 'nameFirst', 'nameNick', 'nameKST', 'numBiometric', 'statusMarital', 'gender', 'countryCitizen', 'dateBirth', 'countryBirth', 'citizenNatural', 'flightTraining', 'tsaNoFly', 'visaNum', 'visaStatusRevoke'
-workers.TIDE.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst, nameNick, nameKST, numBiometric, statusMarital, gender, countryCitizen, dateBirth, countryBirth, citizenNatural, flightTraining, tsaNoFly, visaNum, visaStatusRevoke
-workers.TIDE.Person.selectDistinct=false
+workers.TIDE.Person.selectHeader='personId', 'nameLast', 'nameFirst', 'nameNick', 'nameKST', 'numPass', 'numBiometric', 'numFBI', 'numTide', 'statusLPR', 'statusMarital', 'statusTIDE', 'statusUSP', 'gender', 'countryCitizen', 'dateBirth', 'countryBirth', 'citizenNatural', 'flightTraining', 'tsaNoFly', 'visaNum', 'visaStatusRevoke', 'dataSource', 'terrGroupMem', 'tideCateg', 'title'
+workers.TIDE.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst, nameNick, nameKST, numPass, numBiometric, numFBI, numTide, statusLPR, statusMarital, statusTIDE, statusUSP, gender, countryCitizen, dateBirth, countryBirth, citizenNatural, flightTraining, tsaNoFly, visaNum, visaStatusRevoke, dataSource, terrGroupMem, tideCateg, title
+workers.TIDE.Person.selectDistinct=true
 
 workers.TIDE.Country.selectHeader='countryId', 'countryCitizen'
 workers.TIDE.Country.selectFields=countryCitizen as countryId, countryCitizen
 workers.TIDE.Country.selectDistinct=true
 
-workers.TIDE.CITIZEN_OF.selectHeader='personId', 'countryId'
-workers.TIDE.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId
+workers.TIDE.CITIZEN_OF.selectHeader='personId', 'countryId', 'dataSource'
+workers.TIDE.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId, dataSource
 workers.TIDE.CITIZEN_OF.selectDistinct=false
 
 # I94Visa
-workers.I94Visa.Person.selectHeader='personId', 'nameLast', 'nameFirst'
-workers.I94Visa.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst
-workers.I94Visa.Person.selectDistinct=false
+workers.I94Visa.Person.selectHeader='personId', 'nameLast', 'nameFirst', 'dataSource', 'addrStreet', 'addrStreetPerm', 'dateBirth', 'countryEmbark', 'countryCitizen', 'visaIssueCity', 'visaIssueDate', 'carrier', 'numIdDoc', 'numPass', 'gender'
+workers.I94Visa.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst, dataSource, addrStreet, addrStreetPerm, dateBirth, countryEmbark, countryCitizen, visaIssueCity, visaIssueDate, carrier, numIdDoc, numPass, gender
+workers.I94Visa.Person.selectDistinct=true
 
 workers.I94Visa.Country.selectHeader='countryId', 'countryCitizen'
 workers.I94Visa.Country.selectFields=countryCitizen as countryId, countryCitizen
 workers.I94Visa.Country.selectDistinct=true
 
-workers.I94Visa.CITIZEN_OF.selectHeader='personId', 'countryId'
-workers.I94Visa.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId
+workers.I94Visa.CITIZEN_OF.selectHeader='personId', 'countryId', 'dataSource'
+workers.I94Visa.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId, dataSource
 workers.I94Visa.CITIZEN_OF.selectDistinct=false
 
 # FB
 workers.FB.Person.selectHeader='personId', 'accountId', 'userId', 'userName'
 workers.FB.Person.selectFields=personId, accountId, userId, userName
-workers.FB.Person.selectDistinct=false
+workers.FB.Person.selectDistinct=true
 
 # FBEdges
 workers.FBEdges.FB_KNOWS.selectHeader='accountIdFROM', 'accountIdTO'
 workers.FBEdges.FB_KNOWS.selectFields=accountIdFROM, accountIdTO
 workers.FBEdges.FB_KNOWS.selectDistinct=false
+
+# CDR
+workers.CDR.Person.selectHeader='personId', 'nameLast', 'nameFirst', 'nameMiddle', 'phoneMSISDN', 'dataSource', 'phoneAreaCode', 'phoneNumber', 'phoneIMSI', 'phoneIMEI', 'addrStreet', 'addrZipCode', 'lat', 'lon', 'gender'
+workers.CDR.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst, nameMiddle, phoneMSISDN, dataSource, phoneAreaCode, phoneNumber, phoneIMSI, phoneIMEI, addrStreet, addrZipCode, lat, lon, gender
+workers.CDR.Person.selectDistinct=true
+
+# CDREdges
+workers.CDREdges.PHONE_COMM.selectHeader='phoneMSISDNSource', 'phoneMSISDNTarget', 'dataSource', 'phoneCallDate', 'numberCalls', 'minutes', 'text', 'sms', 'classification', 'family'
+workers.CDREdges.PHONE_COMM.selectFields=phoneMSISDNSource, phoneMSISDNTarget, dataSource, phoneCallDate, numberCalls, minutes, text, sms, classification, family
+workers.CDREdges.PHONE_COMM.selectDistinct=false
 
 ############### Neo4j Worker components
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
@@ -173,4 +219,6 @@ neoWorkers.TIDE.neo4jCsvLoadPropFile=workerConf/neo4j-tide.props
 neoWorkers.I94Visa.neo4jCsvLoadPropFile=workerConf/neo4j-i94.props
 neoWorkers.FB.neo4jCsvLoadPropFile=workerConf/neo4j-fb.props
 neoWorkers.FBEdges.neo4jCsvLoadPropFile=workerConf/neo4j-fbedges.props
+neoWorkers.CDR.neo4jCsvLoadPropFile=workerConf/neo4j-cdr.props
+neoWorkers.CDREdges.neo4jCsvLoadPropFile=workerConf/neo4j-cdredges.props
 

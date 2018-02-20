@@ -122,8 +122,6 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       
       Map<String, String> nodeInputs = extractLabelsToImport(job, nodeLabels);
       log.info("nodeInputs={}", nodeInputs);
-      if(nodeInputs.size()==0)
-        log.warn("Empty nodeInputs={}", nodeInputs);
       final Collection<String> nodeLabelsToImport = nodeInputs.keySet();
       state.setPercent(10).setMessage("Importing nodes: "+nodeLabelsToImport);
       importNodeCsvFiles(db, domainProps, nodeInputs);
@@ -134,8 +132,8 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
 
       Map<String, String> edgeInputs = extractLabelsToImport(job, edgeLabels);
       log.info("edgeInputs={}", edgeInputs);
-      if(edgeInputs.size()==0)
-        log.warn("Empty edgeInputs={}", edgeInputs);
+      if(nodeInputs.size()==0 && edgeInputs.size()==0)
+        log.warn("Empty nodeInputs or edgeInputs -- see INFO logs");
       state.setPercent(60).setMessage("Importing edges: "+edgeInputs.values());
       importEdgeCsvFiles(db, domainProps, edgeInputs);
     }
@@ -160,17 +158,25 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       String nodeLabel = e.getKey();
       String csvFile = e.getValue();
       log.info("importing {} nodes from {}", nodeLabel, csvFile);
+      String idProps = domainProps.getProperty(nodeLabel + ".idProps", "");
+      if (idProps.trim().length() == 0)
+        log.warn("No 'idProps' setting defined for nodeLabel={}", nodeLabel);
       String propMapping = domainProps.getProperty(nodeLabel + ".propMapping", "");
       if (propMapping.trim().length() == 0)
-        log.warn("No properties defined for nodeLabel={}", nodeLabel);
+        log.warn("No 'propMapping' setting  defined for nodeLabel={}", nodeLabel);
       String cypherCmdSuffix = domainProps.getProperty(nodeLabel + ".cypherCmdSuffix", "");
+      // http://neo4j.com/docs/developer-manual/current/cypher/clauses/merge/
       String cypherCmd = "USING PERIODIC COMMIT "
           + "LOAD CSV WITH HEADERS FROM \"" + csvFile + "\" AS r " //
           // TODO: test if CREATE would be faster than MERGE
           // see https://neo4j.com/developer/guide-importing-data-and-etl/#_importing_the_data_using_cypher
-          + "MERGE (n:" + nodeLabel + " {" + propMapping + "})"
-          + cypherCmdSuffix;
-      
+          + "MERGE (n:" + nodeLabel + " {" + idProps + "})";
+      if (propMapping != null && propMapping.trim().length() > 0) {
+        cypherCmd += " ON CREATE SET " + propMapping 
+            + " ON MATCH SET " + propMapping;
+      }
+      cypherCmd += " "+cypherCmdSuffix;
+      log.info("cypherCmd={}", cypherCmd);
       db.printCypherNoTxnResult(cypherCmd);
       //db.printCypherResult("MATCH (n) RETURN count(*)");
     }
@@ -181,18 +187,27 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       String edgeLabel = e.getKey();
       String csvFile = e.getValue();
       log.info("importing {} edges from {}", edgeLabel, csvFile);
+      String idProps = domainProps.getProperty(edgeLabel + ".idProps", "");
+      if (idProps.trim().length() == 0)
+        log.warn("No 'idProps' setting defined for edgeLabel={}", edgeLabel);
       String propMapping = domainProps.getProperty(edgeLabel + ".propMapping", "");
       final String fromNode = domainProps.getProperty(edgeLabel + ".fromNode");
       checkNotNull(fromNode, "No 'fromNode' property defined for edgeLabel=" + edgeLabel);
       final String toNode = domainProps.getProperty(edgeLabel + ".toNode");
       checkNotNull(toNode, "No 'toNode' property defined for edgeLabel=" + edgeLabel);
       String cypherCmdSuffix = domainProps.getProperty(edgeLabel + ".cypherCmdSuffix", "");
+      // http://neo4j.com/docs/developer-manual/current/cypher/clauses/merge/
       String cypherCmd = "USING PERIODIC COMMIT "
           + "LOAD CSV WITH HEADERS FROM \"" + csvFile + "\" AS r "
-          + "MATCH (f:"+fromNode+") " // 
-          + "MATCH (t:"+toNode+") " //
-          + "MERGE (f)-[:" + edgeLabel + " {" + propMapping + "}]->(t) "
-          + cypherCmdSuffix;
+          + "MERGE (f:"+fromNode+") " // 
+          + "MERGE (t:"+toNode+") " //
+          + "MERGE (f)-[n:" + edgeLabel + " {" + idProps + "}]->(t) ";
+      if (propMapping != null && propMapping.trim().length() > 0) {
+        cypherCmd += " ON CREATE SET " + propMapping 
+            + " ON MATCH SET " + propMapping;
+      }
+      cypherCmd += " "+cypherCmdSuffix;
+      log.info("cypherCmd={}", cypherCmd);
       db.printCypherNoTxnResult(cypherCmd);
 //      db.printCypherResult("MATCH (n) RETURN count(*)");
 //      db.printCypherResult("MATCH ()-[r]->() RETURN count(*)");

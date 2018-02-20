@@ -1,0 +1,17 @@
+
+nodeLabels=
+edgeLabels=PHONE_COMM
+
+PHONE_COMM.fromNode=Person {phoneMsisdn: r.phoneMSISDNSource}
+PHONE_COMM.toNode=Person {phoneMsisdn: r.phoneMSISDNTarget}
+PHONE_COMM.propMapping=\
+  n.phoneCallDate=r.phoneCallDate, \
+  n.numberCalls=r.numberCalls, \
+  n.minutes=r.minutes, \
+  n.text=r.text, \
+  n.sms=r.sms, \
+  n.classification=r.classification, \
+  n.family=r.family, \
+  n.dataSourceCDR=r.dataSource
+
+

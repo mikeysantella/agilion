@@ -2,14 +2,45 @@
 nodeLabels=Person Country
 edgeLabels=CITIZEN_OF
 
-Person.propMapping=id: r.personId, nameFirst: r.nameFirst, nameLast: r.nameLast, countryCitizen: r.countryCitizen
-Person.uniqueProps=id
+Person.idProps=nodeId:r.personId
+Person.propMapping=\
+  n.nodeType='Person', \
+  n.nameFirst=r.nameFirst, \
+  n.nameLast=r.nameLast, \
+  n.countryCitizen=r.countryCitizen, \
+  n.nameNick=r.nameNick, \
+  n.nameKST=r.nameKST, \
+  n.numPass=r.numPass, \
+  n.numBiometric=r.numBiometric, \
+  n.numFBI=r.numFBI, \
+  n.numTide=r.numTide, \
+  n.statusLPR=r.statusLPR, \
+  n.statusMarital=r.statusMarital, \
+  n.statusTIDE=r.statusTIDE, \
+  n.statusUSP=r.statusUSP, \
+  n.dateBirth=r.dateBirth, \
+  n.countryBirth=r.countryBirth, \
+  n.citizenNatural=r.citizenNatural, \
+  n.flightTraining=r.flightTraining, \
+  n.tsaNoFly=r.tsaNoFly, \
+  n.visaNum=r.visaNum, \
+  n.visaStatusRevoke=r.visaStatusRevoke, \
+  n.terrGroupMem=r.terrGroupMem, \
+  n.tideCateg=r.tideCateg, \
+  n.title=r.title, \
+  n.dataSourceTIDE=r.dataSource
+Person.uniqueProps=nodeId
 Person.propsToIndex=countryCitizen
 
-Country.propMapping=id: r.countryId, nameCountry: r.countryCitizen
-Country.uniqueProps=id
+Country.idProps=nodeId:r.countryId
+Country.propMapping=\
+  n.nodeType='Country', \
+  n.nameCountry=r.countryCitizen
+Country.uniqueProps=nodeId
 
-CITIZEN_OF.fromNode=Person {id: r.personId}
-CITIZEN_OF.toNode=Country {id: r.countryId}
-CITIZEN_OF.propMapping=countryId: r.countryId
+CITIZEN_OF.fromNode=Person {nodeId: r.personId}
+CITIZEN_OF.toNode=Country {nodeId: r.countryId}
+CITIZEN_OF.propMapping=\
+  n.countryId=r.countryId, \
+  n.dataSourceTIDE=r.dataSource
 

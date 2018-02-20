@@ -69,11 +69,29 @@ public class IngestMergeExportTest {
       }
     }
     
+    if(true){
+      Request ingestCdrReq=me.ingestRequest(sess.getId(), null, "testIngestCdrReq",
+          new File("../../../dataengine/dataio/CDR_node_attribute_data.csv").toURI().normalize(),
+        "CDR");
+      
+      Request mergeCdrReq=me.mergeRequest(sessId, ingestCdrReq.getId(), "testMergeCdrReq", neoDirPath);
+      prevReqId=mergeCdrReq.getId();
+
+      if(true){ // if an endpoint of an edge does not match, no edge is created, so must import nodes -- see above 
+        Request ingestCdrEdgesReq=me.ingestRequest(sess.getId(), null, "testIngestCdrEdgesReq",
+            new File("../../../dataengine/dataio/CDR_edgelist_data.csv").toURI().normalize(),
+          "CDREdges");
+        
+        Request mergeCdrEdgesReq=me.mergeRequest(sessId, ingestCdrEdgesReq.getId(), "testMergeCdrEdgesReq", neoDirPath);
+        prevReqId=mergeCdrEdgesReq.getId();
+      }
+    }
+    
     {
       me.exportRequest(sessId, prevReqId, "testExportGraphmlReq", neoDirPath, 
           "export.graphml", "graphml", null);
       me.exportRequest(sessId, prevReqId, "testExportNodelistReq", neoDirPath, 
-          "export.nodelist", "nodelist", "id, nameFirst, nameLast, countryCitizen");
+          "export.nodelist", "nodelist", "nodeId, nodeType, nameFirst, nameLast, phoneMsisdn, countryCitizen");
       me.exportRequest(sessId, prevReqId, "testExportEdgelistReq", neoDirPath, 
           "export.edgelist", "edgelist", null);
     }

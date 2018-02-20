@@ -1,0 +1,25 @@
+
+nodeLabels=Person
+edgeLabels=
+
+Person.idProps=nodeId: r.personId
+Person.propMapping=\
+  n.nodeType='Person', \
+  n.nameFirst=r.nameFirst, \
+  n.nameLast=r.nameLast, \
+  n.nameMiddle=r.nameMiddle, \
+  n.phoneMsisdn=r.phoneMSISDN, \
+  n.phoneAreaCode=r.phoneAreaCode, \
+  n.phoneNumber=r.phoneNumber, \
+  n.phoneIMSI=r.phoneIMSI, \
+  n.phoneIMEI=r.phoneIMEI, \
+  n.addrStreet=r.addrStreet, \
+  n.addrZipCode=r.addrZipCode, \
+  n.lat=r.lat, \
+  n.lon=r.lon, \
+  n.gender=r.gender, \
+  n.dataSourceCDR=r.dataSource
+Person.uniqueProps=nodeId
+Person.propsToIndex=phoneMsisdn
+
+

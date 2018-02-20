@@ -148,7 +148,7 @@ public class NeoExporterWorker extends BaseWorker<Job> {
           procCall="apoc.export.csv.query";
           if(cypherExpr!=null && cypherExpr.trim().length()>0)
             log.warn("Ignoring {}: {}", OperationConsts.CYPHER_EXPR, cypherExpr);
-          cypherExpr="MATCH edge = (start)-[]->(end) RETURN start.id,end.id";
+          cypherExpr="MATCH edge = (start)-[]->(end) RETURN start.nodeId,end.nodeId";
           break;
         default:
         case graphml:

@@ -116,7 +116,7 @@ public class MergeDatasetToNeo extends AbstractJobCreator {
     
     Map<String, URI> csvFiles=new HashMap<>();
     Job prevJob=job0;
-    final String exportDir=configMap.getProperty("exportDir")+"/forNeo-"+System.currentTimeMillis();
+    final String exportDir=configMap.getProperty("exportDir")+"/"+inputDataset.getDataSchema()+"-forNeo-"+System.currentTimeMillis();
     for(String concept:concepts){
       Job nextJob = new Job().id(jobPrefix + ".job1-exportToCsvFiles."+ValidIdUtils.makeValid(concept))
           .type(OperationConsts.TYPE_EXPORTER)

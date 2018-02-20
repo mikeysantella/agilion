@@ -2,7 +2,13 @@
 nodeLabels=Person
 edgeLabels=
 
-Person.propMapping=id: r.personId, FbAccountId: r.accountId, FbUserId: r.userId, FbUserName: r.userName
-Person.uniqueProps=id, FbAccountId
+Person.idProps=nodeId: r.personId
+Person.propMapping=\
+  n.nodeType='Person', \
+  n.FbAccountId=r.accountId, \
+  n.FbUserId=r.userId, \
+  n.FbUserName=r.userName, \
+  n.dataSourceFB=r.dataSource
+Person.uniqueProps=nodeId, FbAccountId
 
 
