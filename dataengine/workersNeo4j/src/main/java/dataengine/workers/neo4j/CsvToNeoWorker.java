@@ -26,12 +26,15 @@ import net.deelam.utils.PropertiesUtil;
 public class CsvToNeoWorker extends BaseWorker<Job> {
   
   public static void main(String[] args) throws Exception {
-    CsvToNeoWorker worker = new CsvToNeoWorker(null, PropertiesUtil.loadProperties("tide.props"));
+    final Properties props = PropertiesUtil.loadProperties("tide.props");
+    props.put("tideEdges.neo4jCsvLoadPropFile", "tide.props");
+    CsvToNeoWorker worker = new CsvToNeoWorker(null, props);
     System.out.println(worker.initOperation());
 
     Map<String, Object> params=new HashMap<>();
     String mysqlDir="/home/dlam/dev/agilionReal/dataengine/dataio/mysql";
-    params.put((OperationConsts.DB_PATH), "ingested-neo2");
+    params.put((OperationConsts.DATA_SCHEMA), "tideEdges");
+    params.put((OperationConsts.DB_PATH), "ingested-neo5");
     params.put("Person", new File(mysqlDir,"persons.csv").toURI().toString());
     params.put("Country", new File(mysqlDir,"countries.csv").toURI().toString());
     params.put("CITIZEN_OF", new File(mysqlDir,"countries.csv").toURI().toString());
@@ -161,12 +164,14 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       if (propMapping.trim().length() == 0)
         log.warn("No properties defined for nodeLabel={}", nodeLabel);
       String cypherCmdSuffix = domainProps.getProperty(nodeLabel + ".cypherCmdSuffix", "");
-      String cypherCmd = "LOAD CSV WITH HEADERS FROM \"" + csvFile + "\" AS r " //
+      String cypherCmd = "USING PERIODIC COMMIT "
+          + "LOAD CSV WITH HEADERS FROM \"" + csvFile + "\" AS r " //
           // TODO: test if CREATE would be faster than MERGE
           // see https://neo4j.com/developer/guide-importing-data-and-etl/#_importing_the_data_using_cypher
           + "MERGE (n:" + nodeLabel + " {" + propMapping + "})"
           + cypherCmdSuffix;
-      db.printCypherResult(cypherCmd);
+      
+      db.printCypherNoTxnResult(cypherCmd);
       //db.printCypherResult("MATCH (n) RETURN count(*)");
     }
   }
@@ -182,13 +187,15 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       final String toNode = domainProps.getProperty(edgeLabel + ".toNode");
       checkNotNull(toNode, "No 'toNode' property defined for edgeLabel=" + edgeLabel);
       String cypherCmdSuffix = domainProps.getProperty(edgeLabel + ".cypherCmdSuffix", "");
-      String cypherCmd = "LOAD CSV WITH HEADERS FROM \"" + csvFile + "\" AS r "
+      String cypherCmd = "USING PERIODIC COMMIT "
+          + "LOAD CSV WITH HEADERS FROM \"" + csvFile + "\" AS r "
           + "MATCH (f:"+fromNode+") " // 
           + "MATCH (t:"+toNode+") " //
           + "MERGE (f)-[:" + edgeLabel + " {" + propMapping + "}]->(t) "
           + cypherCmdSuffix;
-      db.cypher(cypherCmd, null);
-      //db.printCypherResult("MATCH ()->() RETURN count(*)");
+      db.printCypherNoTxnResult(cypherCmd);
+//      db.printCypherResult("MATCH (n) RETURN count(*)");
+//      db.printCypherResult("MATCH ()-[r]->() RETURN count(*)");
     }
   }
 

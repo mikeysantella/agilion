@@ -1,0 +1,8 @@
+
+nodeLabels=
+edgeLabels=FB_KNOWS
+
+FB_KNOWS.fromNode=Person {FbAccountId: r.accountIdFROM}
+FB_KNOWS.toNode=Person {FbAccountId: r.accountIdTO}
+
+

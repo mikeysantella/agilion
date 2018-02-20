@@ -26,6 +26,7 @@ import dataengine.apis.SessionsDB_I;
 import dataengine.apis.UriCodec;
 import dataengine.apis.UriCodec.UriMySql;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import net.deelam.activemq.MQClient;
 import net.deelam.utils.PropertiesUtil;
@@ -81,6 +82,7 @@ public class PythonExportSqlWorker extends AbstractPythonWrapperWorker {
 //  }
   
   @RequiredArgsConstructor
+  @ToString
   static class SelectCriteria {
     final String selectHeader;
     final String selectFields;

@@ -1,19 +1,14 @@
 package dataengine.api;
 
 import static org.junit.Assert.assertEquals;
-
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
-
 import org.junit.Ignore;
-import org.junit.Test;
-
 import dataengine.ApiClient;
 import dataengine.ApiException;
 
@@ -21,7 +16,7 @@ import dataengine.ApiException;
 public class IngestMergeExportTest {
   static Logger log=Logger.getLogger("IngestMergeExportTest");
   
-  public static void main(String[] args) throws ApiException, InterruptedException {
+  public static void main(String[] args) throws Exception {
     String baseUri = "http://localhost:9090/main/";
     if(args.length>0)
       baseUri=args[0];
@@ -55,7 +50,25 @@ public class IngestMergeExportTest {
       Request mergeI94Req=me.mergeRequest(sessId, ingestI94Req.getId(), "testMergeI94Req", neoDirPath);
       prevReqId=mergeI94Req.getId();
     }
+    
+    if(true){
+      Request ingestFbReq=me.ingestRequest(sess.getId(), null, "testIngestFbReq",
+          new File("../../../dataengine/dataio/Facebook_node_attribute_data.csv").toURI().normalize(),
+        "FB");
+      
+      Request mergeFbReq=me.mergeRequest(sessId, ingestFbReq.getId(), "testMergeFbReq", neoDirPath);
+      prevReqId=mergeFbReq.getId();
 
+      if(true){ // if an endpoint of an edge does not match, no edge is created, so must import nodes -- see above 
+        Request ingestFbEdgesReq=me.ingestRequest(sess.getId(), null, "testIngestFbEdgesReq",
+            new File("../../../dataengine/dataio/Facebook_edgelist_data.csv").toURI().normalize(),
+          "FBEdges");
+        
+        Request mergeFbEdgesReq=me.mergeRequest(sessId, ingestFbEdgesReq.getId(), "testMergeFbEdgesReq", neoDirPath);
+        prevReqId=mergeFbEdgesReq.getId();
+      }
+    }
+    
     {
       me.exportRequest(sessId, prevReqId, "testExportGraphmlReq", neoDirPath, 
           "export.graphml", "graphml", null);
@@ -90,8 +103,11 @@ public class IngestMergeExportTest {
   }
 
   public Request ingestRequest(String sessId, List<String> priorRequestIds, String reqLabel,
-      URI inputUri, String dataSchema) throws ApiException, InterruptedException {
+      URI inputUri, String dataSchema) throws ApiException, InterruptedException, FileNotFoundException {
     {
+      if(!new File(inputUri).exists())
+        throw new FileNotFoundException("Copy input file to this location: "+inputUri);
+      
       HashMap<String, Object> ingestToSqlWorkerParamValues = new HashMap<>();
       ingestToSqlWorkerParamValues.put("inputUri", inputUri.toString());
       ingestToSqlWorkerParamValues.put("dataSchema", dataSchema);

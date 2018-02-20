@@ -1,26 +1,34 @@
+
+# Components to configure using settings in this property file
 componentIds=amq, sessions, tasker, jobMgrType, workers, neoWorkers
+
+# Components to start in the JVM that uses this property file
 componentIdsToStart=amq, sessions, tasker, jobMgrType, workers, neoWorkers
 
-
+# include settings from other files
 include=startup.props
 
+############### ActiveMQ communication bus component
 # ActiveMQ service: shares connectionUrl
 amq.classname=net.deelam.coordworkers.AmqServiceComp
 amq.brokerUrls=tcp://localhost:33330,stomp://localhost:33331
 
-
+###### Variables used by 'include' settings below
 # 'connectionTcpUrl' is a SharedValue set by AmqServiceComp named 'amq' in this property file
 needsAmq.brokerUrl.ref=amq/connectionTcpUrl
 
+############### Session DB component
 sessions.classname=dataengine.main.SessionsDbComponent
 sessions.include=needsAmq
 
+############### Tasker component converts Requests into Jobs
 tasker.classname=dataengine.main.TaskerComponent
 tasker.include=needsAmq
 tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset, dataengine.tasker.jobcreators.MergeDatasetToNeo, dataengine.tasker.jobcreators.ExportDataset
 tasker.exportDir=/home/dlam/dev/agilionReal/dataengine/dataio/exportDir
 tasker.dispatcherComponentType=jobMgrType
 
+############### JobManager component provides jobs to Workers
 jobMgrType.classname=dataengine.main.JobMgrComponent
 jobMgrType.include=needsAmq
 // TODO: have workers discover msgT.newJobAvailable by asking jobDto.jobBoardRpcAddr
@@ -28,13 +36,14 @@ jobMgrType.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
 jobMgrType.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
 jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
 
+############### Worker components
 workers.classname=dataengine.main.WorkersComponent
 // TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
 workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 workers.sqlConnect=root:dataengine-mysql@localhost:3306
 
 # supported data schemas
-workers.dataSchemas=TIDE, I94Visa
+workers.dataSchemas=TIDE, I94Visa, FB, FBEdges
 
 # dshape = http://datashape.readthedocs.io/en/latest/types.html
 workers.TIDE.dshape=var * { \
@@ -83,10 +92,39 @@ workers.I94Visa.dshape=var * { \
   'numPass': ?string,\
   'gender': ?string\
   }
+workers.FB.dshape=var * { \
+  'accountId' : ?string,\
+  'personId' : ?string,\
+  'albumIdIGNORE' : ?string,\
+  'applicationIGNORE' : ?string,\
+  'commentsNumIGNORE' : ?string,\
+  'createdTimeIGNORE' : ?string,\
+  'fbItemTypeIGNORE' : ?string,\
+  'linkIGNORE' : ?string,\
+  'parentItemnumIGNORE' : ?string,\
+  'pictureUrlIGNORE' : ?string,\
+  'postIdIGNORE' : ?string,\
+  'recipientsIGNORE' : ?string,\
+  'recipientsIdIGNORE' : ?string,\
+  'threadIdIGNORE' : ?string,\
+  'ToIGNORE' : ?string,\
+  'toIdIGNORE' : ?string,\
+  'updatedTimeIGNORE' : ?string,\
+  'uriIGNORE' : ?string,\
+  'userId' : ?string,\
+  'userImgIGNORE' : ?string,\
+  'userName' : ?string\
+  }
+workers.FBEdges.dshape=var * { \
+  'accountIdFROM' : ?string,\
+  'accountIdTO' : ?string\
+  }
 
 # concepts to export from each data format
 workers.TIDE.exportConcepts=Person, Country, CITIZEN_OF
 workers.I94Visa.exportConcepts=Person, Country, CITIZEN_OF
+workers.FB.exportConcepts=Person
+workers.FBEdges.exportConcepts=FB_KNOWS
 
 # how data is extracted for each concept
 # syntax: workers.<exportConcept>.selectHeader
@@ -116,11 +154,23 @@ workers.I94Visa.CITIZEN_OF.selectHeader='personId', 'countryId'
 workers.I94Visa.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId
 workers.I94Visa.CITIZEN_OF.selectDistinct=false
 
+# FB
+workers.FB.Person.selectHeader='personId', 'accountId', 'userId', 'userName'
+workers.FB.Person.selectFields=personId, accountId, userId, userName
+workers.FB.Person.selectDistinct=false
 
+# FBEdges
+workers.FBEdges.FB_KNOWS.selectHeader='accountIdFROM', 'accountIdTO'
+workers.FBEdges.FB_KNOWS.selectFields=accountIdFROM, accountIdTO
+workers.FBEdges.FB_KNOWS.selectDistinct=false
+
+############### Neo4j Worker components
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
 neoWorkers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 
 # path to properties need to load CSV files into Neo4j
 neoWorkers.TIDE.neo4jCsvLoadPropFile=workerConf/neo4j-tide.props
 neoWorkers.I94Visa.neo4jCsvLoadPropFile=workerConf/neo4j-i94.props
+neoWorkers.FB.neo4jCsvLoadPropFile=workerConf/neo4j-fb.props
+neoWorkers.FBEdges.neo4jCsvLoadPropFile=workerConf/neo4j-fbedges.props
 

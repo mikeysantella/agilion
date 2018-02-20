@@ -1,0 +1,8 @@
+
+nodeLabels=Person
+edgeLabels=
+
+Person.propMapping=id: r.personId, FbAccountId: r.accountId, FbUserId: r.userId, FbUserName: r.userName
+Person.uniqueProps=id, FbAccountId
+
+

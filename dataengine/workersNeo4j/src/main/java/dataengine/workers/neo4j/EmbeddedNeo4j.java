@@ -170,8 +170,23 @@ public class EmbeddedNeo4j implements Closeable {
     });
   }
 
+  public void cypherNoTxn(String cypherCmd, Consumer<Result> resultHandler) {
+    try (Result result = graphDb.execute(cypherCmd)) {
+      if (resultHandler != null)
+        resultHandler.accept(result);
+    }
+  }
+  
   public void printCypherResult(String cypherCmd) {
-    cypher(cypherCmd, result -> {
+    cypher(cypherCmd, createResultHandler(cypherCmd));
+  }
+
+  public void printCypherNoTxnResult(String cypherCmd) {
+    cypherNoTxn(cypherCmd, createResultHandler(cypherCmd));
+  }
+  
+  static Consumer<Result> createResultHandler(String cypherCmd){
+    return result -> {
       List<String> columns = result.columns();
       if (false) {
         StringBuilder sb = new StringBuilder(columns.toString());
@@ -186,7 +201,6 @@ public class EmbeddedNeo4j implements Closeable {
         log.info("Result of '{}': \n\t{}", cypherCmd, sb);
       } else
         log.info("Result of '{}': \n{}", cypherCmd, result.resultAsString());
-    });
+    };
   }
-
 }
