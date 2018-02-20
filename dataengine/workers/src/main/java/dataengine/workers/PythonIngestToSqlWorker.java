@@ -54,15 +54,15 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
       case 1:
         // This test file is not consistent with case 2!!
         params.put((OperationConsts.INPUT_URI), "file:///home/dlam/dev/agilionReal/dataengine/dataio/INTEL_datasets/TIDE_sample_data.csv");
-        params.put((OperationConsts.DATA_FORMAT), "TIDE");
+        params.put((OperationConsts.DATA_SCHEMA), "TIDE");
         break;
       case 2:
         params.put((OperationConsts.INPUT_URI), "file:///home/dlam/dev/agilionReal/dataengine/dataio/TIDE_node_attribute_data.csv");
-        params.put((OperationConsts.DATA_FORMAT), "TIDE");
+        params.put((OperationConsts.DATA_SCHEMA), "TIDE");
         break;
       case 3:
         params.put((OperationConsts.INPUT_URI), "file:///home/dlam/dev/agilionReal/dataengine/dataio/I-94_node_attribute_data.csv");
-        params.put((OperationConsts.DATA_FORMAT), "I94Visa");
+        params.put((OperationConsts.DATA_SCHEMA), "I94Visa");
         break;
     }
     
@@ -84,7 +84,7 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
     if(sqlConnect==null)
       log.error("sqlConnect not set!");
     
-    dataFormats = PropertiesUtil.splitList(props, "dataFormats", ",");
+    dataSchemas = PropertiesUtil.splitList(props, "dataSchemas", ",");
     
 //    type2Conf.values().forEach(confFile->{
 //      if(!new File(confFile).exists())
@@ -92,7 +92,7 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
 //    });
   }
 
-  private final List<String> dataFormats;
+  private final List<String> dataSchemas;
 //  private static final Map<String,String> type2Conf=new HashMap<>();
 //  static {
 //    type2Conf.put("TIDE", "workerConf/fieldmap.TIDE.conf");
@@ -110,16 +110,16 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
             .description("whether input file has a header")
             .valuetype(ValuetypeEnum.BOOLEAN)
             .defaultValue(true))
-        .addParamsItem(new OperationParam().key(OperationConsts.DATA_FORMAT).required(true)
-            .description("type and format of data")
+        .addParamsItem(new OperationParam().key(OperationConsts.DATA_SCHEMA).required(true)
+            .description("schema of data")
             .valuetype(ValuetypeEnum.ENUM)
-            .possibleValues(new ArrayList<>(dataFormats))
+            .possibleValues(new ArrayList<>(dataSchemas))
             );
   }
 
   @Override
   public boolean canDo(Job job) {
-    return dataFormats.contains(job.getParams().get(OperationConsts.DATA_FORMAT));
+    return dataSchemas.contains(job.getParams().get(OperationConsts.DATA_SCHEMA));
   }
 
   private String domainfieldsFile="workerConf/domainfields.intel.conf";
@@ -134,7 +134,7 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
       throw new FileNotFoundException(inputFile.getAbsolutePath());
     Boolean inputDSHasHeader=(Boolean) inDS.getStats().get(OperationConsts.HAS_HEADER);
     return createIngestPythonMsg(outUri.getDatabaseName(), outUri.getTablename(), 
-        inputFile.getAbsolutePath(), inDS.getDataFormat(), inputDSHasHeader);
+        inputFile.getAbsolutePath(), inDS.getDataSchema(), inputDSHasHeader);
   }
 
   protected Dataset createInputDataset(Job job) throws Exception {
@@ -143,7 +143,7 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
     
     Dataset inDS = new Dataset()
         .uri((String) job.getParams().get(OperationConsts.INPUT_URI))
-        .dataFormat((String) job.getParams().get(OperationConsts.DATA_FORMAT))
+        .dataSchema((String) job.getParams().get(OperationConsts.DATA_SCHEMA))
         .stats(statsMap)
         .label("input for job " + job.getId());
     if(sessDb!=null) {
@@ -155,22 +155,22 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
   
   protected Dataset createOutputDataset(Job job, Dataset inDS) throws Exception {
     String sessId = (sessDb==null)?"sess123":sessDb.rpc().getRequest(job.getRequestId()).thenApply(Request::getSessionId).get();
-    String tablename = inDS.getDataFormat() + "___" + System.currentTimeMillis();
+    String tablename = inDS.getDataSchema() + "___" + System.currentTimeMillis();
     String dbName=ValidIdUtils.genDatabaseName("sess"+sessId);
     String outDsUri=UriCodec.genMySqlUri(dbName, tablename);
     
     final HashMap<String, Object> statsMap = new HashMap<>();
     {
-      String csvFormat=inDS.getDataFormat();
-      String exportConcepts=props.getProperty(csvFormat+".exportConcepts");
+      String dataSchema=inDS.getDataSchema();
+      String exportConcepts=props.getProperty(dataSchema+".exportConcepts");
       if(exportConcepts==null)
-        throw new IllegalArgumentException("No setting found for "+csvFormat+".exportConcepts");
+        throw new IllegalArgumentException("No setting found for "+dataSchema+".exportConcepts");
       statsMap.put(OperationConsts.EXPORT_CONCEPTS, exportConcepts);
     }
     Dataset outDS = new Dataset()
         .uri(outDsUri)
         .dataFormat(OperationConsts.DATA_FORMAT_MYSQL)
-        .dataSchema((String) job.getParams().get(OperationConsts.DATA_FORMAT))
+        .dataSchema((String) job.getParams().get(OperationConsts.DATA_SCHEMA))
         .label("ingested dataset")
         .stats(statsMap);
     if(sessDb!=null) {
@@ -203,8 +203,8 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
   }
   
   Message createIngestPythonMsg(String dbname, String tablename,
-      String csvFile, String csvFormat, boolean hasHeader) throws JMSException {
-    log.info("createIngestPythonMsg: {} {}", csvFile, csvFormat);
+      String csvFile, String dataSchema, boolean hasHeader) throws JMSException {
+    log.info("createIngestPythonMsg: {} {}", csvFile, dataSchema);
     Message message = session.createTextMessage("INGEST");
     message.setJMSReplyTo(replyQueue);
     message.setStringProperty("id", "INGEST");
@@ -215,9 +215,9 @@ public class PythonIngestToSqlWorker extends AbstractPythonWrapperWorker {
     message.setStringProperty("tableName", tablename);
     message.setStringProperty("sourcedataCsv", csvFile);
     
-    String dshape=props.getProperty(csvFormat+".dshape");
+    String dshape=props.getProperty(dataSchema+".dshape");
     if(dshape==null)
-      throw new IllegalArgumentException("No setting found for "+csvFormat+".dshape");
+      throw new IllegalArgumentException("No setting found for "+dataSchema+".dshape");
     message.setStringProperty("dshape", dshape);
     message.setBooleanProperty(OperationConsts.HAS_HEADER, hasHeader);
     //message.setStringProperty("exportDir", exportDir);

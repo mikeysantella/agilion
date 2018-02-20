@@ -37,8 +37,8 @@ public class NeoExporterWorker extends BaseWorker<Job> {
 //    edgeInputs.put(new File(mysqlDir,"countries.csv").toURI().toString(), "CITIZEN_OF");
 //    params.put(OperationConsts.CSVFILE2EDGELABEL_MAP, edgeInputs);
 
-    params.put((OperationConsts.DB_PATH), "/home/dlam/dev/agilionReal/dataengine/main/neoDBs/1519020512372/");
-    if (false) {
+    params.put((OperationConsts.DB_PATH), "/home/dlam/dev/agilionReal/dataengine/main/neoDBs/1519081032039/");
+    if (!false) {
       params.put((OperationConsts.EXPORT_PATH), "export.graphml");
       params.put((OperationConsts.EXPORT_FORMAT), ExportFormats.graphml.name());
     } else if (!true) {
@@ -116,6 +116,7 @@ public class NeoExporterWorker extends BaseWorker<Job> {
         .config("apoc.import.file.enabled", "true") //
         .config("apoc.export.file.enabled", "true").create()) {
       state.setPercent(5).setMessage("Created "+db);
+      //db.printCypherResult("MATCH (n) RETURN count(*)");
       
       String procCall;
       String config="{}";

@@ -2,9 +2,8 @@
 nodeLabels=Person Country
 edgeLabels=CITIZEN_OF
 
-Person.propMapping=id: r.personId, nameFirst: r.nameFirst, nameLast: r.nameLast, countryCitizen: r.countryCitizen
+Person.propMapping=id: r.personId, nameFirst: r.nameFirst, nameLast: r.nameLast
 Person.uniqueProps=id
-Person.propsToIndex=countryCitizen
 
 Country.propMapping=id: r.countryId, nameCountry: r.countryCitizen
 Country.uniqueProps=id

@@ -3,6 +3,7 @@ package dataengine.api;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,21 +35,35 @@ public class IngestMergeExportTest {
 
     Session sess=me.createSession();
     String sessId = sess.getId();
-    //sessId="4f87fa0b-319e-4776-bc09-14e8112cbcca";
-    
-    Request ingestReq=me.ingestRequest(sess.getId(), null, "testIngestReq");
-    String prevReqId=ingestReq.getId();
-    
-    String neoDirPath="neoDBs/"+System.currentTimeMillis();
-    Request mergeTideReq=me.mergeTideRequest(sessId, prevReqId, "testMergeTideReq", neoDirPath);
-    prevReqId=mergeTideReq.getId();
-    
-    me.exportTideRequest(sessId, prevReqId, "testExportTideReq", neoDirPath, 
-        "export.graphml", "graphml", null);
-    me.exportTideRequest(sessId, prevReqId, "testExportTideReq", neoDirPath, 
-        "export.nodelist", "nodelist", "id, first, last, countryId");
-    me.exportTideRequest(sessId, prevReqId, "testExportTideReq", neoDirPath, 
-        "export.edgelist", "edgelist", null);
+
+    String neoDirPath=new File("neoDBs/"+System.currentTimeMillis()).getAbsolutePath();
+    String prevReqId=null;
+    if(true){
+      Request ingestTideReq=me.ingestRequest(sess.getId(), null, "testIngestTideReq",
+          new File("../../../dataengine/dataio/TIDE_node_attribute_data.csv").toURI().normalize(),
+          "TIDE");
+  
+      Request mergeTideReq=me.mergeRequest(sessId, ingestTideReq.getId(), "testMergeTideReq", neoDirPath);
+      prevReqId=mergeTideReq.getId();
+    }
+
+    if(true){
+      Request ingestI94Req=me.ingestRequest(sess.getId(), null, "testIngestI94Req",
+          new File("../../../dataengine/dataio/I-94_node_attribute_data.csv").toURI().normalize(),
+        "I94Visa");
+      
+      Request mergeI94Req=me.mergeRequest(sessId, ingestI94Req.getId(), "testMergeI94Req", neoDirPath);
+      prevReqId=mergeI94Req.getId();
+    }
+
+    {
+      me.exportRequest(sessId, prevReqId, "testExportGraphmlReq", neoDirPath, 
+          "export.graphml", "graphml", null);
+      me.exportRequest(sessId, prevReqId, "testExportNodelistReq", neoDirPath, 
+          "export.nodelist", "nodelist", "id, nameFirst, nameLast, countryCitizen");
+      me.exportRequest(sessId, prevReqId, "testExportEdgelistReq", neoDirPath, 
+          "export.edgelist", "edgelist", null);
+    }
   }
 
   final SessionsApi sessApi;
@@ -74,11 +89,12 @@ public class IngestMergeExportTest {
     return createdSession;
   }
 
-  public Request ingestRequest(String sessId, List<String> priorRequestIds, String reqLabel) throws ApiException, InterruptedException {
+  public Request ingestRequest(String sessId, List<String> priorRequestIds, String reqLabel,
+      URI inputUri, String dataSchema) throws ApiException, InterruptedException {
     {
       HashMap<String, Object> ingestToSqlWorkerParamValues = new HashMap<>();
-      ingestToSqlWorkerParamValues.put("inputUri", "file:///home/dlam/dev/agilionReal/dataengine/dataio/TIDE_node_attribute_data.csv");
-      ingestToSqlWorkerParamValues.put("dataFormat", "TIDE");
+      ingestToSqlWorkerParamValues.put("inputUri", inputUri.toString());
+      ingestToSqlWorkerParamValues.put("dataSchema", dataSchema);
       ingestToSqlWorkerParamValues.put("hasHeader", true);
       
       OperationSelectionMap subOperationSelections = new OperationSelectionMap();
@@ -86,7 +102,7 @@ public class IngestMergeExportTest {
       subOperationSelections.put(subOp1.getId(), subOp1);
       
       HashMap<String, Object> addSrcDatasetParamValues = new HashMap<>();
-      addSrcDatasetParamValues.put("datasetLabel", "TIDE dataset");
+      addSrcDatasetParamValues.put("datasetLabel", dataSchema+" dataset");
       addSrcDatasetParamValues.put("ingesterWorker", subOp1.getId());
       
       Request req = new Request().sessionId(sessId).label(reqLabel)
@@ -123,7 +139,7 @@ public class IngestMergeExportTest {
     }
   }
   
-  private Request mergeTideRequest(String sessId, String ingestReqId, String reqLabel, String neoDir) throws ApiException, InterruptedException {
+  private Request mergeRequest(String sessId, String ingestReqId, String reqLabel, String neoDir) throws ApiException, InterruptedException {
     HashMap<String, Object> mergeDatasetParamValues = new HashMap<>();
     mergeDatasetParamValues.put("inputRequestId", ingestReqId);
     mergeDatasetParamValues.put("dbPath", neoDir);
@@ -144,7 +160,7 @@ public class IngestMergeExportTest {
     return submittedReq;
   }
 
-  private Request exportTideRequest(String sessId, String prevReqId, String reqLabel,
+  private Request exportRequest(String sessId, String prevReqId, String reqLabel,
       String neoDir, String outputPath, String exportFormat, String propertyColumns) throws ApiException, InterruptedException {
     HashMap<String, Object> neoExportWorkerParamValues = new HashMap<>();
     neoExportWorkerParamValues.put("dbPath", neoDir);

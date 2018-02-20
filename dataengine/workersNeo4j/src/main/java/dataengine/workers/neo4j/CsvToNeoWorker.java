@@ -105,6 +105,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     if(propFile==null)
       throw new IllegalStateException("No setting for "+dataSchema+".neo4jCsvLoadPropFile");
     final Properties domainProps = PropertiesUtil.loadProperties(propFile);
+    log.info("{} domainProps={}",propFile, domainProps);
     final List<String> nodeLabels = PropertiesUtil.splitList(domainProps, "nodeLabels", " ");
     final List<String> edgeLabels = PropertiesUtil.splitList(domainProps, "edgeLabels", " ");
 
@@ -112,11 +113,14 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     String dbPath = (String) job.getParams().get(OperationConsts.DB_PATH);
     File databaseDirectory = new File(dbPath);
     String neoConfig = null;
+    log.info("Opening Neo4j DB at {}", dbPath);
     try (EmbeddedNeo4j db = EmbeddedNeo4j.builder(databaseDirectory).configFile(neoConfig).create()) {
       state.setPercent(5).setMessage("Created "+db);
       
-      
       Map<String, String> nodeInputs = extractLabelsToImport(job, nodeLabels);
+      log.info("nodeInputs={}", nodeInputs);
+      if(nodeInputs.size()==0)
+        log.warn("Empty nodeInputs={}", nodeInputs);
       final Collection<String> nodeLabelsToImport = nodeInputs.keySet();
       state.setPercent(10).setMessage("Importing nodes: "+nodeLabelsToImport);
       importNodeCsvFiles(db, domainProps, nodeInputs);
@@ -126,6 +130,9 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
       db.waitUntilIndexesDone(10);
 
       Map<String, String> edgeInputs = extractLabelsToImport(job, edgeLabels);
+      log.info("edgeInputs={}", edgeInputs);
+      if(edgeInputs.size()==0)
+        log.warn("Empty edgeInputs={}", edgeInputs);
       state.setPercent(60).setMessage("Importing edges: "+edgeInputs.values());
       importEdgeCsvFiles(db, domainProps, edgeInputs);
     }
@@ -135,6 +142,8 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
 
   public Map<String, String> extractLabelsToImport(Job job, List<String> labels) {
     Map<String, String> labelsToImport =new HashMap<>();
+    log.info("labels={}",labels);
+    log.info("job.getParams()={}",job.getParams());
     for(String label:labels) {
       String csvFile=(String) job.getParams().get(label);
       if(csvFile!=null && csvFile.trim().length()!=0)
@@ -147,6 +156,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     for (Entry<String, String> e : inputs.entrySet()) {
       String nodeLabel = e.getKey();
       String csvFile = e.getValue();
+      log.info("importing {} nodes from {}", nodeLabel, csvFile);
       String propMapping = domainProps.getProperty(nodeLabel + ".propMapping", "");
       if (propMapping.trim().length() == 0)
         log.warn("No properties defined for nodeLabel={}", nodeLabel);
@@ -157,6 +167,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
           + "MERGE (n:" + nodeLabel + " {" + propMapping + "})"
           + cypherCmdSuffix;
       db.printCypherResult(cypherCmd);
+      //db.printCypherResult("MATCH (n) RETURN count(*)");
     }
   }
 
@@ -164,6 +175,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
     for (Entry<String, String> e : inputs.entrySet()) {
       String edgeLabel = e.getKey();
       String csvFile = e.getValue();
+      log.info("importing {} edges from {}", edgeLabel, csvFile);
       String propMapping = domainProps.getProperty(edgeLabel + ".propMapping", "");
       final String fromNode = domainProps.getProperty(edgeLabel + ".fromNode");
       checkNotNull(fromNode, "No 'fromNode' property defined for edgeLabel=" + edgeLabel);
@@ -176,6 +188,7 @@ public class CsvToNeoWorker extends BaseWorker<Job> {
           + "MERGE (f)-[:" + edgeLabel + " {" + propMapping + "}]->(t) "
           + cypherCmdSuffix;
       db.cypher(cypherCmd, null);
+      //db.printCypherResult("MATCH ()->() RETURN count(*)");
     }
   }
 

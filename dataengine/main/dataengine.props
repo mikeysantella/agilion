@@ -33,36 +33,36 @@ workers.classname=dataengine.main.WorkersComponent
 workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 workers.sqlConnect=root:dataengine-mysql@localhost:3306
 
-# supported data formats
-workers.dataFormats=TIDE, I94Visa
+# supported data schemas
+workers.dataSchemas=TIDE, I94Visa
 
 # dshape = http://datashape.readthedocs.io/en/latest/types.html
 workers.TIDE.dshape=var * { \
   'dataSource': ?string,\
-  'isNatCitizen': ?string,\
-  'birthCountry': ?string,\
-  'citizenship': ?string,\
-  'dob': ?string,\
-  'hasFlightTraining': ?string,\
+  'citizenNatural': ?string,\
+  'countryBirth': ?string,\
+  'countryCitizen': ?string,\
+  'dateBirth': ?string,\
+  'flightTraining': ?string,\
   'gender': ?string,\
-  'firstName': ?string,\
-  'lastName': ?string,\
+  'nameFirst': ?string,\
+  'nameLast': ?string,\
   'fullNameIGNORE': ?string,\
-  'terroristName': ?string,\
-  'nickname': ?string,\
-  'biometricID': ?string,\
-  'fbiCaseNumber': ?string,\
-  'tideIdNumber': ?string,\
-  'lprStatus': ?string,\
-  'maritalStatus': ?string,\
-  'tideStatus': ?string,\
-  'uspStatus': ?string,\
-  'terroristMembership': ?string,\
-  'tideCategory': ?string,\
+  'nameKST': ?string,\
+  'nameNick': ?string,\
+  'numBiometric': ?string,\
+  'numFBI': ?string,\
+  'numTide': ?string,\
+  'statusLPR': ?string,\
+  'statusMarital': ?string,\
+  'statusTIDE': ?string,\
+  'statusUSP': ?string,\
+  'terrGroupMem': ?string,\
+  'tideCateg': ?string,\
   'title': ?string,\
-  'isTsaNoFly': ?string,\
-  'visaNumber': ?string,\
-  'visaRevocation': ?string,\
+  'tsaNoFly': ?string,\
+  'visaNum': ?string,\
+  'visaStatusRevoke': ?string,\
   'numPass': ?string\
   }
 workers.I94Visa.dshape=var * { \
@@ -89,17 +89,32 @@ workers.TIDE.exportConcepts=Person, Country, CITIZEN_OF
 workers.I94Visa.exportConcepts=Person, Country, CITIZEN_OF
 
 # how data is extracted for each concept
-workers.Person.selectHeader='personId', 'lastName', 'firstName', 'nickname', 'terroristName', 'biometricID', 'maritalStatus', 'gender', 'countryId', 'dob', 'birthCountry', 'isNatCitizen', 'hasFlightTraining', 'isTsaNoFly', 'visaNumber', 'visaRevocation'
-workers.Person.selectFields=concat(lastName, ' ', firstName) as personId, lastName, firstName, nickname, terroristName, biometricID, maritalStatus, gender, citizenship as countryId, dob, birthCountry, isNatCitizen, hasFlightTraining, isTsaNoFly, visaNumber, visaRevocation
-workers.Person.selectDistinct=false
+# syntax: workers.<exportConcept>.selectHeader
+# TIDE
+workers.TIDE.Person.selectHeader='personId', 'nameLast', 'nameFirst', 'nameNick', 'nameKST', 'numBiometric', 'statusMarital', 'gender', 'countryCitizen', 'dateBirth', 'countryBirth', 'citizenNatural', 'flightTraining', 'tsaNoFly', 'visaNum', 'visaStatusRevoke'
+workers.TIDE.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst, nameNick, nameKST, numBiometric, statusMarital, gender, countryCitizen, dateBirth, countryBirth, citizenNatural, flightTraining, tsaNoFly, visaNum, visaStatusRevoke
+workers.TIDE.Person.selectDistinct=false
 
-workers.Country.selectHeader='countryId', 'citizenship'
-workers.Country.selectFields=citizenship as countryId, citizenship
-workers.Country.selectDistinct=true
+workers.TIDE.Country.selectHeader='countryId', 'countryCitizen'
+workers.TIDE.Country.selectFields=countryCitizen as countryId, countryCitizen
+workers.TIDE.Country.selectDistinct=true
 
-workers.CITIZEN_OF.selectHeader='personId', 'countryId'
-workers.CITIZEN_OF.selectFields=concat(lastName, ' ', firstName) as personId, citizenship as countryId
-workers.CITIZEN_OF.selectDistinct=false
+workers.TIDE.CITIZEN_OF.selectHeader='personId', 'countryId'
+workers.TIDE.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId
+workers.TIDE.CITIZEN_OF.selectDistinct=false
+
+# I94Visa
+workers.I94Visa.Person.selectHeader='personId', 'nameLast', 'nameFirst'
+workers.I94Visa.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst
+workers.I94Visa.Person.selectDistinct=false
+
+workers.I94Visa.Country.selectHeader='countryId', 'countryCitizen'
+workers.I94Visa.Country.selectFields=countryCitizen as countryId, countryCitizen
+workers.I94Visa.Country.selectDistinct=true
+
+workers.I94Visa.CITIZEN_OF.selectHeader='personId', 'countryId'
+workers.I94Visa.CITIZEN_OF.selectFields=concat(nameLast, ' ', nameFirst) as personId, countryCitizen as countryId
+workers.I94Visa.CITIZEN_OF.selectDistinct=false
 
 
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent

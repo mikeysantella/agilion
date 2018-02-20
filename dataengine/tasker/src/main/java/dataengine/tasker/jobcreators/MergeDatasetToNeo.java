@@ -129,7 +129,7 @@ public class MergeDatasetToNeo extends AbstractJobCreator {
         job1Params.put(OperationConsts.DATASET_ID, inputDataset.getId());
         URI outputUri=new File(exportDir, concept+".csv").toURI();
         job1Params.put(OperationConsts.OUTPUT_URI, outputUri.toString());
-        job1Params.put(OperationConsts.DATA_SCHEMA, concept); // concept to export
+        job1Params.put(OperationConsts.DATA_SCHEMA, inputDataset.getDataSchema()+"."+concept); // concept to export
         csvFiles.put(concept,outputUri);
         nextJob.params(job1Params);
       }

@@ -116,13 +116,11 @@ public class AddSourceDataset extends AbstractJobCreator {
         job1.params(job1Params);
       }
     }
-    selection.getParams().remove(OperationConsts.INPUT_URI); // don't need this after job1
 //    {
 //      Map<String, Object> job2Params = new HashMap<>(selection.getParams());
 //      job2Params.put(OperationConsts.PREV_JOBID, job1.getId());
 //      job2.params(job2Params);
 //    }
-    selection.getParams().remove(OperationConsts.DATA_FORMAT); // don't need this any more
     {
       Map<String, Object> job3Params = new HashMap<>(selection.getParams());
       //job3Params.put(OperationConsts.PREV_JOBID, job2.getId());

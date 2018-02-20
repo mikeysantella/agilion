@@ -48,24 +48,24 @@ public class PythonExportSqlWorker extends AbstractPythonWrapperWorker {
       log.error("sqlConnect not set!");
     
     // populate type2selectCriteria using props
-    List<String> dataFormats = PropertiesUtil.splitList(props, "dataFormats", ",");
-    for(String dataFormat:dataFormats) {
-      List<String> concepts = PropertiesUtil.splitList(props, dataFormat+".exportConcepts", ",");
+    List<String> dataSchemas = PropertiesUtil.splitList(props, "dataSchemas", ",");
+    for(String dataSchema:dataSchemas) {
+      List<String> concepts = PropertiesUtil.splitList(props, dataSchema+".exportConcepts", ",");
       for(String concept:concepts) {
         if(!type2selectCriteria.containsKey(concept)) {
-          String selectHeader=props.getProperty(concept+".selectHeader");
+          String selectHeader=props.getProperty(dataSchema+"."+concept+".selectHeader");
           if(selectHeader==null)
-            throw new IllegalStateException("No setting for "+concept+".selectHeader");
+            throw new IllegalStateException("No setting for "+dataSchema+"."+concept+".selectHeader");
           
-          String selectFields=props.getProperty(concept+".selectFields");
+          String selectFields=props.getProperty(dataSchema+"."+concept+".selectFields");
           if(selectFields==null)
-            throw new IllegalStateException("No setting for "+concept+".selectFields");
+            throw new IllegalStateException("No setting for "+dataSchema+"."+concept+".selectFields");
           
-          String selectDistinct=props.getProperty(concept+".selectDistinct");
+          String selectDistinct=props.getProperty(dataSchema+"."+concept+".selectDistinct");
           if(selectDistinct==null)
-            throw new IllegalStateException("No setting for "+concept+".selectDistinct");
+            throw new IllegalStateException("No setting for "+dataSchema+"."+concept+".selectDistinct");
           
-          type2selectCriteria.put(concept, new SelectCriteria(selectHeader, selectFields, Boolean.valueOf(selectDistinct)));
+          type2selectCriteria.put(dataSchema+"."+concept, new SelectCriteria(selectHeader, selectFields, Boolean.valueOf(selectDistinct)));
         }
       }
     }
