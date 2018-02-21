@@ -48,7 +48,7 @@ public class MergeDatasetToNeo extends AbstractJobCreator {
   public MergeDatasetToNeo(RpcClientProvider<SessionsDB_I> sessionDb, Properties props){
      sessDb=sessionDb;
      configMap=props;
-     final File exportDir=new File(configMap.getProperty("exportDir"));
+     final File exportDir=new File(configMap.getProperty("exportDir","."));
      if(!exportDir.exists()){
        if (!exportDir.mkdirs())
          throw new RuntimeException("Could not create directory: "+exportDir.getAbsolutePath());

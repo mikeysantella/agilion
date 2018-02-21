@@ -56,13 +56,13 @@ public class TaskerServiceTest {
 
   @Before
   public void setUp() throws Exception {
-    CompletableFuture<Vertx> vertxF = CompletableFuture.completedFuture(Vertx.vertx());
+    //CompletableFuture<Vertx> vertxF = CompletableFuture.completedFuture(Vertx.vertx());
     Injector injector = Guice.createInjector(
         new TaskerModule(new Properties(), null),
         new AbstractModule() {
           @Override
           protected void configure() {
-            bind(Vertx.class).toInstance(vertxF.join());
+            //bind(Vertx.class).toInstance(vertxF.join());
 
             // OperationsRegistryVerticle to which operations are registered by providers (ie, Workers)
             if(false) {
