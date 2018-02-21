@@ -1,5 +1,6 @@
 package com.agilion.controller;
 
+import com.agilion.config.WebAppConfig;
 import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
 import com.agilion.services.app.UserService;
@@ -9,18 +10,26 @@ import com.agilion.services.jobmanager.NetworkBuildingJob;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
 import com.agilion.services.security.LoggedInUserGetter;
 import com.agilion.services.security.NoLoggedInUserException;
+import com.agilion.services.validator.FormError;
 import com.agilion.services.validator.ValidationResult;
 import com.agilion.utils.NetworkFormToJobRequestConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -45,6 +54,9 @@ public class NetworkBuilderController
     @Autowired
     LoggedInUserGetter loggedInUserGetter;
 
+    @Autowired
+    MessageSourceAccessor messageSource;
+
     private static Gson gson = new Gson();
 
     @RequestMapping("/new")
@@ -62,21 +74,33 @@ public class NetworkBuilderController
     }
 
     @RequestMapping(value = "/submit", method = RequestMethod.POST)
-    public @ResponseBody ValidationResult attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult, Model model) throws Exception {
-        //TODO VALIDATION!
-
-        // Take the submitted form and send it to the job manager.
-        String username = this.loggedInUserGetter.getCurrentlyLoggedInUser().getUsername();
-        NetworkBuildingRequest networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm, username);
-        String newNetworkJobID = this.jobManager.submitJob(networkBuildingRequest);
-
-        // Take the resulting job ID and attach it to the user so that we can get the status/results of the job
-        User user = loggedInUserGetter.getCurrentlyLoggedInUser();
-        user.getSubmittedNetworkBuildJobIds().add(newNetworkJobID);
-        this.userService.saveUser(user);
-
+    public @ResponseBody ValidationResult attemptNetworkBuildSubmit(@Valid NetworkBuilderForm networkBuilderForm, BindingResult bindingResult,
+                                                                    Model model, HttpServletResponse response) throws Exception
+    {
+        // If there were bidning errors, then immediately set the status to 4xx and do nothing.
         ValidationResult result = new ValidationResult(bindingResult);
-        model.addAttribute("result", result);
+        if (bindingResult.hasErrors())
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        else
+        {
+            try {
+                // Take the submitted form and send it to the job manager.
+                String username = this.loggedInUserGetter.getCurrentlyLoggedInUser().getUsername();
+                NetworkBuildingRequest networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm, username);
+                String newNetworkJobID = this.jobManager.submitJob(networkBuildingRequest);
+
+                // Take the resulting job ID and attach it to the user so that we can get the status/results of the job
+                User user = loggedInUserGetter.getCurrentlyLoggedInUser();
+                user.getSubmittedNetworkBuildJobIds().add(newNetworkJobID);
+                this.userService.saveUser(user);
+            }
+            catch(Exception e)
+            {
+                String errMsg = messageSource.getMessage("validation.generic.servererror")+" "+e.getMessage();
+                FormError error = FormError.createFormErrorFromMessage(errMsg);
+                result.addError(error);
+            }
+        }
 
         return result;
     }

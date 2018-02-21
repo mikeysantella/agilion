@@ -1,5 +1,7 @@
 package com.agilion.services.dataengine;
 
+import com.agilion.domain.networkbuilder.datasets.DataSet;
+import com.agilion.domain.networkbuilder.datasets.DataSetReference;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dataengine.api.Operation;
@@ -57,7 +59,8 @@ public class DemoDataEngineClient implements DataEngineClient
     }
 
     @Override
-    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<String> dataFilePaths, Map<String, Object> params) throws Exception {
+    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<DataSetReference> datasets,
+                                                  Map<String, Object> params) throws Exception {
         DataOperationReceipt r = new DataOperationReceipt(sessionID, "TEST");
         this.map.put(r, 0);
         return r;

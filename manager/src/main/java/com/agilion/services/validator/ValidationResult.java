@@ -5,38 +5,43 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 
 public class ValidationResult implements Serializable
 {
-    private List<FieldError> fieldErrors;
-
-    private List<ObjectError> globalErrors;
+    private List<FormError> errors;
+    public final String OBJ_ID = "VALIDATION_RESULT";
 
     public ValidationResult()
     {
-
+        errors = new LinkedList<>();
     }
 
     public ValidationResult(BindingResult result)
     {
-        this.fieldErrors = result.getFieldErrors();
-        this.globalErrors = result.getGlobalErrors();
+        errors = new LinkedList<>();
+        for (FieldError error : result.getFieldErrors())
+        {
+            FormError formError = new FormError(error.getField(), error.getDefaultMessage());
+            this.errors.add(formError);
+        }
     }
 
-    public List<FieldError> getFieldErrors() {
-        return fieldErrors;
+    public List<FormError> getErrors() {
+        return errors;
     }
 
-    public void setFieldErrors(List<FieldError> fieldErrors) {
-        this.fieldErrors = fieldErrors;
+    public void setErrors(List<FormError> errors) {
+        this.errors = errors;
     }
 
-    public List<ObjectError> getGlobalErrors() {
-        return globalErrors;
+    public void addError(FormError error)
+    {
+        this.errors.add(error);
     }
 
-    public void setGlobalErrors(List<ObjectError> globalErrors) {
-        this.globalErrors = globalErrors;
+    public boolean hasErrors() {
+        return errors.size() > 0;
     }
 }

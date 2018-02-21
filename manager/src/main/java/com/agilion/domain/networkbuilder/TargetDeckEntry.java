@@ -1,7 +1,9 @@
 package com.agilion.domain.networkbuilder;
 
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class TargetDeckEntry

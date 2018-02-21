@@ -4,19 +4,33 @@ var app = new Vue({
     // Define the data model. We're going to submit this to the server
     data: {
       form : {
-          projectName: null,
+          projectName: "",
           targetDeck: {
               targetDeckEntryList:[{
                   selectorList: "",
                   selectorType: "",
               }],
-              selectorFiles: ""
+              selectorFile: {
+                file: null,
+                display: ""
+              }
           },
-          fromDate: null,
-          toDate: null,
+          fromDate: "",
+          toDate: "",
           dataSources: [],
-          dataFiles: []
+          dataSets: [{
+            nodelist: {
+                file: null,
+                display: ""
+            },
+            edgelist: {
+                file: null,
+                display: ""
+            }
+          }]
       },
+
+      formErrors: [],
 
       submitted: false,
 
@@ -24,7 +38,7 @@ var app = new Vue({
       serverData: {
           selectorTypes: SERVERDATA.selectorTypes, // This is defined in newProject.html
           dataSources: SERVERDATA.dataSources // So is this.
-      }
+      },
     },
 
     // Define the methods for the model/view
@@ -53,32 +67,78 @@ var app = new Vue({
             this.form.toDate = temp;
         },
 
+        addDataset: function()
+        {
+            var dict = {
+               nodelist: {
+                   file: null,
+                   display: ""
+               },
+               edgelist: {
+                   file: null,
+                   display: ""
+               }
+            }
+            this.form.dataSets.push(dict);
+        },
+
+        removeDataset: function(index)
+        {
+            this.form.dataSets.splice(index, 1);
+        },
+
+        datasetFileChanged: function(set, event)
+        {
+            set.file = event.target.files[0];
+            set.display = event.target.value.replace(/\\/g, '/').replace(/.*\//, '');
+        },
+
+        selectorFileChanged: function(event)
+        {
+            this.form.targetDeck.selectorFile.file = event.target.files[0];
+            this.form.targetDeck.selectorFile.display = event.target.value.replace(/\\/g, '/').replace(/.*\//, '');
+        },
+
+        formIsClientSideValid: function()
+        {
+            return this.validProjectName && this.validTargetDeck && this.validDates;
+        },
+
         // This method submits the model to the server if validation succeeds
         submitNetworkBuild: function(form)
         {
+            var vue = this;
             var btn = $("#submitButton");
             this.submitted = true;
-            if (this.validProjectName && this.validTargetDeck && this.validDates)
+            if (this.formIsClientSideValid())
             {
                 btn.button('Working...');
                 $.ajax({
                     url: contextRoot+"project/submit",
                     method: 'POST',
-                    data: buildFormSubmissionObject(this.form, this.$refs.selectorFile, this.$refs.dataFile),
+                    data: buildFormSubmissionObject(this.form),
                     processData: false,
                     contentType: false,
-                    success: function()
+                    success: function(data)
                     {
                         btn.button('reset')
                         window.location.href="/project/history?submittedNetwork=true";
                     },
-                    error: function()
+                    error: function(data)
                     {
-                        btn.button('reset')
+                        var validationResult = data.responseJSON;
+                        btn.button('reset');
+                        if (validationResult["OBJ_ID"] && validationResult["OBJ_ID"] == "VALIDATION_RESULT")
+                        {
+                            vue.formErrors = validationResult.errors;
+                        }
                     }
                 });
             }
-        }
+        },
+
+        selectAllDatasources: function(){ this.form.dataSources = this.serverData.dataSources;},
+        deselectAllDatasources: function(){ this.form.dataSources = [];}
     },
 
     computed: {
@@ -117,10 +177,8 @@ var app = new Vue({
             "changeDate", () => {this.form.toDate = $('#toDate').val()}
         );
 
-        initBootstrapFilePickers();
     },
 });
-
 
 function buildFormSubmissionObject(model, selectorFile, dataFile)
 {
@@ -139,14 +197,16 @@ function buildFormSubmissionObject(model, selectorFile, dataFile)
     });
 
     // Vue doesn't do files in its model... leaky abstractions, yay!
-    $.each(selectorFile.files, function(i, file)
-    {
-        formData.append("targetDeck.selectorFiles["+i+"]", file);
-    });
+    if (model.targetDeck.selectorFile.file != null)
+        formData.append("targetDeck.selectorFile", model.targetDeck.selectorFile.file);
 
-    $.each(dataFile.files, function(i, file)
+    $.each(model.dataSets,  function(i, dataset)
     {
-        formData.append("dataFiles["+i+"]", file);
+        if (dataset.nodelist.file != null)
+            formData.append("dataSets["+i+"].nodelist", dataset.nodelist.file);
+
+        if (dataset.edgelist.file != null)
+            formData.append("dataSets["+i+"].edgelist", dataset.edgelist.file);
     });
     return formData;
 }

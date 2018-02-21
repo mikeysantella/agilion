@@ -65,7 +65,7 @@ public class DataEngineTestController
         return this.v2Client.getDataEngineOperationStatus(new DataOperationReceipt(sessID, "NOTNEEDED"));
     }
 
-    public DataOperationReceipt sendDataAsDataEngineRequest(Map<String, Object> clientData, String sessionID) throws NoLoggedInUserException
+    public DataOperationReceipt sendDataAsDataEngineRequest(Map<String, Object> clientData) throws NoLoggedInUserException
     {
         // If the user sent a session ID, use it.
         String sessionID = null;

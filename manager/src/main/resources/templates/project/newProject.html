@@ -5,7 +5,6 @@
         <link media="all" rel="stylesheet" th:href="@{/webjars/bootstrap-datepicker/css/bootstrap-datepicker.min.css}" />
         <link media="all" rel="stylesheet" th:href="@{/css/separators.css}" />
         <link media="all" rel="stylesheet" th:href="@{/css/validation.css}" />
-        <script th:src="@{/js/form/bs_fileinput.js}"></script>
 
         <!--/*
           Any simple data objects from the server should be defined here. It's easier than performing a separate AJAX
@@ -45,10 +44,17 @@
                 Create New Project
             </div>
             <div id="app">
+
+                <div v-if="formErrors.length > 0" class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> The project was not submitted because of the following errors:
+                    <ul>
+                        <li v-for="error in formErrors" v-text="error.errorMessage"></li>
+                    </ul>
+                </div>
                 <form id="form" class="form">
-                    <div class="form-group">
+                    <div class="form-group" v-bind:class="{ 'has-error' : !validProjectName }">
                         <label class="required-label" v-bind:class="{ 'invalid' : !validProjectName }" for="projectName" >Project Name</label>
-                        <input v-model="form.projectName" class="form-control" id="projectName"/>
+                        <input v-model="form.projectName" class="form-control"  id="projectName"/>
                         <span class="invalid-feedback" v-bind:class="{ 'showFeedback' : !validProjectName }">
                             A Project Name is required.
                         </span>
@@ -70,7 +76,7 @@
                                                     Remove
                                                 </button>
                                             </span>
-                                            <input class="form-control" v-model="targetDeckEntry.selectorList" />
+                                            <textarea class="form-control text-area-input" v-model="targetDeckEntry.selectorList" rows="1"></textarea>
                                         </div>
                                     </div>
                                     <div class="col-xs-5">
@@ -84,7 +90,7 @@
                                 <div class="row">
                                     <div class="">
                                         <button type="button" class="btn btn-link block" @click="addTargetDeck">
-                                            + Add Target Deck Entry
+                                            + Add Target Deck
                                         </button>
                                     </div>
                                 </div>
@@ -94,17 +100,16 @@
                                 <div class="input-group">
                                     <label class="input-group-btn">
                                         <span class="btn btn-default">Browse
-                                            <input style="display: none;" type="file" ref="selectorFile"
-                                                   @change="form.targetDeck.selectorFiles = $event.target.value" multiple/>
+                                            <input style="display: none;" type="file" @change="selectorFileChanged($event)"/>
                                         </span>
                                     </label>
-                                    <input type="text" class="form-control" readonly="">
+                                    <input type="text" class="form-control" v-model="form.targetDeck.selectorFile.display" readonly="">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" v-bind:class="{ 'has-error' : !validDates }">
                         <label class="required-label" v-bind:class="{ 'invalid' : !validDates }" for="projectName">
                             Specify Network Date Range
                         </label>
@@ -112,7 +117,7 @@
                             <input id="fromDate" v-model="form.fromDate" type="text" class="form-control" placeholder="Start Date"/>
                             <span class="input-group-btn">
                                 <button type="button" class="btn btn-default middle-btn-addon" @click="swapDates()">
-                                    &nbsp;<i class="fa fa-exchange"></i>&nbsp;
+                                    &nbsp;<i class="fa fa-exchange-alt"></i>&nbsp;
                                 </button>
                             </span>
                             <input id="toDate" v-model="form.toDate" type="text" class="form-control" placeholder="End Date"/>
@@ -128,22 +133,42 @@
                                 <input type="checkbox" :name="source" :value="source" v-model="form.dataSources"/>
                                 <span v-text="source"></span>
                             </label>
+
                         </div>
+                        <button type="button" class="btn btn-default btn-sm" @click="selectAllDatasources">Select All</button>
+                        <button type="button" class="btn btn-default btn-sm" @click="deselectAllDatasources">Deselect All</button>
                     </div>
                     <div class="form-group">
                         <label for="projectName">Datafiles</label>
-                        <div class="row form-group" >
-                            <div class="col-xs-12">
-                                <div class="input-group">
-                                    <label class="input-group-btn">
-                                        <span class="btn btn-default">Browse
-                                            <input id="dataFile" style="display: none;" type="file" ref="dataFile"
-                                                   @change="form.dataFiles = $event.target.value" multiple/>
-                                        </span>
-                                    </label>
-                                    <input type="text" class="form-control" readonly="">
+                        <div class="form-group">
+                            <div class="row" v-for="(dataset, datasetIndex) in form.dataSets">
+                                <div class="col-xs-6 ">
+                                    <label class="control-label sub-label">Nodelist:</label>
+                                    <div class="input-group">
+                                        <label class="input-group-btn">
+                                            <button @click="removeDataset(datasetIndex)" class="btn btn-default" type="button">Remove</button>
+                                        </label>
+                                        <label class="input-group-btn">
+                                            <span class="btn btn-default file-input-mid-btn">Browse
+                                                <input style="display: none;" type="file" @change="datasetFileChanged(dataset.nodelist, $event)" />
+                                            </span>
+                                        </label>
+                                        <input type="text" class="form-control" readonly="" v-model="dataset.nodelist.display">
+                                    </div>
+                                </div>
+                                <div class="col-xs-6">
+                                    <label class="control-label sub-label">Edgelist:</label>
+                                    <div class="input-group">
+                                        <label class="input-group-btn">
+                                            <span class="btn btn-default">Browse
+                                                <input style="display: none;" type="file" @change="datasetFileChanged(dataset.edgelist, $event)" />
+                                            </span>
+                                        </label>
+                                        <input type="text" class="form-control" readonly="" v-model="dataset.edgelist.display">
+                                    </div>
                                 </div>
                             </div>
+                            <button type="button" class="btn btn-link" @click="addDataset">+ Add Row</button>
                         </div>
                         <div class="block">
                             <button type="button" data-target="#dataRequirementsModal" data-toggle="modal" class="btn btn-link btn-sm" onclick="viewDataFileRequirements">

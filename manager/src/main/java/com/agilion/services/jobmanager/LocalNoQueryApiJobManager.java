@@ -1,28 +1,28 @@
-package com.agilion.mock;
+package com.agilion.services.jobmanager;
 
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.dataengine.DataOperationReceipt;
 import com.agilion.services.files.FileStore;
-import com.agilion.services.jobmanager.JobManager;
-import com.agilion.services.jobmanager.JobState;
-import com.agilion.services.jobmanager.NetworkBuildingJob;
-import com.agilion.services.jobmanager.NetworkBuildingRequest;
 import dataengine.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.access.method.P;
 
 import java.io.InputStream;
 import java.util.*;
 
-public class MockJobManager implements JobManager
+/**
+ * This job manager
+ */
+public class LocalNoQueryApiJobManager implements JobManager
 {
-    Logger log = LoggerFactory.getLogger(MockJobManager.class);
+    Logger log = LoggerFactory.getLogger(LocalNoQueryApiJobManager.class);
     private FileStore filestore;
     private DataEngineClient dataEngineClient;
     private Map<String, MockJobRunner> jobs;
 
-    public MockJobManager(FileStore filestoreImpl, DataEngineClient dataEngineClient)
+    public LocalNoQueryApiJobManager(){}
+
+    public LocalNoQueryApiJobManager(FileStore filestoreImpl, DataEngineClient dataEngineClient)
     {
         this.filestore = filestoreImpl;
         this.dataEngineClient = dataEngineClient;
@@ -122,7 +122,7 @@ public class MockJobManager implements JobManager
                     //TODO for now, we are not doing anything with the target deck. We are simply uploading data files to the data engine
                     DataOperationReceipt receipt = dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
                             networkBuildingRequest.getRequestingUser(),
-                            networkBuildingRequest.getDataFilePaths(),
+                            networkBuildingRequest.getDataSets(),
                             null);
 
                     while (!dataEngineClient.networkBuildIsDone(receipt))

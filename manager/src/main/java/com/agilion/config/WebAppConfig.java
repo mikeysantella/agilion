@@ -1,27 +1,33 @@
 package com.agilion.config;
 
 import com.agilion.domain.app.config.UIDateFormat;
-import com.agilion.mock.MockJobManager;
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.files.FileStore;
 import com.agilion.services.files.LocalFileStore;
 import com.agilion.services.jobmanager.JobManager;
+import com.agilion.services.jobmanager.LocalNoQueryApiJobManager;
 import com.agilion.utils.NetworkFormToJobRequestConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 @Configuration
 public class WebAppConfig extends WebMvcConfigurerAdapter
 {
     public static final String DATE_STRING_FORMAT = "MM/dd/yyyy";
+    public static final String DATE_REGEX_PATTERN = "(0?[1-9]|1[012])/(0?[1-9]|[12][0-9]|3[01])/((19|20)\\d\\d)";
 
     @Autowired
     DataEngineClient dataEngineClient;
@@ -33,11 +39,23 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
     }
 
     @Bean
+    public DateFormat dateFormat()
+    {
+        return new SimpleDateFormat(DATE_STRING_FORMAT);
+    }
+
+    @Bean
     public MessageSource messageSource() {
         ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
         messageSource.setBasename("classpath:messages");
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
+    }
+
+    @Bean
+    public MessageSourceAccessor accessor()
+    {
+        return new MessageSourceAccessor(messageSource(), Locale.ENGLISH);
     }
 
     @Bean
@@ -58,13 +76,13 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
     @Bean
     public JobManager jobManager()
     {
-        return new MockJobManager(fileStore(), dataEngineClient);
+        return new LocalNoQueryApiJobManager(fileStore(), dataEngineClient);
     }
 
     @Bean
     public NetworkFormToJobRequestConverter networkFormToJobRequestConverter()
     {
-        return new NetworkFormToJobRequestConverter(fileStore());
+        return new NetworkFormToJobRequestConverter(fileStore(), dateFormat());
     }
 
     @Bean

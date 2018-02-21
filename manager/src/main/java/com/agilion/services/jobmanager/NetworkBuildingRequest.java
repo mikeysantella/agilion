@@ -2,6 +2,8 @@ package com.agilion.services.jobmanager;
 
 import com.agilion.config.WebAppConfig;
 import com.agilion.domain.networkbuilder.TargetDeck;
+import com.agilion.domain.networkbuilder.datasets.DataSet;
+import com.agilion.domain.networkbuilder.datasets.DataSetReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.hibernate.validator.constraints.NotBlank;
@@ -12,6 +14,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This object represents a request to start a network build. It includes parameters such as:
+ *
+ * 1. Selector lists or files
+ * 2. Data sources to query (using the selectors as inputs)
+ * 3. Dates to limit the query
+ * 4. Data to manually include in the network (via a nodelist and edgelist)
+ */
 public class NetworkBuildingRequest
 {
     private String jobName;
@@ -20,36 +30,15 @@ public class NetworkBuildingRequest
 
     private List<String> selectorFilePaths;
 
-    private List<String> dataFilePaths;
+    private List<DataSetReference> dataSets;
 
     private List<String> dataSources;
 
-    private Map<String, Object> requestParams;
+    private Date fromDate;
+
+    private Date toDate;
 
     private String requestingUser;
-
-    public NetworkBuildingRequest(String jobName, List<String> selectorFilePaths, List<String> dataFilePaths,
-                             List<String> dataSources, Map<String, Object> requestParams, String requestingUser)
-    {
-        this.jobName = jobName;
-        this.selectorFilePaths = selectorFilePaths;
-        this.dataFilePaths = dataFilePaths;
-        this.dataSources = dataSources;
-        this.requestParams = requestParams;
-        this.requestingUser = requestingUser;
-    }
-
-    public NetworkBuildingRequest(String jobName, Map<String, List<String>> selectorSet, List<String> dataFilePaths,
-                                  List<String> dataSources, Map<String, Object> requestParams, String requestingUser)
-    {
-        this.jobName = jobName;
-        this.selectorSet = selectorSet;
-        this.dataFilePaths = dataFilePaths;
-        this.dataSources = dataSources;
-        this.requestParams = requestParams;
-        this.requestingUser = requestingUser;
-
-    }
 
     public String getJobName() {
         return jobName;
@@ -75,14 +64,6 @@ public class NetworkBuildingRequest
         this.selectorFilePaths = selectorFilePaths;
     }
 
-    public List<String> getDataFilePaths() {
-        return dataFilePaths;
-    }
-
-    public void setDataFilePaths(List<String> dataFilePaths) {
-        this.dataFilePaths = dataFilePaths;
-    }
-
     public List<String> getDataSources() {
         return dataSources;
     }
@@ -91,12 +72,20 @@ public class NetworkBuildingRequest
         this.dataSources = dataSources;
     }
 
-    public Map<String, Object> getRequestParams() {
-        return requestParams;
+    public Date getFromDate() {
+        return fromDate;
     }
 
-    public void setRequestParams(Map<String, Object> requestParams) {
-        this.requestParams = requestParams;
+    public void setFromDate(Date fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public Date getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(Date toDate) {
+        this.toDate = toDate;
     }
 
     public String getRequestingUser() {
@@ -105,5 +94,26 @@ public class NetworkBuildingRequest
 
     public void setRequestingUser(String requestingUser) {
         this.requestingUser = requestingUser;
+    }
+
+    public List<DataSetReference> getDataSets() {
+        return dataSets;
+    }
+
+    public void setDataSets(List<DataSetReference> dataSets) {
+        this.dataSets = dataSets;
+    }
+
+    public NetworkBuildingRequest(String jobName, Map<String, List<String>> selectorSet, List<String> selectorFilePaths,
+                                  List<DataSetReference> datasets, List<String> dataSources, Date fromDate, Date toDate, String requestingUser) {
+
+        this.jobName = jobName;
+        this.selectorSet = selectorSet;
+        this.selectorFilePaths = selectorFilePaths;
+        this.dataSources = dataSources;
+        this.fromDate = fromDate;
+        this.toDate = toDate;
+        this.requestingUser = requestingUser;
+        this.dataSets = datasets;
     }
 }
