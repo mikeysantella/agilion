@@ -19,19 +19,31 @@ needsAmq.brokerUrl.ref=amq/connectionTcpUrl
 
 ############### Session DB component
 sessions.classname=dataengine.main.SessionsDbComponent
+
+# sessions.include causes all the settings prefixed with 'needsAmq' 
+# to be included with the prefix 'sessions' instead.
+# In this case, sessions.brokerUrl.ref=amq/connectionTcpUrl will be added
 sessions.include=needsAmq
 
 ############### Tasker component converts Requests into Jobs
 tasker.classname=dataengine.main.TaskerComponent
 tasker.include=needsAmq
+
+# When a DE client submits a Request, it is translated into several jobs by JobCreators.
 tasker.jobCreators=dataengine.tasker.jobcreators.AddSourceDataset, dataengine.tasker.jobcreators.MergeDatasetToNeo, dataengine.tasker.jobcreators.ExportDataset
-tasker.exportDir=/home/dlam/dev/agilionReal/dataengine/dataio/exportDir
+
+# Must point to a directory that is writable by the MySQL service
+tasker.exportDir=../dataio/exportDir
+
+# Determines which JobManager this Tasker connects with
 tasker.dispatcherComponentType=jobMgrType
 
 ############### JobManager component provides jobs to Workers
 jobMgrType.classname=dataengine.main.JobMgrComponent
 jobMgrType.include=needsAmq
-// TODO: have workers discover msgT.newJobAvailable by asking jobDto.jobBoardRpcAddr
+
+# TODO: have workers discover msgT.newJobAvailable by asking jobDto.jobBoardRpcAddr
+# Declares message bus addresses to use
 jobMgrType.msgT.newJobAvailable=jobMgrA_newJobAvailableTopic_toJobConsumers
 jobMgrType.msgQ.dispatcherRpcAddr=jobMgrA_dispatcherQueue
 jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
@@ -40,10 +52,14 @@ jobMgrType.msgQ.jobBoardRpcAddr=jobMgrA_jobBoardQueue
 workers.classname=dataengine.main.WorkersComponent
 // TODO: remove; use jobDto.taskerRpcAddr,.dispatcherRpcAddr,.jobBoardRpcAddr,etc instead
 workers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
+
+# which MySQL service to use
 workers.sqlConnect=root:dataengine-mysql@localhost:3306
 
 # supported data schemas
 workers.dataSchemas=TIDE, I94Visa, FB, FBEdges, CDR, CDREdges
+
+### The following declares how the CSV file is parsed for each data schema ###
 
 # dshape = http://datashape.readthedocs.io/en/latest/types.html
 workers.TIDE.dshape=var * { \
@@ -154,7 +170,12 @@ workers.CDREdges.dshape=var * { \
   'family' : ?string\
 }
 
-# concepts to export from each data format
+### The following declares how concepts are extracted from the ingested CSV file for each data schema ###
+# First, the CSV files are ingested into MySQL tables.
+# Then, internal CSV files are created for ingest into Neo4j.  Concepts specify node and edge types.
+# Finally, the internal CSV files are imported and merged into Neo4j.  
+
+# Concepts to export to Neo4j from each data schema
 workers.TIDE.exportConcepts=Person, Country, CITIZEN_OF
 workers.I94Visa.exportConcepts=Person, Country, CITIZEN_OF
 workers.FB.exportConcepts=Person
@@ -162,8 +183,11 @@ workers.FBEdges.exportConcepts=FB_KNOWS
 workers.CDR.exportConcepts=Person
 workers.CDREdges.exportConcepts=PHONE_COMM
 
-# how data is extracted for each concept
-# syntax: workers.<exportConcept>.selectHeader
+# Configure how data is extracted for each concept:
+#   workers.<concept>.selectHeader - declares the first line in the exported CSV file; must be consistent with the 'selectFields' setting
+#   workers.<concept>.selectFields - declares which fields are used in a MySQL SELECT statement
+#   workers.<concept>.selectDistinct - whether a MySQL DISTINCT is used in the SELECT query
+
 # TIDE
 workers.TIDE.Person.selectHeader='personId', 'nameLast', 'nameFirst', 'nameNick', 'nameKST', 'numPass', 'numBiometric', 'numFBI', 'numTide', 'statusLPR', 'statusMarital', 'statusTIDE', 'statusUSP', 'gender', 'countryCitizen', 'dateBirth', 'countryBirth', 'citizenNatural', 'flightTraining', 'tsaNoFly', 'visaNum', 'visaStatusRevoke', 'dataSource', 'terrGroupMem', 'tideCateg', 'title'
 workers.TIDE.Person.selectFields=concat(nameLast, ' ', nameFirst) as personId, nameLast, nameFirst, nameNick, nameKST, numPass, numBiometric, numFBI, numTide, statusLPR, statusMarital, statusTIDE, statusUSP, gender, countryCitizen, dateBirth, countryBirth, citizenNatural, flightTraining, tsaNoFly, visaNum, visaStatusRevoke, dataSource, terrGroupMem, tideCateg, title
@@ -214,7 +238,9 @@ workers.CDREdges.PHONE_COMM.selectDistinct=false
 neoWorkers.classname=dataengine.workers.neo4j.NeoWorkersComponent
 neoWorkers.include=needsAmq, jobMgrType.msgT, jobMgrType.msgQ
 
-# path to properties need to load CSV files into Neo4j
+# Path to property files needed to load CSV files into Neo4j
+# These files are used by workersNeo4j/src/main/java/dataengine/workers/neo4j/CsvToNeoWorker.java
+# See main/workerConf/neo4j-tide.props for further documentation
 neoWorkers.TIDE.neo4jCsvLoadPropFile=workerConf/neo4j-tide.props
 neoWorkers.I94Visa.neo4jCsvLoadPropFile=workerConf/neo4j-i94.props
 neoWorkers.FB.neo4jCsvLoadPropFile=workerConf/neo4j-fb.props

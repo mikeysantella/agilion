@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from stompworker.settingsreader import GenSql
 from sqlalchemy.sql import text
 
 class MsgListener:
@@ -49,42 +48,43 @@ class MsgListener:
         #s.exportCsvPath = exportDir + 'countriesDyn.csv'
         exporter.exportToNeoCsv(s.selectHeader, selectExpr2, s.exportCsvPath)
         
-    def query(self, msg, s):
-        config = {
-          'domainfieldsFile': s.domainfieldsFile,
-          'fieldmapFile': s.fieldmapFile,
-          'dbname': s.dbname,
-          'tablename': s.tablename,
-          'csvFile': s.csvFile
-        }
-        GenSql.genPopulateSql(**config)
-
-    def select(self, msg, s):
-        # use https://www.sqlalchemy.org/ instead?
-        import MySQLdb
-        config = {
-          'user': s.user,  # 'root',
-          'password': s.pw,  # 'my-secret-pw',
-          'host': s.host,  # '127.0.0.1',
-          'database': s.db  # 'thegeekstuff'
-        }
-        try:
-            cnx = MySQLdb.connect(**config)
-            cursor = cnx.cursor()
-
-            query = (GenSql.genSelectAll(s.tablename))
-            print("select=", query)
-            cursor.execute(query)
-            # https://stackoverflow.com/questions/9942594/unicodeencodeerror-ascii-codec-cant-encode-character-u-xa0-in-position-20/9942822
-            # for r in cursor:
-              # print("row: {}".format(str(r).encode('utf-8')))
-        finally:
-            cursor.close()
-            cnx.close()
-
-            
-def meth1(msg, s):
-    GenSql.genPopulateSql(**s)
+#from stompworker.settingsreader import GenSql
+#    def query(self, msg, s):
+#        config = {
+#          'domainfieldsFile': s.domainfieldsFile,
+#          'fieldmapFile': s.fieldmapFile,
+#          'dbname': s.dbname,
+#          'tablename': s.tablename,
+#          'csvFile': s.csvFile
+#        }
+#        GenSql.genPopulateSql(**config)
+#
+#    def select(self, msg, s):
+#        # use https://www.sqlalchemy.org/ instead?
+#        import MySQLdb
+#        config = {
+#          'user': s.user,  # 'root',
+#          'password': s.pw,  # 'my-secret-pw',
+#          'host': s.host,  # '127.0.0.1',
+#          'database': s.db  # 'thegeekstuff'
+#        }
+#        try:
+#            cnx = MySQLdb.connect(**config)
+#            cursor = cnx.cursor()
+#
+#            query = (GenSql.genSelectAll(s.tablename))
+#            print("select=", query)
+#            cursor.execute(query)
+#            # https://stackoverflow.com/questions/9942594/unicodeencodeerror-ascii-codec-cant-encode-character-u-xa0-in-position-20/9942822
+#            # for r in cursor:
+#              # print("row: {}".format(str(r).encode('utf-8')))
+#        finally:
+#            cursor.close()
+#            cnx.close()
+#
+#            
+#def meth1(msg, s):
+#    GenSql.genPopulateSql(**s)
   
 import sqlalchemy as sa
 

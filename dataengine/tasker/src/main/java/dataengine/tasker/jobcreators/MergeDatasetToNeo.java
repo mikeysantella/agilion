@@ -38,12 +38,26 @@ import net.deelam.utils.PropertiesUtil;
  * </pre>
  */
 @Slf4j
-@RequiredArgsConstructor(onConstructor = @__(@Inject) )
+//@RequiredArgsConstructor(onConstructor = @__(@Inject) )
 public class MergeDatasetToNeo extends AbstractJobCreator {
 
   private final RpcClientProvider<SessionsDB_I> sessDb;
   final Properties configMap;
-  
+
+  @Inject
+  public MergeDatasetToNeo(RpcClientProvider<SessionsDB_I> sessionDb, Properties props){
+     sessDb=sessionDb;
+     configMap=props;
+     final File exportDir=new File(configMap.getProperty("exportDir"));
+     if(!exportDir.exists()){
+       if (!exportDir.mkdirs())
+         throw new RuntimeException("Could not create directory: "+exportDir.getAbsolutePath());
+		 exportDir.setExecutable(true, false);
+       exportDir.setReadable(true, false);
+       exportDir.setWritable(true, false);
+     }
+  }
+ 
   @Override
   protected Operation initOperation() {
     Operation operation = new Operation().level(0).id(this.getClass().getSimpleName())
@@ -116,7 +130,9 @@ public class MergeDatasetToNeo extends AbstractJobCreator {
     
     Map<String, URI> csvFiles=new HashMap<>();
     Job prevJob=job0;
-    final String exportDir=configMap.getProperty("exportDir")+"/"+inputDataset.getDataSchema()+"-forNeo-"+System.currentTimeMillis();
+    final File exportDir=new File(configMap.getProperty("exportDir"), inputDataset.getDataSchema()+"-forNeo-"+System.currentTimeMillis());
+    if(!exportDir.exists() && !exportDir.mkdirs())
+      throw new RuntimeException("Could not create directory: "+exportDir.getAbsolutePath());
     for(String concept:concepts){
       Job nextJob = new Job().id(jobPrefix + ".job1-exportToCsvFiles."+ValidIdUtils.makeValid(concept))
           .type(OperationConsts.TYPE_EXPORTER)
@@ -127,7 +143,7 @@ public class MergeDatasetToNeo extends AbstractJobCreator {
         Map<String, Object> job1Params = new HashMap<>(selection.getParams());
         job1Params.put(OperationConsts.WORKER_NAME, "PythonExportSqlWorker");
         job1Params.put(OperationConsts.DATASET_ID, inputDataset.getId());
-        URI outputUri=new File(exportDir, concept+".csv").toURI();
+        URI outputUri=new File(exportDir, concept+".csv").toURI().normalize();
         job1Params.put(OperationConsts.OUTPUT_URI, outputUri.toString());
         job1Params.put(OperationConsts.DATA_SCHEMA, inputDataset.getDataSchema()+"."+concept); // concept to export
         csvFiles.put(concept,outputUri);

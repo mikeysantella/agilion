@@ -14,7 +14,7 @@ chmod g+s "$DATADIR"
 # All new directories will have the group rw permission
 setfacl -Rdm g:`stat -c "%G" "$DATADIR"`:rw "$DATADIR"
 # Let container's non-root user write to DATADIR
-chmod o+w "$DATADIR"
+chmod a+rwX "$DATADIR"
 
 if ! [ -e "$DATADIR/mysql-conf.d/mysql.conf" ]; then
 	echo "########  Downloading MySQL $SQL_VERSION"

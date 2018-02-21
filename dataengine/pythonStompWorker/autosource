@@ -1,14 +1,16 @@
 #!/bin/bash
 
 # This directory created using: virtualenv -p python3 .
+alias python=python3
+alias pip=pip3
 
 source bin/activate
 
-if ! which stomp; then
-	pip install -i https://pypi.python.org/simple stomp.py
-	pip install -r requirements.txt
-	pip freeze | grep -v "0.0.0" > requirements.txt
-fi
+#if ! which stomp; then
+#	pip3 install -i https://pypi.python.org/simple stomp.py
+#	pip3 install -r requirements.txt
+#	pip3 freeze | grep -v "0.0.0" > requirements.txt
+#fi
 
 #Need to install mysqlclient for python3 after 'apt-get install python3-dev libmysqlclient-dev'
 #https://stackoverflow.com/questions/14087598/python-3-importerror-no-module-named-configparser
@@ -18,7 +20,8 @@ MOD_NAME=stompworker
 createPex(){
  set -x
  echo "Build wheel to override Pex's cache"
- pip wheel -w ~/.pex/build/ .
+ pip3 wheel -w ~/.pex/build/ .
+ pip3 wheel -w . .
  pex $MOD_NAME -f $PWD -r requirements.txt -m $MOD_NAME -o $MOD_NAME.pex
  set +x
 }

@@ -1,8 +1,16 @@
 
+# How concepts are to be imported into Neo4j as nodes or edges
 nodeLabels=Person Country
 edgeLabels=CITIZEN_OF
 
+# Specifies the identifier that uniquely identifies a concept.
+# Syntax: <propertyName>:r.<csvColumnName>
+# See Neo4j's Cypher language for reference
 Person.idProps=nodeId:r.personId
+
+# Specifies how to populate node properties from CSV file 
+# Syntax: n.<propertyName>=r.<csvColumnName>
+# See Neo4j's Cypher language for reference
 Person.propMapping=\
   n.nodeType='Person', \
   n.nameFirst=r.nameFirst, \
@@ -29,7 +37,12 @@ Person.propMapping=\
   n.tideCateg=r.tideCateg, \
   n.title=r.title, \
   n.dataSourceTIDE=r.dataSource
+
+# Specifies which property name should be unique. 
+# Multivalue names are separated by a comma.
 Person.uniqueProps=nodeId
+
+# Specifies which properties to index for lookup
 Person.propsToIndex=countryCitizen
 
 Country.idProps=nodeId:r.countryId
@@ -38,6 +51,9 @@ Country.propMapping=\
   n.nameCountry=r.countryCitizen
 Country.uniqueProps=nodeId
 
+# For concepts that will be an edge, specify the from and to nodes.
+# Syntax: <Concept> {<idProp>: r.<csvColumnName>}
+# See Neo4j's Cypher language for reference
 CITIZEN_OF.fromNode=Person {nodeId: r.personId}
 CITIZEN_OF.toNode=Country {nodeId: r.countryId}
 CITIZEN_OF.propMapping=\

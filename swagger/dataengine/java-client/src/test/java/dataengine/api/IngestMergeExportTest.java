@@ -31,7 +31,7 @@ public class IngestMergeExportTest {
     Session sess=me.createSession();
     String sessId = sess.getId();
 
-    String neoDirPath=new File("neoDBs/"+System.currentTimeMillis()).getAbsolutePath();
+    String neoDirPath=new File("../../../dataengine/dataio/neoDBs/"+System.currentTimeMillis()).getAbsolutePath();
     String prevReqId=null;
     if(true){
       Request ingestTideReq=me.ingestRequest(sess.getId(), null, "testIngestTideReq",
@@ -88,12 +88,13 @@ public class IngestMergeExportTest {
     }
     
     {
+      String exportDir=new File("../../../dataengine/dataio").getCanonicalPath();
       me.exportRequest(sessId, prevReqId, "testExportGraphmlReq", neoDirPath, 
-          "export.graphml", "graphml", null);
+          exportDir+"/export.graphml", "graphml", null);
       me.exportRequest(sessId, prevReqId, "testExportNodelistReq", neoDirPath, 
-          "export.nodelist", "nodelist", "nodeId, nodeType, nameFirst, nameLast, phoneMsisdn, countryCitizen");
+          exportDir+"/export.nodelist", "nodelist", "nodeId, nodeType, nameFirst, nameLast, phoneMsisdn, countryCitizen");
       me.exportRequest(sessId, prevReqId, "testExportEdgelistReq", neoDirPath, 
-          "export.edgelist", "edgelist", null);
+          exportDir+"/export.edgelist", "edgelist", null);
     }
   }
 

@@ -1,0 +1,74 @@
+Instructions for running and testing the Data Engine
+----------------------------------------------------
+
+See README for additional details.
+
+0. Make sure JAVA_HOME is set to JDK8
+
+1. In the top agilion directory, build the Data Engine (DE)
+./gradlew build
+
+2. Configure and start the DE service
+# Modify the following setting in dataengine/main/dataengine.props
+tasker.exportDir=<absolute path pointing to dataengine/dataio/exportDir>
+# See step 5 for explanation.
+
+./gradlew runDataEngine
+# Wait for the "Data Engine REST server ready" message
+# The log file is located at dataengine/main/dataengine.log
+# Enter '0', 'Q', or 'L' (followed by Enter) to terminate the DE service.
+
+3. Run a basic sanity test, which should take less than 2 minutes.
+./gradlew runDEClientTest
+# The output should state "BUILD SUCCESSFUL".
+# This runs swagger/dataengine/java-client/src/test/java/dataengine/api/MySessionApiServiceTest.java.
+# It simply tests communication among DE components are working.  No data processing is actually done.
+
+4. Install Docker in order to run dataengine/startMysqlDocker.sh
+sudo apt install docker.io
+
+5. In a different console window, start MySQL used by ingestion workers
+cd dataengine
+./startMysqlDocker.sh
+# This script will create dataengine/dataio for MySQL to write CSV files and
+# starts the MySQL service in a Docker container called 'dataengine-mysql' on port 3306.
+# Configuration for the MySQL service is under dataio/mysql-conf.d.
+# The MySQL service writes logs to dataengine/dataengine-mysql.log.
+# To stop this MySQL service, run 'docker stop dataengine-mysql'.
+# Also see the tasker.exportDir and workers.sqlConnect settings in dataengine.props.
+
+6. For demonstration, copy the 6 CSV files to dataengine/dataio, which is where input data files from the UI/Manager should be placed. 
+cp *.csv dataengine/dataio/
+
+7. To demonstrate ingestion, merging, and exporting, run this test in the top agilion directory:
+./gradlew runDEIngestMergeExportTest
+# The output should state "BUILD SUCCESSFUL".
+# This runs swagger/dataengine/java-client/src/test/java/dataengine/api/IngestMergeExportTest.java.
+# Internal CSV files created for merging into Neo4j are under dataengine/dataio/exportDir.
+# The internal Neo4j DB is under dataengine/dataio/neoDBs.
+# Exported files are in dataengine/dataio/export.*
+# See the README file for more details.
+
+8. To modify Python code under dataengine/pythonStompWorker or update dataengine/main/workerConf/stompworker.pex
+# Note: The Python build process could be better packaged and automated by a Python expert.  
+# The following worked for me under Ubuntu Xenial.
+# Assumes python3 is installed: https://askubuntu.com/questions/320996/how-to-make-python-program-command-execute-python-3
+alias python=python3
+python --version
+cd dataengine/pythonStompWorker
+sudo apt install virtualenv
+source bin/activate
+sudo apt-get install python3-pip python3-dev libmysqlclient-dev pex g++
+sudo pip3 install --upgrade pip
+sudo pip3 install -U setuptools
+sudo pip3 install -i https://pypi.python.org/simple stomp.py
+sudo pip3 install -r requirements.txt
+sudo chmod -R a+rX /usr/local/lib/python3.5/
+source autosource
+createPex  # This will initially take many minutes; subsequent calls are much faster
+# If createPex fails, you may have to re-run 'sudo chmod -R a+rX /usr/local/lib/python3.5/'
+cp -v stompworker.pex ../main/workerConf  # This updates the pex that DE uses
+# For reference: https://idle.run/simple-pex
+
+
+

@@ -5,8 +5,13 @@ initDevEnv(){
 	npm install ng-admin --save
 }
 
+installNvm(){
+	curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+}
+
 # may need updated Node.js version
 updateNode(){
+	nvm install 8.9.4
 	nvm use 8.9.4
 }
 

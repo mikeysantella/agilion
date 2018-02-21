@@ -1,11 +1,91 @@
 
-The startMysqlDocker.sh script starts the MySQL database service within a docker.  Before executing the script, set the MYSQL_ROOT_PW environment variable to be the root password for the MySQL database, which should be the same as the workers.sqlConnect setting (which is passed to SqlAlchemy as a connection URL) in main/dataengine.props.
+See DE-instructions.txt for running and testing the Data Engine
 
-PythonIngesterWorker runs workerConf/stompworker.pex (Python executable) by sending commands to it via stomp communication service (provided by ActiveMQ).
+The following describes Data Engine implementation details
+
+Data Engine Implementation
+==========================
+
+Code Structure
+--------------
+The Data Engine (DE) is decomposed into several subprojects/modules under the 'dataengine' directory. The build.gradle and settings.gradle files specify how the subprojects are built. Eclipse IDE was used for coding.
+The DE is designed to be distributed across several computers, particularly the worker modules.  The 'main' subproject is the entrypoint for starting the DE.  By default, it will start all modules.  However, the primary DE instance can be configured to start a subset of modules and other secondary DE instances can start the remaining modules and possibly multiple instances of worker modules.
+
+Modules:
+* main - entrypoint
+* apis - APIs for DE components
+* constants - holds constants
+* server - exposes REST service; handles client requests and submits requests to tasker 
+* sessions - stores sessions, jobs, and dataset metadata
+* api - interface classes and constants used across modules
+* tasker - converts requests to jobs
+* jobmgr - manages assignment of jobs to workers
+* workers - performs the actual work specified by jobs
+* workersNeo4j - performs Neo4j-specific jobs
+* spark, sparkjobs - not used
+
+Other subdirectories under dataengine:
+* adminUI - provides web-based diagnostic UI to Data Engine REST API; 
+    See autosource file for installation, then open a browser to adminUI/index.html
+* main/activemq-data - runtime files for ActiveMQ
+* main/runtime/zookeeper-data - runtime files for Zookeeper
+* main/workerConf - domain-specific and executable Python files for workers
+* extJars - external libraries used by DE but not in Maven Central
+* pythonStompWorker - Python source code used to build stompworker.pex, which is used by some workers
+
+
+Settings
+--------
+The primary DE instance uses the dataengine.props to populate Zookeeper with configuration settings for all components. By default, DE will instantiate its own Zookeeper but an existing Zookeeper can be used. Secondary DE instances will retrieve configuration settings from Zookeeper. 
+main/zoo.cfg is needed by Zookeeper.
+
+Secondary DE instances only need startup.props, which specify how to connect to Zookeeper, where the components will retrieve their configuration settings.
+
+bootstrap.props is used by the 'server' module.  The brokerUrl setting should be consistent with the value in dataengine.props.
+
+See inline documentation in main/dataengine.props and main/workerConf/neo4j-tide.props for further details.
+
+
+Requests and Jobs
+-----------------
+
+See the Data Engine Design document in Google Drive as background to the following material.
+Also review the Data Engine API in Swagger: https://app.swaggerhub.com/apis/deelam/DataEngine/0.0.2-SNAPSHOT
+
+When a DE client submits a Request, it is translated into several jobs by JobCreators within the Tasker module.
+The Tasker then submits the jobs to a JobManager (multiple instances of JobManagers can be created).
+The JobManager offers jobs to Workers, which choose which jobs they are able to perform.  
+When a Worker finishes a job, it is removed from the JobManager.  It is not immediately removed in case the Worker instance fails, in which case another Worker instance can retry the failed job.  Each job has a retry limit.
+A job is associated with an input and output Dataset.
+While all this is occurring, the SessionsDB keeps track of all the jobs and datasets associated with a session.
+
+
+End-to-End Data Flow
+--------------------
+A DE client provides CSV files as input.
+First, the CSV files are ingested into MySQL tables 
+(see workers/src/main/java/dataengine/workers/PythonIngestToSqlWorker.java).
+
+Then, internal CSV files are created for ingest into Neo4j 
+(see workers/src/main/java/dataengine/workers/PythonExportSqlWorker.java)
+
+Finally, the internal CSV files are imported and merged into Neo4j.  
+(see workersNeo4j/src/main/java/dataengine/workers/neo4j/CsvToNeoWorker.java). 
+
+
+MySQL Service
+-------------
+The startMysqlDocker.sh script starts the MySQL database service within a docker.  Before executing the script, you can set the MYSQL_ROOT_PW environment variable to be the root password for the MySQL database, which should be the same as the workers.sqlConnect setting (which is passed to SqlAlchemy as a connection URL) in main/dataengine.props.
+
+
+Python
+------
+PythonIngestToSqlWorker.java and PythonExportSqlWorker.java runs a Python executable (see main/workerConf/stompworker.pex) by sending commands to it via stomp communication service (provided by ActiveMQ).
 
 stompworker.pex is an assembled package from files under pythonStompWorker.
 MsgListener in __main__.py maps commands from stomp msgs to functions:
 - INGEST: ingests specified input file into specified MySQL database
+- EXPORT_TO_NEOCSV: exports from MySQL to CSV files for import into Neo4j
 - END: causes stompworker.pex to terminate
 
 
