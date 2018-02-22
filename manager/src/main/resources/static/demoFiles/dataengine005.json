@@ -1,0 +1,318 @@
+[
+  {
+    "id": "AddSourceDataset",
+    "description": "add source dataset",
+    "level": 0,
+    "info": {},
+    "params": [
+      {
+        "key": "datasetLabel",
+        "description": "label for dataset",
+        "valuetype": "string",
+        "required": true,
+        "isMultivalued": false,
+        "defaultValue": null,
+        "possibleValues": []
+      },
+      {
+        "key": "ingesterWorker",
+        "description": "ingester worker to use",
+        "valuetype": "operationId",
+        "required": true,
+        "isMultivalued": false,
+        "defaultValue": null,
+        "possibleValues": [
+          "PythonIngestToSqlWorker",
+          "IngestTelephoneDummyWorker",
+          "IngestPeopleDummyWorker"
+        ]
+      }
+    ],
+    "subOperations": {
+      "PythonIngestToSqlWorker": {
+        "id": "PythonIngestToSqlWorker",
+        "description": null,
+        "level": 1,
+        "info": {
+          "operationType": "ingester"
+        },
+        "params": [
+          {
+            "key": "inputUri",
+            "description": null,
+            "valuetype": "uri",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "hasHeader",
+            "description": "whether input file has a header",
+            "valuetype": "boolean",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": true,
+            "possibleValues": []
+          },
+          {
+            "key": "dataSchema",
+            "description": "schema of data",
+            "valuetype": "enum",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": [
+              "TIDE",
+              "I94Visa",
+              "FB",
+              "FBEdges",
+              "CDR",
+              "CDREdges"
+            ]
+          }
+        ],
+        "subOperations": {}
+      },
+      "IngestTelephoneDummyWorker": {
+        "id": "IngestTelephoneDummyWorker",
+        "description": "ingest Telephone source dataset",
+        "level": 1,
+        "info": {
+          "operationType": "ingester"
+        },
+        "params": [
+          {
+            "key": "inputNodelistUris",
+            "description": "locations of nodelist files",
+            "valuetype": "uri",
+            "required": false,
+            "isMultivalued": true,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "inputEdgelistUris",
+            "description": "locations of edgelist files",
+            "valuetype": "uri",
+            "required": false,
+            "isMultivalued": true,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "dataFormat",
+            "description": "type and format of data",
+            "valuetype": "enum",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": [
+              "TELEPHONE.CSV"
+            ]
+          },
+          {
+            "key": "workTime",
+            "description": "seconds the worker will take",
+            "valuetype": "int",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": 10,
+            "possibleValues": []
+          }
+        ],
+        "subOperations": {}
+      },
+      "IngestPeopleDummyWorker": {
+        "id": "IngestPeopleDummyWorker",
+        "description": "ingest People source dataset",
+        "level": 1,
+        "info": {
+          "operationType": "ingester"
+        },
+        "params": [
+          {
+            "key": "inputUri",
+            "description": null,
+            "valuetype": "uri",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "dataFormat",
+            "description": "choosing 'PEOPLE.CSV' will always fail",
+            "valuetype": "string",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": [
+              "PEOPLE.CSV"
+            ]
+          }
+        ],
+        "subOperations": {}
+      }
+    }
+  },
+  {
+    "id": "ExportDataset",
+    "description": "export dataset",
+    "level": 0,
+    "info": {},
+    "params": [
+      {
+        "key": "exporterWorker",
+        "description": "exporter worker to use",
+        "valuetype": "operationId",
+        "required": true,
+        "isMultivalued": false,
+        "defaultValue": null,
+        "possibleValues": [
+          "NeoExporterWorker",
+          "PythonExportSqlWorker"
+        ]
+      }
+    ],
+    "subOperations": {
+      "NeoExporterWorker": {
+        "id": "NeoExporterWorker",
+        "description": "",
+        "level": 1,
+        "info": {
+          "operationType": "exporter"
+        },
+        "params": [
+          {
+            "key": "dbPath",
+            "description": "path to source Neo4j DB",
+            "valuetype": "string",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "exportPath",
+            "description": "path of output file",
+            "valuetype": "string",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "exportFormat",
+            "description": "export format",
+            "valuetype": "string",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": "graphml",
+            "possibleValues": [
+              "graphml",
+              "csv",
+              "nodelist",
+              "edgelist"
+            ]
+          },
+          {
+            "key": "cypherExpression",
+            "description": "expression to execute for 'cypher' export format",
+            "valuetype": "string",
+            "required": false,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "propertyColumns",
+            "description": "properties to include as columns in CSV nodelist file",
+            "valuetype": "string",
+            "required": false,
+            "isMultivalued": false,
+            "defaultValue": "id, name",
+            "possibleValues": []
+          }
+        ],
+        "subOperations": {}
+      },
+      "PythonExportSqlWorker": {
+        "id": "PythonExportSqlWorker",
+        "description": null,
+        "level": 1,
+        "info": {
+          "operationType": "exporter"
+        },
+        "params": [
+          {
+            "key": "datasetId",
+            "description": "input dataset id",
+            "valuetype": "string",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "outputUri",
+            "description": "output URI",
+            "valuetype": "uri",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": []
+          },
+          {
+            "key": "dataSchema",
+            "description": "concept type to export",
+            "valuetype": "enum",
+            "required": true,
+            "isMultivalued": false,
+            "defaultValue": null,
+            "possibleValues": [
+              "I94Visa.Country",
+              "TIDE.Country",
+              "I94Visa.Person",
+              "TIDE.CITIZEN_OF",
+              "TIDE.Person",
+              "FB.Person",
+              "I94Visa.CITIZEN_OF",
+              "FBEdges.FB_KNOWS",
+              "CDREdges.PHONE_COMM",
+              "CDR.Person"
+            ]
+          }
+        ],
+        "subOperations": {}
+      }
+    }
+  },
+  {
+    "id": "MergeDatasetToNeo",
+    "description": "export SQL datasets and merge into Neo4j database",
+    "level": 0,
+    "info": {},
+    "params": [
+      {
+        "key": "inputRequestId",
+        "description": "request id that created the dataset to be merged",
+        "valuetype": "string",
+        "required": true,
+        "isMultivalued": false,
+        "defaultValue": null,
+        "possibleValues": []
+      },
+      {
+        "key": "dbPath",
+        "description": "path for output Neo4j DB",
+        "valuetype": "string",
+        "required": true,
+        "isMultivalued": false,
+        "defaultValue": null,
+        "possibleValues": []
+      }
+    ],
+    "subOperations": {}
+  }
+]
