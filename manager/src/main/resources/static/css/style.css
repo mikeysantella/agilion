@@ -165,3 +165,17 @@ body
     cursor: inherit;
     display: block;
 }
+
+.file-input-mid-btn
+{
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.text-area-input
+{
+    height: 34px !important;
+}

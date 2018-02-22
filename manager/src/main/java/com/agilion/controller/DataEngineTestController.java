@@ -65,9 +65,15 @@ public class DataEngineTestController
         return this.v2Client.getDataEngineOperationStatus(new DataOperationReceipt(sessID, "NOTNEEDED"));
     }
 
-    public DataOperationReceipt sendDataAsDataEngineRequest(Map<String, Object> data) throws NoLoggedInUserException
+    public DataOperationReceipt sendDataAsDataEngineRequest(Map<String, Object> clientData) throws NoLoggedInUserException
     {
+        // If the user sent a session ID, use it.
+        String sessionID = null;
+        if (clientData.containsKey("sessionID"))
+            sessionID = (String) clientData.get("sessionID");
+
         // Start with defining the basic properties of the operation
+        Map<String, Object> data = (Map<String, Object>) clientData.get("operationData");
         OperationSelection operation = new OperationSelection();
         Map<String, Object> parameterMap = (Map<String, Object>) data.get("params");
         operation.setId(data.get("id").toString());
@@ -77,7 +83,7 @@ public class DataEngineTestController
         Map<String, Object> topLevelSubOps = (Map<String, Object>) data.get("subOperations");
         buildSubOperations(operation, topLevelSubOps);
 
-        return this.v2Client.submitDataEngineOperation(operation, userGetter.getCurrentlyLoggedInUser().getUsername());
+        return this.v2Client.submitDataEngineOperation(operation, userGetter.getCurrentlyLoggedInUser().getUsername(), sessionID);
     }
 
     private void buildSubOperations(OperationSelection parentOperation, Map<String, Object> subOpData)

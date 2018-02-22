@@ -8,7 +8,7 @@ import dataengine.api.OperationSelection;
  */
 public interface DataEngineInterface
 {
-    public DataOperationReceipt submitDataEngineOperation(OperationSelection selection, String username);
+    public DataOperationReceipt submitDataEngineOperation(OperationSelection selection, String username, String sessionID);
 
     public DataOperationStatus getDataEngineOperationStatus(DataOperationReceipt id);
 }

@@ -2,11 +2,15 @@ package com.agilion.utils;
 
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
 import com.agilion.domain.networkbuilder.TargetDeckEntry;
+import com.agilion.domain.networkbuilder.datasets.DataSet;
+import com.agilion.domain.networkbuilder.datasets.DataSetReference;
 import com.agilion.services.files.FileStore;
 import com.agilion.services.jobmanager.NetworkBuildingRequest;
+import dataengine.api.Dataset;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.*;
 
 /**
@@ -17,66 +21,71 @@ public class NetworkFormToJobRequestConverter
 {
     private FileStore fileStore;
 
-    public NetworkFormToJobRequestConverter(FileStore store)
+    private DateFormat dateFormat;
+
+    public NetworkFormToJobRequestConverter(FileStore store, DateFormat dateFormat)
     {
         this.fileStore = store;
+        this.dateFormat = dateFormat;
     }
 
     public NetworkBuildingRequest convertNetworkFormToJobRequest(NetworkBuilderForm form, String user) throws Exception
     {
         // First store the files. We'll take the paths and include them in the JobRequest
-        List<String> dataFiles = new LinkedList<>();
         List<String> selectorFiles = new LinkedList<>();
+        List<DataSetReference> dataSetReferences;
 
-        if (form.getDataFiles() != null)
-        {
-            for (MultipartFile multipartFile : form.getDataFiles())
-            {
-                dataFiles.add(fileStore.storeFile(multipartFile.getInputStream(), UUID.randomUUID().toString()));
-            }
-        }
+        dataSetReferences = saveDatasetToFilestore(form.getDataSets());
 
-        if (form.getTargetDeck().getSelectorFiles() != null)
-        {
-            for (MultipartFile multipartFile : form.getTargetDeck().getSelectorFiles())
-            {
-                selectorFiles.add(fileStore.storeFile(multipartFile.getInputStream(), UUID.randomUUID().toString()));
-            }
-        }
-        // Set the dates as parameters
-        Map<String, Object> params = new HashMap<>();
-        params.put("fromDate", form.getFromDate());
-        params.put("toDate", form.getToDate());
+        if (form.getTargetDeck().getSelectorFile() != null)
+            selectorFiles.add(fileStore.storeFile(form.getTargetDeck().getSelectorFile().getInputStream(), UUID.randomUUID().toString()));
 
-        if (form.getTargetDeck().getTargetDeckEntryList().size() < 1)
-        {
-            return new NetworkBuildingRequest(form.getProjectName(), selectorFiles, dataFiles, form.getDataSources(), params, user);
-        }
-        else
-        {
-            Map<String, List<String>> selectorMap = buildSelectorMap(form);
-            return new NetworkBuildingRequest(form.getProjectName(), selectorMap, dataFiles, form.getDataSources(), params, user);
-        }
+        // Next, convert the date strings to dates
+        Date fromDate = this.dateFormat.parse(form.getFromDate());
+        Date toDate = this.dateFormat.parse(form.getToDate());
+
+        Map<String, List<String>> selectorMap = buildSelectorMap(form);
+        return new NetworkBuildingRequest(form.getProjectName(), selectorMap, selectorFiles, dataSetReferences,
+                form.getDataSources(), fromDate, toDate, user);
     }
 
-    public List<String> parseSelectorStringIntoList(String selectorStr)
+    private List<DataSetReference> saveDatasetToFilestore(List<DataSet> dataSets) throws Exception
+    {
+        List<DataSetReference> dataSetReferences = new LinkedList<>();
+        if (dataSets != null)
+        {
+            for (DataSet dataset : dataSets)
+            {
+                String nodelistLoc = this.fileStore.storeFile(dataset.getNodelist().getInputStream(), UUID.randomUUID().toString());
+                String edgelistLoc = this.fileStore.storeFile(dataset.getEdgelist().getInputStream(), UUID.randomUUID().toString());
+                dataSetReferences.add(new DataSetReference(nodelistLoc, edgelistLoc));
+            }
+        }
+
+        return dataSetReferences;
+    }
+
+    private List<String> parseSelectorStringIntoList(String selectorStr)
     {
         return Arrays.asList(selectorStr.split("\\s+"));
     }
 
-    public Map<String, List<String>> buildSelectorMap(NetworkBuilderForm form)
+    private Map<String, List<String>> buildSelectorMap(NetworkBuilderForm form)
     {
         Map<String, List<String>> selectorMap = new HashMap<>();
-        for (TargetDeckEntry entry : form.getTargetDeck().getTargetDeckEntryList())
+        if (form.getTargetDeck().getTargetDeckEntryList() != null && form.getTargetDeck().getTargetDeckEntryList().size() > 0)
         {
-            String selectorType = entry.getSelectorType().toString();
-            if (!selectorMap.containsKey(selectorType))
-                selectorMap.put(selectorType, new LinkedList<>());
+            for (TargetDeckEntry entry : form.getTargetDeck().getTargetDeckEntryList())
+            {
+                String selectorType = entry.getSelectorType().toString();
+                if (!selectorMap.containsKey(selectorType))
+                    selectorMap.put(selectorType, new LinkedList<>());
 
-            List<String> selectors = parseSelectorStringIntoList(entry.getSelectorList());
-            selectorMap.get(selectorType).addAll(selectors);
+                List<String> selectors = parseSelectorStringIntoList(entry.getSelectorList());
+                selectorMap.get(selectorType).addAll(selectors);
+            }
+
         }
-
         return selectorMap;
     }
 }

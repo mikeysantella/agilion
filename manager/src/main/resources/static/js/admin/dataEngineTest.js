@@ -169,10 +169,15 @@ var app = new Vue({
         submit: function()
         {
             var vue = this;
+            var dataToSend = {
+                operationData: this.operation,
+                sessionID: this.sessionID,
+            };
+
             $.ajax({
                 url: contextRoot+"admin/dataengine/submit",
                 method: 'POST',
-                data: JSON.stringify(this.operation),
+                data: JSON.stringify(dataToSend),
                 contentType: "application/json",
                 success: function(data)
                 {

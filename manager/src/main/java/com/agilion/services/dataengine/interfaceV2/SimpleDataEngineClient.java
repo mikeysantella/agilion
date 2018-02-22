@@ -3,6 +3,7 @@ package com.agilion.services.dataengine.interfaceV2;
 import com.agilion.services.dataengine.DataOperationReceipt;
 import dataengine.ApiException;
 import dataengine.api.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.method.P;
 
 import java.time.OffsetDateTime;
@@ -24,11 +25,11 @@ public class SimpleDataEngineClient implements DataEngineInterface
     }
 
     @Override
-    public DataOperationReceipt submitDataEngineOperation(OperationSelection operation, String username) {
-        String uuid = UUID.randomUUID().toString();
+    public DataOperationReceipt submitDataEngineOperation(OperationSelection operation, String username, String sessionID) {
+
         DataOperationReceipt receipt = null;
         try {
-            Session sess = startSession(uuid, username);
+            Session sess = getSession(sessionID, username);
             Request req = createDataEngineRequest(sess.getId(), operation);
             this.requestApi.submitRequest(req);
             receipt = new DataOperationReceipt(sess.getId(), req.getId());
@@ -36,6 +37,20 @@ public class SimpleDataEngineClient implements DataEngineInterface
             e.printStackTrace();
         }
         return receipt;
+    }
+
+    private Session getSession(String sessionID, String username) throws ApiException
+    {
+        Session sess = null;
+        if (StringUtils.isBlank(sessionID))
+        {
+            String uuid = UUID.randomUUID().toString();
+            sess = startSession(uuid, username);
+        }
+        else
+            sess = sessionsApi.getSession(sessionID);
+
+        return sess;
     }
 
     @Override

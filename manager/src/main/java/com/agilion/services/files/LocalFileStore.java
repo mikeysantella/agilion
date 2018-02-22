@@ -28,7 +28,7 @@ public class LocalFileStore implements FileStore
         Path targetPath = Paths.get(getFullPath(destination));
 
         Files.copy(io, targetPath);
-        finalResult = targetPath.toString();
+        finalResult = targetPath.toUri().toASCIIString();
 
         try
         {
