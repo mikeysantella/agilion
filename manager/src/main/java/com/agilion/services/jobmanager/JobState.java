@@ -5,5 +5,6 @@ public enum JobState
     NEW,
     IN_PROGRESS,
     DONE,
-    ERROR
+    ERROR,
+    CANCELLED
 }

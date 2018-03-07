@@ -14,6 +14,10 @@ import javax.validation.constraints.Pattern;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * This class is primarily used to model the input that the user sends to the server when initiating an network
+ * build. It get converterd to a NetworkBuildingRequest
+ */
 public class NetworkBuilderForm
 {
     @NotNull(message = "{validation.project.projectNameEmpty}")

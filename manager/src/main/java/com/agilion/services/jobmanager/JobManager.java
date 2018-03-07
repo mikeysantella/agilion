@@ -11,29 +11,23 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
+/**
+ *
+ */
 public interface JobManager
 {
     /**
-     * Submits a job, returns an ID corresponding to that job. Use the returned ID for the other methods in this class
-     * @param request
+     * Submits a job to a job manager service. This should send requests to data source APIs and/or the data engine
+     * @param networkBuildRequest
      * @return
      */
-    public String submitJob(NetworkBuildingRequest request);
+    public void submitNetworkBuildJob(NetworkBuild networkBuildRequest);
 
     /**
-     * Returns a job
-     * @param jobID
+     * Returns the status of the network build. The returned object contains status information about the Data source API
+     * queries, as well as any data source jobs that are ocurring.
+     * @param networkBuild
      * @return
      */
-    public NetworkBuildingJob getJob(String jobID);
-
-    /**
-     * Returns one or more jobs
-     * @param jobIDs
-     * @return
-     */
-    public List<NetworkBuildingJob> getJobs(List<String> jobIDs);
-
-
-
+    public NetworkBuildStatus getNetworkBuildStatus(NetworkBuild networkBuild);
 }

@@ -1,13 +1,13 @@
 package com.agilion.controller;
 
-import com.agilion.config.WebAppConfig;
 import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
 import com.agilion.services.app.UserService;
+import com.agilion.services.dao.NetworkBuildRepository;
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.jobmanager.JobManager;
-import com.agilion.services.jobmanager.NetworkBuildingJob;
-import com.agilion.services.jobmanager.NetworkBuildingRequest;
+import com.agilion.services.jobmanager.NetworkBuild;
+import com.agilion.services.jobmanager.NetworkBuildStatus;
 import com.agilion.services.security.LoggedInUserGetter;
 import com.agilion.services.security.NoLoggedInUserException;
 import com.agilion.services.validator.FormError;
@@ -15,22 +15,20 @@ import com.agilion.services.validator.ValidationResult;
 import com.agilion.utils.NetworkFormToJobRequestConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.propertyeditors.CustomDateEditor;
-import org.springframework.beans.propertyeditors.StringTrimmerEditor;
-import org.springframework.context.MessageSource;
 import org.springframework.context.support.MessageSourceAccessor;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by Alex_Lappy_486 on 2/5/17.
@@ -50,6 +48,9 @@ public class NetworkBuilderController
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    NetworkBuildRepository networkBuildRepo;
 
     @Autowired
     LoggedInUserGetter loggedInUserGetter;
@@ -84,15 +85,13 @@ public class NetworkBuilderController
         else
         {
             try {
-                // Take the submitted form and send it to the job manager.
-                String username = this.loggedInUserGetter.getCurrentlyLoggedInUser().getUsername();
-                NetworkBuildingRequest networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm, username);
-                String newNetworkJobID = this.jobManager.submitJob(networkBuildingRequest);
+                // Create the network build, and save it to our database for later.
+                User user = this.loggedInUserGetter.getCurrentlyLoggedInUser();
+                NetworkBuild networkBuildingRequest = networkFormConverter.convertNetworkFormToJobRequest(networkBuilderForm, user);
+                this.doInitialSaveOfNetworkBuild(user, networkBuildingRequest);
 
-                // Take the resulting job ID and attach it to the user so that we can get the status/results of the job
-                User user = loggedInUserGetter.getCurrentlyLoggedInUser();
-                user.getSubmittedNetworkBuildJobIds().add(newNetworkJobID);
-                this.userService.saveUser(user);
+                // Submit the job
+                this.jobManager.submitNetworkBuildJob(networkBuildingRequest);
             }
             catch(Exception e)
             {
@@ -103,6 +102,14 @@ public class NetworkBuilderController
         }
 
         return result;
+    }
+
+    public void doInitialSaveOfNetworkBuild(User user, NetworkBuild build)
+    {
+        user.getSubmittedNetworks().add(build);
+        build.setRequestingUser(user);
+        this.userService.saveUser(user);
+        this.networkBuildRepo.save(build);
     }
 
     @RequestMapping(value = "/history", method = RequestMethod.GET)
@@ -120,10 +127,14 @@ public class NetworkBuilderController
         return "project/_projectHistoryTable::table";
     }
 
-    private List<NetworkBuildingJob> getNetworkBuildingJobs() throws NoLoggedInUserException
+    private List<NetworkBuildStatus> getNetworkBuildingJobs() throws NoLoggedInUserException
     {
-        List<String> networkJobIDs = loggedInUserGetter.getCurrentlyLoggedInUser().getSubmittedNetworkBuildJobIds();
-        List<NetworkBuildingJob> jobs = this.jobManager.getJobs(networkJobIDs);
-        return jobs;
+        List<NetworkBuildStatus> statuses = new LinkedList<>();
+        Set<NetworkBuild> networkBuilds = loggedInUserGetter.getCurrentlyLoggedInUser().getSubmittedNetworks();
+        for (NetworkBuild b : networkBuilds)
+        {
+            statuses.add(this.jobManager.getNetworkBuildStatus(b));
+        }
+        return statuses;
     }
 }

@@ -22,7 +22,6 @@ public class HomeController
     public String initHome()
     {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(user.getSubmittedNetworkBuildJobIds());
         return "home";
     }
 }

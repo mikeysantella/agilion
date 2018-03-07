@@ -1,15 +1,16 @@
 package com.agilion.utils;
 
+import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.NetworkBuilderForm;
 import com.agilion.domain.networkbuilder.TargetDeckEntry;
 import com.agilion.domain.networkbuilder.datasets.DataSet;
 import com.agilion.domain.networkbuilder.datasets.DataSetReference;
 import com.agilion.services.files.FileStore;
-import com.agilion.services.jobmanager.NetworkBuildingRequest;
-import dataengine.api.Dataset;
-import org.springframework.web.multipart.MultipartFile;
+import com.agilion.services.jobmanager.NetworkBuild;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.*;
 
@@ -29,29 +30,35 @@ public class NetworkFormToJobRequestConverter
         this.dateFormat = dateFormat;
     }
 
-    public NetworkBuildingRequest convertNetworkFormToJobRequest(NetworkBuilderForm form, String user) throws Exception
+    public NetworkBuild convertNetworkFormToJobRequest(NetworkBuilderForm form, User user) throws Exception
     {
         // First store the files. We'll take the paths and include them in the JobRequest
-        List<String> selectorFiles = new LinkedList<>();
-        List<DataSetReference> dataSetReferences;
+        Set<String> selectorFiles = new HashSet<>();
+        Set<DataSetReference> dataSetReferences = saveDatasetToFilestore(form.getDataSets());
 
-        dataSetReferences = saveDatasetToFilestore(form.getDataSets());
-
+        // Next, store the selector files.
         if (form.getTargetDeck().getSelectorFile() != null)
             selectorFiles.add(fileStore.storeFile(form.getTargetDeck().getSelectorFile().getInputStream(), UUID.randomUUID().toString()));
+
+        //If the user manually entered in selectors, save those to a file and upload it to the filestore, too.
+        if (form.getTargetDeck().getTargetDeckEntryList() != null && form.getTargetDeck().getTargetDeckEntryList().size() > 0)
+            selectorFiles.add(saveSelectorsToFile(form));
 
         // Next, convert the date strings to dates
         Date fromDate = this.dateFormat.parse(form.getFromDate());
         Date toDate = this.dateFormat.parse(form.getToDate());
 
-        Map<String, List<String>> selectorMap = buildSelectorMap(form);
-        return new NetworkBuildingRequest(form.getProjectName(), selectorMap, selectorFiles, dataSetReferences,
-                form.getDataSources(), fromDate, toDate, user);
+        return new NetworkBuild(form.getProjectName(), dataSetReferences, selectorFiles,
+                new HashSet<String>(form.getDataSources()), fromDate, toDate, user);
     }
 
-    private List<DataSetReference> saveDatasetToFilestore(List<DataSet> dataSets) throws Exception
+
+   // public NetworkBuild(String networkBuildName, List<DataSetReference> dataSets, Set<String> selectorFilePaths,
+     //                   Set<String> dataSources, Date fromDate, Date toDate, User requestingUser) {
+
+    private Set<DataSetReference> saveDatasetToFilestore(List<DataSet> dataSets) throws Exception
     {
-        List<DataSetReference> dataSetReferences = new LinkedList<>();
+        Set<DataSetReference> dataSetReferences = new HashSet<>();
         if (dataSets != null)
         {
             for (DataSet dataset : dataSets)
@@ -70,22 +77,18 @@ public class NetworkFormToJobRequestConverter
         return Arrays.asList(selectorStr.split("\\s+"));
     }
 
-    private Map<String, List<String>> buildSelectorMap(NetworkBuilderForm form)
-    {
-        Map<String, List<String>> selectorMap = new HashMap<>();
-        if (form.getTargetDeck().getTargetDeckEntryList() != null && form.getTargetDeck().getTargetDeckEntryList().size() > 0)
+    private String saveSelectorsToFile(NetworkBuilderForm form) throws Exception {
+        InputStream stream;
+        StringBuilder builder = new StringBuilder();
+        for (TargetDeckEntry entry : form.getTargetDeck().getTargetDeckEntryList())
         {
-            for (TargetDeckEntry entry : form.getTargetDeck().getTargetDeckEntryList())
+            for (String selector : entry.getSelectorList().split("\\s+"))
             {
-                String selectorType = entry.getSelectorType().toString();
-                if (!selectorMap.containsKey(selectorType))
-                    selectorMap.put(selectorType, new LinkedList<>());
-
-                List<String> selectors = parseSelectorStringIntoList(entry.getSelectorList());
-                selectorMap.get(selectorType).addAll(selectors);
+                builder.append(selector+" "+entry.getSelectorType()+"\n");
             }
-
         }
-        return selectorMap;
+
+        return fileStore.storeFile(new ByteArrayInputStream(builder.toString().getBytes()), UUID.randomUUID().toString());
     }
+
 }

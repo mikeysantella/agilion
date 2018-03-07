@@ -1,17 +1,15 @@
 package com.agilion.services.dataengine;
 
-import com.agilion.domain.networkbuilder.datasets.DataSet;
-import com.agilion.domain.networkbuilder.datasets.DataSetReference;
+import com.agilion.domain.app.User;
 import dataengine.ApiException;
 import dataengine.api.*;
 import jersey.repackaged.com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.method.P;
 
-import java.io.File;
-import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class LocalDataEngineClient implements DataEngineClient
 {
@@ -45,131 +43,53 @@ public class LocalDataEngineClient implements DataEngineClient
     }
 
     @Override
-    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<DataSetReference> datasets,
-                                                  Map<String, Object> params) throws ApiException
+    public Session startSession(String uniqueSessionID, User user) throws ApiException
     {
-        // First, start the session
-        Session session = startSession(sessionID, username);
-
-        // Next, create one or more data engine requests for each data file.
-        List<Request> requests = new LinkedList<>();
-        for (DataSetReference dataSetReference : datasets)
-        {
-
-            List<OperationSelection> selections = createDataIngestOperations(dataSetReference);
-            for (OperationSelection os : selections)
-            {
-                requests.add(createDataEngineRequest(sessionID, os));
-            }
-        }
-
-        // Finally, submit the requests to the data engine.
-        for (Request request : requests)
-        {
-            requestApi.submitRequest(request);
-        }
-
-        return new DataOperationReceipt(session.getId(), getRequestIDs(requests));
-    }
-
-    private List<String> getRequestIDs(List<Request> reqs)
-    {
-        List<String> list = new LinkedList<>();
-        for (Request r : reqs)
-        {
-            list.add(r.getId());
-        }
-        return list;
-    }
-
-    @Override
-    public boolean networkBuildIsDone(DataOperationReceipt receipt) {
-        boolean allFinished = true;
-        try
-        {
-
-            for (String requestID : receipt.getRequestIDs())
-            {
-                Request updatedRequest = this.requestApi.getRequest(requestID);
-                if (!requestIsStopped(updatedRequest))
-                {
-                    allFinished = false;
-                    break;
-                }
-            }
-        }
-        catch (ApiException e)
-        {
-            e.printStackTrace();
-            allFinished = false;
-        }
-        return allFinished;
-    }
-
-    private Session startSession(String uniqueSessionID, String username) throws ApiException
-    {
-        this.requestApi.listOperations();
-        this.requestApi.refreshOperations();
         Session session = new Session();
         session.setCreatedTime(OffsetDateTime.now());
         session.setId(uniqueSessionID);
-        session.setUsername(username);
+        session.setUsername(user.getUsername());
 
         this.sessionsApi.createSession(session);
         return session;
     }
 
-    private Request createDataEngineRequest(String sessionID, OperationSelection dataIngestOperation)
+    @Override
+    public Request sendDataEngineOperationRequest(Session session, OperationSelection dataIngestOperation)
     {
         Request request = new Request();
         String requestID = UUID.randomUUID().toString();
         request.setId(requestID);
         request.setCreatedTime(OffsetDateTime.now());
-        request.setSessionId(sessionID);
+        request.setSessionId(session.getId());
         request.setOperation(dataIngestOperation);
 
         return request;
     }
 
-    private List<OperationSelection> createDataIngestOperations(DataSetReference dataReferences)
-    {
-        List<OperationSelection> selections = new LinkedList<>();
-        String[] nodelistAndEdgelist = {dataReferences.getNodelistLocation(), dataReferences.getEdgelistLocation()};
+    @Override
+    public OperationSelection createDataIngestOperations(String inputUri, String dataFormat, boolean hasHeader) throws ApiException {
+        OperationSelectionMap suboperationSelections = new OperationSelectionMap();
+        Map<String, Object> subopParams = new HashMap<>();
+        subopParams.put("inputUri", inputUri);
+        subopParams.put("dataFormat", dataFormat);
+        subopParams.put("hasHeader", hasHeader);
 
-        for (int i = 0; i < nodelistAndEdgelist.length; i++)
-        {
-            //TODO THE DATA TYPES AND PARAMS ARE HARDCODED. HOW ARE WE GETTING THIS FROM THE USER??
-            // Build an ingester worker definition
-            String dataformat = i == 0 ? "CDR" : "CDREdges";
-            OperationSelectionMap suboperationSelections = new OperationSelectionMap();
-            Map<String, Object> subopParams = new HashMap<>();
-            subopParams.put("inputUri", nodelistAndEdgelist[i]);
-            subopParams.put("dataFormat", dataformat);
-            subopParams.put("hasHeader", false);
+        OperationSelection subop = new OperationSelection().id("PythonIngestToSqlWorker").params(subopParams);
+        suboperationSelections.put(subop.getId(), subop);
 
-            OperationSelection subop = new OperationSelection().id("PythonIngestToSqlWorker").params(subopParams);
-            suboperationSelections.put(subop.getId(), subop);
+        // Add all other data ingest params specified by the user
+        Map<String, Object> params = new HashMap<>();
+        params.put("ingesterWorker", subop.getId());
+        params.put("datasetLabel", UUID.randomUUID().toString());
 
-            // Add all other data ingest params specified by the user
-            Map<String, Object> params = new HashMap<>();
-            params.put("ingesterWorker", subop.getId());
-            params.put("datasetLabel", UUID.randomUUID().toString());
-
-            // Build the final operation representing the Data Ingest job
-            selections.add(new OperationSelection().id("AddSourceDataset")
-                    .params(params).subOperationSelections(suboperationSelections));
-        }
-
-        return selections;
-
+        // Build the final operation representing the Data Ingest job
+        return new OperationSelection().id("AddSourceDataset")
+                .params(params).subOperationSelections(suboperationSelections);
     }
 
-    private boolean requestIsStopped(Request request)
-    {
-        State s = request.getState();
-        if (s == State.COMPLETED || s == State.FAILED || s == State.CANCELLED)
-            return true;
-        else
-            return false;
+    @Override
+    public Request getUpdatedRequest(Request request) throws ApiException {
+        return this.requestApi.getRequest(request.getId());
     }
 }

@@ -1,8 +1,13 @@
 package com.agilion.services.dataengine;
 
+import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.datasets.DataSet;
 import com.agilion.domain.networkbuilder.datasets.DataSetReference;
+import dataengine.ApiException;
 import dataengine.api.Operation;
+import dataengine.api.OperationSelection;
+import dataengine.api.Request;
+import dataengine.api.Session;
 
 import java.util.List;
 import java.util.Map;
@@ -22,9 +27,11 @@ public interface DataEngineClient
 
     public List<Operation> listOperations();
 
-    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<DataSetReference> datasets,
-                                                  Map<String, Object> params)
-            throws Exception;
+    public Session startSession(String uniqueSessionID, User username) throws ApiException;
 
-    public boolean networkBuildIsDone(DataOperationReceipt receipt);
+    public Request sendDataEngineOperationRequest(Session session, OperationSelection dataIngestOperation) throws ApiException;;
+
+    public OperationSelection createDataIngestOperations(String inputUri, String dataFormat, boolean hasHeader) throws ApiException;
+
+    public Request getUpdatedRequest(Request request) throws ApiException;
 }

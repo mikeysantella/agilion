@@ -1,10 +1,15 @@
 package com.agilion.services.dataengine;
 
+import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.datasets.DataSet;
 import com.agilion.domain.networkbuilder.datasets.DataSetReference;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import dataengine.ApiException;
 import dataengine.api.Operation;
+import dataengine.api.OperationSelection;
+import dataengine.api.Request;
+import dataengine.api.Session;
 import jersey.repackaged.com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.ClassPathResource;
@@ -59,24 +64,22 @@ public class DemoDataEngineClient implements DataEngineClient
     }
 
     @Override
-    public DataOperationReceipt startNetworkBuild(String sessionID, String username, List<DataSetReference> datasets,
-                                                  Map<String, Object> params) throws Exception {
-        DataOperationReceipt r = new DataOperationReceipt(sessionID, "TEST");
-        this.map.put(r, 0);
-        return r;
+    public Session startSession(String uniqueSessionID, User username) throws ApiException {
+        return null;
     }
 
     @Override
-    public boolean networkBuildIsDone(DataOperationReceipt receipt) {
-        int count = this.map.get(receipt);
-        if (count > 2)
-        {
-            return true;
-        }
-        else {
-            count = count + 1;
-            this.map.put(receipt, count);
-            return false;
-        }
+    public Request sendDataEngineOperationRequest(Session session, OperationSelection dataIngestOperation) throws ApiException {
+        return null;
+    }
+
+    @Override
+    public OperationSelection createDataIngestOperations(String inputUri, String dataFormat, boolean hasHeader) throws ApiException {
+        return null;
+    }
+
+    @Override
+    public Request getUpdatedRequest(Request request) throws ApiException {
+        return null;
     }
 }

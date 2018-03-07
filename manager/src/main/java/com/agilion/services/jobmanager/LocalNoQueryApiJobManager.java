@@ -1,9 +1,18 @@
 package com.agilion.services.jobmanager;
 
+import com.agilion.domain.networkbuilder.datasets.DataSetReference;
+import com.agilion.services.dao.NetworkBuildRepository;
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.dataengine.DataOperationReceipt;
 import com.agilion.services.files.FileStore;
+import com.agilion.utils.RUUID;
+import com.agilion.utils.SleepyTime;
 import dataengine.ApiException;
+import dataengine.api.OperationSelection;
+import dataengine.api.Request;
+import dataengine.api.Session;
+import dataengine.api.State;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,145 +20,161 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * This job manager
+ * This job manager does NOT do any API queries, and runs all data-engine related steps locally.
+ *
+ * Ideally, we would like to set up Agilion so that the UI takes up as little resources as possible, while some other,
+ * more powerful machine does API querying and Data Engine job management. This class, therefore, only serves to
+ * implement Agilion quickly.
  */
 public class LocalNoQueryApiJobManager implements JobManager
 {
     Logger log = LoggerFactory.getLogger(LocalNoQueryApiJobManager.class);
-    private FileStore filestore;
     private DataEngineClient dataEngineClient;
-    private Map<String, MockJobRunner> jobs;
+    private NetworkBuildRepository networkBuildRepo;
+    private Map<NetworkBuild, LocalJobRunner> jobs;
 
-    public LocalNoQueryApiJobManager(){}
-
-    public LocalNoQueryApiJobManager(FileStore filestoreImpl, DataEngineClient dataEngineClient)
+    public LocalNoQueryApiJobManager(DataEngineClient dataEngineClient, NetworkBuildRepository networkBuildRepo)
     {
-        this.filestore = filestoreImpl;
         this.dataEngineClient = dataEngineClient;
         this.jobs = new HashMap<>();
+        this.networkBuildRepo = networkBuildRepo;
     }
 
     @Override
-    public String submitJob(NetworkBuildingRequest request)
-    {
-        String newJobID = UUID.randomUUID().toString();
-        NetworkBuildingJob networkBuildingJob = new NetworkBuildingJob(newJobID);
-        networkBuildingJob.setName(request.getJobName());
-        MockJobRunner mockJob = new MockJobRunner(request, networkBuildingJob);
-        jobs.put(newJobID, mockJob);
-
-        // Start the mocked job on a new thread.
-        Thread thread = new Thread(mockJob);
-        thread.start();
-        return newJobID;
-    }
-
-    @Override
-    public NetworkBuildingJob getJob(String jobID) {
-        return this.jobs.get(jobID).networkBuildingJob;
-    }
-
-    @Override
-    public List<NetworkBuildingJob> getJobs(List<String> jobIDs) {
-        List<NetworkBuildingJob> jobs = new LinkedList<>();
-        for (String id : jobIDs){
-            jobs.add(this.getJob(id));
-        }
-
-        return jobs;
+    public void submitNetworkBuildJob(NetworkBuild networkBuildRequest) {
+        // First, create the local job runner. This object will do the actual correspondence with the DataEngine
+        LocalJobRunner jobRunner = new LocalJobRunner(networkBuildRequest);
+        new Thread(jobRunner).start();
     }
 
     /**
-     * This method returns selectors from the job request. If the JobRequest has a Selector file, then the selectors in that
-     * file are returned. Otherwise, the selectors in the target deck are used.
+     * This class' run() method performs the logic for creating the DataEngine Ingest requests and waiting for them to be
+     * done.
      *
-     * RIGHT NOW WE ARE NOT COMBINING BOTH THE SELECTOR FILES AND THE TARGET DECK. WE ALSO EXPECT THE FILES TO BE IN THE FORMAT:
-     * SELECTOR_TYPE,SELECTOR_VALUE
-     *
-     * @param request
+     * @param
      * @return
      */
-    protected Map<String, List<String>> getSelectors(NetworkBuildingRequest request) throws Exception
-    {
-        Map<String, List<String>> selectors = new HashMap<>();
+    @Override
+    public NetworkBuildStatus getNetworkBuildStatus(NetworkBuild networkBuild) {
+        LocalJobRunner jobRunner = this.jobs.get(networkBuild);
+        return new NetworkBuildStatus(jobRunner.requests);
 
-        if (request.getSelectorFilePaths() != null && request.getSelectorFilePaths().size() > 0)
-        {
-            for (String filepath : request.getSelectorFilePaths())
-            {
-                InputStream io = this.filestore.getFile(filepath);
-                Scanner scan = new Scanner(io);
-
-                while (scan.hasNextLine())
-                {
-                    String[] tokens = scan.nextLine().trim().split(",");
-                    String type = tokens[0];
-                    String value = tokens[1];
-
-                    if (!selectors.containsKey(type))
-                        selectors.put(type, new LinkedList<>());
-
-                    selectors.get(type).add(value);
-                }
-            }
-        }
-        else
-            selectors = request.getSelectorSet();
-
-        return selectors;
     }
 
-    private class MockJobRunner implements Runnable
+    private class LocalJobRunner implements Runnable
     {
-        NetworkBuildingJob networkBuildingJob;
-        NetworkBuildingRequest networkBuildingRequest;
+        private NetworkBuild networkBuildReq;
+        private String statusMessage = "Queued";
+        private JobState statusState = JobState.NEW;
+        private Session session;
+        private List<Request> requests = new LinkedList<>();
 
-        MockJobRunner(NetworkBuildingRequest request, NetworkBuildingJob networkBuildingJob)
+        LocalJobRunner(NetworkBuild request)
         {
-            this.networkBuildingRequest = request;
-            this.networkBuildingJob = networkBuildingJob;
+            this.networkBuildReq = request;
         }
 
         @Override
         public void run()
         {
+            statusMessage = "In Progress";
+            statusState = JobState.IN_PROGRESS;
+
+            // To start the network build, convert all of the DataSetReference objects contained in the NetworkBuild
+            // object to DataEngine Ingest operations. Then we start a session, and for each operation, initiate a new request
             try
             {
-                networkBuildingJob.setStatus("Working");
-                networkBuildingJob.setState(JobState.IN_PROGRESS);
+                // Start the session
+                this.session = dataEngineClient.startSession(RUUID.randomUUID(), networkBuildReq.getRequestingUser());
+                networkBuildReq.setAssociatedDataEngineSessionID(this.session.getId());
+                networkBuildRepo.save(networkBuildReq);
 
-                try {
-                    //TODO for now, we are not doing anything with the target deck. We are simply uploading data files to the data engine
-                    DataOperationReceipt receipt = dataEngineClient.startNetworkBuild(this.networkBuildingJob.getId(),
-                            networkBuildingRequest.getRequestingUser(),
-                            networkBuildingRequest.getDataSets(),
-                            null);
-
-                    while (!dataEngineClient.networkBuildIsDone(receipt))
-                    {
-                        Thread.sleep(5 * 1000);
-                        log.info("Still waiting on network build of sessionId "+this.networkBuildingJob.getId());
-                    }
-
-                    networkBuildingJob.setStatus("Finished");
-                    networkBuildingJob.setState(JobState.DONE);
-                }
-                catch(ApiException e)
+                // For every data engine operation, send a request in the session we just created
+                for (OperationSelection dataIngestOperation : createIngestOperations(this.networkBuildReq))
                 {
-                    networkBuildingJob.setState(JobState.ERROR);
-                    networkBuildingJob.setStatus("Failed -- "+e.getMessage());
+                    this.requests.add(dataEngineClient.sendDataEngineOperationRequest(session, dataIngestOperation));
                 }
-                catch(Exception e)
+                networkBuildReq.setAssociatedDataEngineRequestIDs(getAllRequestIDs(this.requests));
+                networkBuildRepo.save(networkBuildReq);
+
+                // Loop until the network build is done. This is a dumb way to do it, but like I said, this class should be temporary
+                // until we  come up with a better solution (when more details about the product are clear).
+                while (!networkBuildIsDone(this.requests))
                 {
-                    e.printStackTrace();
-                    networkBuildingJob.setState(JobState.ERROR);
-                    networkBuildingJob.setStatus("Failed due to unexpected error. See error logs");
+                    SleepyTime.sleepForSeconds(5);
                 }
+
+                statusMessage = "Completed";
+                statusState = JobState.DONE;
             }
             catch (Exception e)
             {
                 e.printStackTrace();
+                statusMessage = "Failed due to exception: "+e.getMessage();
+                statusState = JobState.ERROR;
             }
         }
+    }
+
+    private Set<String> getAllRequestIDs(List<Request> reqs)
+    {
+        Set<String> s = new HashSet<>();
+        for (Request r : reqs)
+        {
+            s.add(r.getId());
+        }
+        return s;
+    }
+
+    private boolean networkBuildIsDone(List<Request> requests) {
+        boolean allFinished = true;
+        try
+        {
+            for (Request request : requests)
+            {
+                Request updatedRequest = this.dataEngineClient.getUpdatedRequest(request);
+                if (!requestIsStopped(updatedRequest))
+                {
+                    allFinished = false;
+                    break;
+                }
+            }
+        }
+        catch (ApiException e)
+        {
+            e.printStackTrace();
+            allFinished = false;
+        }
+        return allFinished;
+    }
+
+    private boolean requestIsStopped(Request request)
+    {
+        State s = request.getState();
+        if (s == State.COMPLETED || s == State.FAILED || s == State.CANCELLED)
+            return true;
+        else
+            return false;
+    }
+
+    private List<OperationSelection> createIngestOperations(NetworkBuild build) throws ApiException
+    {
+        List<OperationSelection> ops = new LinkedList<>();
+        for (DataSetReference dataSetReference : build.getDataSets())
+        {
+            // Create a request for the nodelist and edgelist, if either exist.
+            if (StringUtils.isNotBlank(dataSetReference.getNodelistLocation()))
+            {
+                String nodelistUri = dataSetReference.getNodelistLocation();
+                ops.add(this.dataEngineClient.createDataIngestOperations(nodelistUri, "CDR", false));
+            }
+
+            if (StringUtils.isNotBlank(dataSetReference.getEdgelistLocation()))
+            {
+                String uri = dataSetReference.getEdgelistLocation();
+                ops.add(this.dataEngineClient.createDataIngestOperations(uri, "CDREdges", false));
+            }
+        }
+        return ops;
     }
 }

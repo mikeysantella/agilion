@@ -49,7 +49,6 @@ public class UserService implements UserDetailsService
         if (user == null)
             throw new UsernameNotFoundException("USERNAME NOT FOUND, YOU IDIOT");
 
-        user.getSubmittedNetworkBuildJobIds().size();
         return user;
     }
 }

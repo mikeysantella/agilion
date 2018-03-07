@@ -22,6 +22,13 @@ public class LocalFileStore implements FileStore
         new File(this.rootDir).mkdirs();
     }
 
+    /**
+     * NOTE: This method closes the input stream!
+     * @param io
+     * @param destination
+     * @return
+     * @throws IOException
+     */
     @Override
     public String storeFile(InputStream io, String destination) throws IOException {
         String finalResult = null;

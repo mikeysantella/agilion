@@ -2,14 +2,26 @@ package com.agilion.domain.networkbuilder.datasets;
 
 import org.apache.commons.lang3.StringUtils;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Created by Alex_Lappy_486 on 2/20/18.
  */
+@Entity
 public class DataSetReference
 {
+    /**
+     * The ID of the user.
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+
     private String nodelistLocation;
 
     private String edgelistLocation;

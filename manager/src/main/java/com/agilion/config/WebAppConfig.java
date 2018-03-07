@@ -1,6 +1,7 @@
 package com.agilion.config;
 
 import com.agilion.domain.app.config.UIDateFormat;
+import com.agilion.services.dao.NetworkBuildRepository;
 import com.agilion.services.dataengine.DataEngineClient;
 import com.agilion.services.files.FileStore;
 import com.agilion.services.files.LocalFileStore;
@@ -31,6 +32,9 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
 
     @Autowired
     DataEngineClient dataEngineClient;
+
+    @Autowired
+    NetworkBuildRepository networkBuildRepository;
 
     @Bean
     public UIDateFormat getUIDateFormat()
@@ -76,7 +80,7 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
     @Bean
     public JobManager jobManager()
     {
-        return new LocalNoQueryApiJobManager(fileStore(), dataEngineClient);
+        return new LocalNoQueryApiJobManager(dataEngineClient, networkBuildRepository);
     }
 
     @Bean
