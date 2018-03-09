@@ -49,20 +49,22 @@ public class LocalDataEngineClient implements DataEngineClient
         session.setCreatedTime(OffsetDateTime.now());
         session.setId(uniqueSessionID);
         session.setUsername(user.getUsername());
+        session.setLabel(user.getUsername()+"-"+uniqueSessionID);
 
         this.sessionsApi.createSession(session);
         return session;
     }
 
     @Override
-    public Request sendDataEngineOperationRequest(Session session, OperationSelection dataIngestOperation)
-    {
+    public Request sendDataEngineOperationRequest(Session session, OperationSelection dataIngestOperation) throws ApiException {
         Request request = new Request();
         String requestID = UUID.randomUUID().toString();
         request.setId(requestID);
         request.setCreatedTime(OffsetDateTime.now());
         request.setSessionId(session.getId());
         request.setOperation(dataIngestOperation);
+
+        this.requestApi.submitRequest(request);
 
         return request;
     }
@@ -72,7 +74,7 @@ public class LocalDataEngineClient implements DataEngineClient
         OperationSelectionMap suboperationSelections = new OperationSelectionMap();
         Map<String, Object> subopParams = new HashMap<>();
         subopParams.put("inputUri", inputUri);
-        subopParams.put("dataFormat", dataFormat);
+        subopParams.put("dataSchema", dataFormat);
         subopParams.put("hasHeader", hasHeader);
 
         OperationSelection subop = new OperationSelection().id("PythonIngestToSqlWorker").params(subopParams);

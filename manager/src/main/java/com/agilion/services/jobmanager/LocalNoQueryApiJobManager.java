@@ -44,6 +44,7 @@ public class LocalNoQueryApiJobManager implements JobManager
     public void submitNetworkBuildJob(NetworkBuild networkBuildRequest) {
         // First, create the local job runner. This object will do the actual correspondence with the DataEngine
         LocalJobRunner jobRunner = new LocalJobRunner(networkBuildRequest);
+        this.jobs.put(networkBuildRequest, jobRunner);
         new Thread(jobRunner).start();
     }
 
@@ -87,6 +88,7 @@ public class LocalNoQueryApiJobManager implements JobManager
                 // Start the session
                 this.session = dataEngineClient.startSession(RUUID.randomUUID(), networkBuildReq.getRequestingUser());
                 networkBuildReq.setAssociatedDataEngineSessionID(this.session.getId());
+                System.out.println("SAVING "+this.session.getId()+" with network build to");
                 networkBuildRepo.save(networkBuildReq);
 
                 // For every data engine operation, send a request in the session we just created
@@ -101,6 +103,8 @@ public class LocalNoQueryApiJobManager implements JobManager
                 // until we  come up with a better solution (when more details about the product are clear).
                 while (!networkBuildIsDone(this.requests))
                 {
+                    //update all of the requsts with new updates requests from the data engine
+                    updateRequests(requests);
                     SleepyTime.sleepForSeconds(5);
                 }
 
@@ -143,9 +147,17 @@ public class LocalNoQueryApiJobManager implements JobManager
         catch (ApiException e)
         {
             e.printStackTrace();
-            allFinished = false;
+            allFinished = true;
         }
         return allFinished;
+    }
+
+    private List<Request> updateRequests(List<Request> reqs) throws ApiException {
+        List<Request> newReqs = new LinkedList<>();
+        for (Request r : reqs) {
+            newReqs.add(this.dataEngineClient.getUpdatedRequest(r));
+        }
+        return newReqs;
     }
 
     private boolean requestIsStopped(Request request)

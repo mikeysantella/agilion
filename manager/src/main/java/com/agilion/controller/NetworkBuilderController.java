@@ -108,8 +108,9 @@ public class NetworkBuilderController
     {
         user.getSubmittedNetworks().add(build);
         build.setRequestingUser(user);
-        this.userService.saveUser(user);
         this.networkBuildRepo.save(build);
+        this.userService.saveUser(user);
+
     }
 
     @RequestMapping(value = "/history", method = RequestMethod.GET)

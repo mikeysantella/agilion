@@ -40,7 +40,7 @@ public class NetworkBuild
     /**
      * A list of references to data files that were submitted along with the network build request.
      */
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private Set<DataSetReference> dataSets;
 
     /**
@@ -92,6 +92,8 @@ public class NetworkBuild
         this.toDate = toDate;
         this.requestingUser = requestingUser;
     }
+
+    public NetworkBuild(){}
 
     public Long getId() {
         return id;

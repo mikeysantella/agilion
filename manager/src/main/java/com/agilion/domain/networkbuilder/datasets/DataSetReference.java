@@ -31,6 +31,8 @@ public class DataSetReference
         this.edgelistLocation = edgelistLocation;
     }
 
+    public DataSetReference(){}
+
     public String getNodelistLocation() {
 
         return nodelistLocation;
