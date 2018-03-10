@@ -58,8 +58,8 @@ public class LocalNoQueryApiJobManager implements JobManager
     @Override
     public NetworkBuildStatus getNetworkBuildStatus(NetworkBuild networkBuild) {
         LocalJobRunner jobRunner = this.jobs.get(networkBuild);
-        return new NetworkBuildStatus(jobRunner.requests);
-
+        return new NetworkBuildStatus(jobRunner.requests, networkBuild.getNetworkBuildStartDate(),
+                jobRunner.statusMessage, networkBuild.getNetworkBuildName());
     }
 
     private class LocalJobRunner implements Runnable
@@ -104,7 +104,7 @@ public class LocalNoQueryApiJobManager implements JobManager
                 while (!networkBuildIsDone(this.requests))
                 {
                     //update all of the requsts with new updates requests from the data engine
-                    updateRequests(requests);
+                    this.requests = updateRequests(requests);
                     SleepyTime.sleepForSeconds(5);
                 }
 
@@ -155,7 +155,8 @@ public class LocalNoQueryApiJobManager implements JobManager
     private List<Request> updateRequests(List<Request> reqs) throws ApiException {
         List<Request> newReqs = new LinkedList<>();
         for (Request r : reqs) {
-            newReqs.add(this.dataEngineClient.getUpdatedRequest(r));
+            Request updatedRequest = this.dataEngineClient.getUpdatedRequest(r);
+            newReqs.add(updatedRequest);
         }
         return newReqs;
     }

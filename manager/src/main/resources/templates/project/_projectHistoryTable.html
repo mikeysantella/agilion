@@ -15,17 +15,17 @@
         </thead>
         <tbody>
         <tr th:each="job : ${jobs}">
-            <td th:text="${job.name}"></td>
+            <td th:text="${job.buildName}"></td>
             <td th:text="${job.startDate}"></td>
-            <td class="jobState" th:text="${job.state}"></td>
-            <td th:text="${job.status}"></td>
+            <td class="jobState" th:text="${job.overallJobState}"></td>
+            <td th:text="${job.statusMessage}"></td>
             <td>
-                <th:block th:if="${job.state.name() == 'DONE'}">
+                <th:block th:if="${job.overallJobState.name() == 'DONE'}">
                     <a class="btn btn-link" >
                         Perform Analysis
                     </a>
                 </th:block>
-                <th:block th:if="${job.state.name() == 'ERROR'}">
+                <th:block th:if="${job.overallJobState.name() == 'ERROR'}">
                     <a class="btn btn-link" >
                         View Errors
                     </a>

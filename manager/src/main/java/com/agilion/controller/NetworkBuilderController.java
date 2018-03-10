@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -106,11 +107,13 @@ public class NetworkBuilderController
 
     public void doInitialSaveOfNetworkBuild(User user, NetworkBuild build)
     {
+        // Mark the date that the network build was started
+        build.setNetworkBuildStartDate(new Date());
+
         user.getSubmittedNetworks().add(build);
         build.setRequestingUser(user);
         this.networkBuildRepo.save(build);
         this.userService.saveUser(user);
-
     }
 
     @RequestMapping(value = "/history", method = RequestMethod.GET)

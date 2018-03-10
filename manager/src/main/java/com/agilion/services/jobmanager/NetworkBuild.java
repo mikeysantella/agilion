@@ -69,6 +69,11 @@ public class NetworkBuild
      */
     private Date toDate;
 
+    /**
+     * The date that the network build was created
+     */
+    private Date networkBuildStartDate;
+
     private String associatedDataEngineSessionID;
 
     @ElementCollection
@@ -91,6 +96,7 @@ public class NetworkBuild
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.requestingUser = requestingUser;
+
     }
 
     public NetworkBuild(){}
@@ -202,5 +208,13 @@ public class NetworkBuild
         result = 31 * result + (toDate != null ? toDate.hashCode() : 0);
         result = 31 * result + (requestingUser != null ? requestingUser.hashCode() : 0);
         return result;
+    }
+
+    public Date getNetworkBuildStartDate() {
+        return networkBuildStartDate;
+    }
+
+    public void setNetworkBuildStartDate(Date networkBuildStartDate) {
+        this.networkBuildStartDate = networkBuildStartDate;
     }
 }
