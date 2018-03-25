@@ -1,7 +1,7 @@
 package com.agilion.services.dataengine;
 
+import com.google.common.collect.Lists;
 import dataengine.api.Request;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 import java.util.List;
 

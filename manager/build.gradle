@@ -28,7 +28,9 @@ repositories {
 
 
 dependencies {
-	compile project(":java-client")
+	//compile project(":java-client")
+	compile files('libs/dataengine-client-0.0.3-SNAPSHOT.jar')
+	compile group: 'com.google.collections', name: 'google-collections', version: '1.0'
 
 	compile 'org.thymeleaf:thymeleaf:3.0.2.RELEASE'
 	compile 'org.thymeleaf:thymeleaf-spring4:3.0.2.RELEASE'
@@ -62,6 +64,17 @@ dependencies {
 	compile group: 'commons-io', name: 'commons-io', version: '2.5'
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile group: 'junit', name: 'junit', version: '4.12'
+
+	// Dependencies to facilitate using the DataEngine Client API via a jar
+	compile group: 'io.swagger', name: 'swagger-annotations', version:'1.5.9'
+	compile group: 'org.glassfish.jersey.core', name: 'jersey-client', version:'2.22.2'
+	compile group: 'org.glassfish.jersey.media', name: 'jersey-media-multipart', version:'2.22.2'
+	compile group: 'org.glassfish.jersey.media', name: 'jersey-media-json-jackson', version:'2.22.2'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.7.5'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.7.5'
+	compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.7.5'
+	compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version:'2.7.5'
+	compile group: 'com.brsanthu', name: 'migbase64', version:'2.2'
 }
 
 sourceSets {

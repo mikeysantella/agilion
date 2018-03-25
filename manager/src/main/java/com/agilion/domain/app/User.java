@@ -2,7 +2,7 @@ package com.agilion.domain.app;
 
 import com.agilion.services.jobmanager.NetworkBuild;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jersey.repackaged.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.security.core.GrantedAuthority;

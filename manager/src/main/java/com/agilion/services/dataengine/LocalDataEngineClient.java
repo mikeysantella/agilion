@@ -1,9 +1,9 @@
 package com.agilion.services.dataengine;
 
 import com.agilion.domain.app.User;
+import com.google.common.collect.Lists;
 import dataengine.ApiException;
 import dataengine.api.*;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;

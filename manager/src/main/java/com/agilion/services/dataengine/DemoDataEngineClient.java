@@ -3,6 +3,7 @@ package com.agilion.services.dataengine;
 import com.agilion.domain.app.User;
 import com.agilion.domain.networkbuilder.datasets.DataSet;
 import com.agilion.domain.networkbuilder.datasets.DataSetReference;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import dataengine.ApiException;
@@ -10,7 +11,6 @@ import dataengine.api.Operation;
 import dataengine.api.OperationSelection;
 import dataengine.api.Request;
 import dataengine.api.Session;
-import jersey.repackaged.com.google.common.collect.Lists;
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.ClassPathResource;
 
