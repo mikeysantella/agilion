@@ -23,6 +23,9 @@ import java.util.Map;
 
 /**
  * Created by Alex_Lappy_486 on 1/19/18.
+ *
+ * This controller handles requests from the admin/dataengine page. It is primarily used to test interactions between
+ * the UI and the data engine
  */
 @Controller
 @RequestMapping("/admin/dataengine")

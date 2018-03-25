@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Defines operations for communicating with the data engine.
+ * Defines operations for communicating with the data engine. All data engine operations should be done through this interface,
+ * (rather than calling the RequestsApi/SessionsApi classes directly).
  */
 public interface DataEngineClient
 {

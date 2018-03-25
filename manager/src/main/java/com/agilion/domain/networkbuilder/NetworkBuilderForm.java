@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * This class is primarily used to model the input that the user sends to the server when initiating an network
- * build. It get converterd to a NetworkBuildingRequest
+ * build. It get converted to a NetworkBuildingRequest
  */
 public class NetworkBuilderForm
 {

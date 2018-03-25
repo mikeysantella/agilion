@@ -7,7 +7,7 @@ import com.agilion.services.files.FileStore;
 import com.agilion.services.files.LocalFileStore;
 import com.agilion.services.jobmanager.JobManager;
 import com.agilion.services.jobmanager.LocalNoQueryApiJobManager;
-import com.agilion.utils.NetworkFormToJobRequestConverter;
+import com.agilion.utils.UIFormToNetworkBuildConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -84,9 +84,9 @@ public class WebAppConfig extends WebMvcConfigurerAdapter
     }
 
     @Bean
-    public NetworkFormToJobRequestConverter networkFormToJobRequestConverter()
+    public UIFormToNetworkBuildConverter networkFormToJobRequestConverter()
     {
-        return new NetworkFormToJobRequestConverter(fileStore(), dateFormat());
+        return new UIFormToNetworkBuildConverter(fileStore(), dateFormat());
     }
 
     @Bean

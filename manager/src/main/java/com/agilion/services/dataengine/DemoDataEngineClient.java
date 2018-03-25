@@ -23,6 +23,8 @@ import java.util.Map;
 
 /**
  * Created by Alex_Lappy_486 on 2/1/18.
+ *
+ * A class that completely mocks any interactions with the data engine
  */
 public class DemoDataEngineClient implements DataEngineClient
 {
@@ -65,21 +67,24 @@ public class DemoDataEngineClient implements DataEngineClient
 
     @Override
     public Session startSession(String uniqueSessionID, User username) throws ApiException {
-        return null;
+        Session s = new Session();
+        s.setId(uniqueSessionID);
+        s.setUsername(username.getUsername());
+        return s;
     }
 
     @Override
     public Request sendDataEngineOperationRequest(Session session, OperationSelection dataIngestOperation) throws ApiException {
-        return null;
+        return new Request();
     }
 
     @Override
     public OperationSelection createDataIngestOperations(String inputUri, String dataFormat, boolean hasHeader) throws ApiException {
-        return null;
+        return new OperationSelection();
     }
 
     @Override
     public Request getUpdatedRequest(Request request) throws ApiException {
-        return null;
+        return new Request();
     }
 }

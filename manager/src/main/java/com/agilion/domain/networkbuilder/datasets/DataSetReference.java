@@ -11,6 +11,8 @@ import java.util.List;
 
 /**
  * Created by Alex_Lappy_486 on 2/20/18.
+ *
+ * This class is used to pass around the locations of datasets (rather than the datasets themselves).
  */
 @Entity
 public class DataSetReference

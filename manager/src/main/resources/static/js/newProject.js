@@ -1,3 +1,8 @@
+// This is my first attempt at using Vue for a dynamic page / client-side validation. It's probably not the best example
+// of how to use the technology, but in general, to me, it seems like the idea is to write pages in a "data-driven"
+// manner: all updates to the page should concern themselves with modifications to the main "data" object.
+//
+
 var app = new Vue({
     el: '#app',
 

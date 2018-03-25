@@ -12,7 +12,7 @@ import com.agilion.services.security.LoggedInUserGetter;
 import com.agilion.services.security.NoLoggedInUserException;
 import com.agilion.services.validator.FormError;
 import com.agilion.services.validator.ValidationResult;
-import com.agilion.utils.NetworkFormToJobRequestConverter;
+import com.agilion.utils.UIFormToNetworkBuildConverter;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.support.MessageSourceAccessor;
@@ -45,7 +45,7 @@ public class NetworkBuilderController
     JobManager jobManager;
 
     @Autowired
-    NetworkFormToJobRequestConverter networkFormConverter;
+    UIFormToNetworkBuildConverter networkFormConverter;
 
     @Autowired
     UserService userService;

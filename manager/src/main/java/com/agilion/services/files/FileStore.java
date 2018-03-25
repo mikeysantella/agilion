@@ -2,6 +2,10 @@ package com.agilion.services.files;
 
 import java.io.InputStream;
 
+/**
+ * An interface for storing/retrieving files. Useful if we're going to be using some kind of hosted filesystem for
+ * interactions between the UI/Data Engine (S3, HDFS, etc).
+ */
 public interface FileStore
 {
     /**

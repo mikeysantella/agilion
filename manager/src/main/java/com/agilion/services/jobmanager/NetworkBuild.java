@@ -18,7 +18,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This object contains the data for a NetworkBuild.
+ * This object contains the data for a NetworkBuild. It serves as the main data object for representing a user's
+ * network build operation.
  */
 @Entity
 public class NetworkBuild

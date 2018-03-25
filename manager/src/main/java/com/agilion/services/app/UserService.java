@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.Date;
 
+/**
+ * This class handles user-related actions and functions.
+ */
 @Service
 @Transactional
 public class UserService implements UserDetailsService

@@ -77,10 +77,10 @@ public class LocalDataEngineClient implements DataEngineClient
         subopParams.put("dataSchema", dataFormat);
         subopParams.put("hasHeader", hasHeader);
 
+        // TODO: are we always going to use the PythonIngestToSqlWorker for ingestion actions?
         OperationSelection subop = new OperationSelection().id("PythonIngestToSqlWorker").params(subopParams);
         suboperationSelections.put(subop.getId(), subop);
 
-        // Add all other data ingest params specified by the user
         Map<String, Object> params = new HashMap<>();
         params.put("ingesterWorker", subop.getId());
         params.put("datasetLabel", UUID.randomUUID().toString());

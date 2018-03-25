@@ -18,13 +18,13 @@ import java.util.*;
  * This class converts the NetworkBuilderForm object, uploaded by users on the "Network Builder page", into a JobRequest,
  * which commands the JobManagerServer to start processing/gathering data.
  */
-public class NetworkFormToJobRequestConverter
+public class UIFormToNetworkBuildConverter
 {
     private FileStore fileStore;
 
     private DateFormat dateFormat;
 
-    public NetworkFormToJobRequestConverter(FileStore store, DateFormat dateFormat)
+    public UIFormToNetworkBuildConverter(FileStore store, DateFormat dateFormat)
     {
         this.fileStore = store;
         this.dateFormat = dateFormat;
@@ -51,10 +51,6 @@ public class NetworkFormToJobRequestConverter
         return new NetworkBuild(form.getProjectName(), dataSetReferences, selectorFiles,
                 new HashSet<String>(form.getDataSources()), fromDate, toDate, user);
     }
-
-
-   // public NetworkBuild(String networkBuildName, List<DataSetReference> dataSets, Set<String> selectorFilePaths,
-     //                   Set<String> dataSources, Date fromDate, Date toDate, User requestingUser) {
 
     private Set<DataSetReference> saveDatasetToFilestore(List<DataSet> dataSets) throws Exception
     {

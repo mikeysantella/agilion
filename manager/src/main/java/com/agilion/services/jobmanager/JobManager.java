@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- *
+ * A generic interface for the UI to submit jobs, and retrieve statuses about jobs
  */
 public interface JobManager
 {
